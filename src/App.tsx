@@ -39,6 +39,7 @@ import { Header } from './components/layout/Header';
 // Visualizações dos Módulos
 import { OverviewView } from './components/views/OverviewView';
 import { TicketsView } from './components/views/TicketsView';
+import { Par2357TicketsPreviewView } from './components/views/Par2357TicketsPreviewView';
 import { TeamView } from './components/views/TeamView';
 import { PendingsView } from './components/views/PendingsView';
 import { AuditsView } from './components/views/AuditsView';
@@ -278,11 +279,19 @@ export default function App() {
           )}
 
           {currentRoute === 'chamados' && (
-            <TicketsView
-              tickets={tickets}
-              initialTicketId={targetTicketId}
-              onClearInitialTicketId={() => setTargetTicketId(null)}
-            />
+            import.meta.env.VITE_PAR2357_TICKETS_PREVIEW === 'true' ? (
+              <Par2357TicketsPreviewView
+                baseUrl={import.meta.env.VITE_PAR2357_API_BASE_URL || ''}
+                initialTicketId={targetTicketId}
+                onClearInitialTicketId={() => setTargetTicketId(null)}
+              />
+            ) : (
+              <TicketsView
+                tickets={tickets}
+                initialTicketId={targetTicketId}
+                onClearInitialTicketId={() => setTargetTicketId(null)}
+              />
+            )
           )}
 
           {currentRoute === 'equipe' && (
