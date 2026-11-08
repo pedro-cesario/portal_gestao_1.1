@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test:e2e:synthetic": "playwright test --config=playwright.synthetic.config.ts"
+    "test:e2e:synthetic": "playwright test --config=playwright.synthetic.config.ts",
+    "test:e2e:integrated": "playwright test --config=playwright.integrated.config.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
