@@ -27,7 +27,7 @@ export interface TicketPageQuery {
   status?: string;
   technician_id?: number;
   group_id?: number;
-  category_id?: number;
+  categoria_id?: number;
 }
 
 export interface OverviewQuery {
@@ -117,7 +117,7 @@ export function createPortalApiClient(options: PortalApiOptions = {}) {
       if (query.status) p.set('status', query.status);
       if (query.technician_id !== undefined) p.set('technician_id', String(positiveInt(query.technician_id, 'technician_id')));
       if (query.group_id !== undefined) p.set('group_id', String(positiveInt(query.group_id, 'group_id')));
-      if (query.category_id !== undefined) p.set('category_id', String(positiveInt(query.category_id, 'category_id')));
+      if (query.categoria_id !== undefined) p.set('categoria_id', String(positiveInt(query.categoria_id, 'categoria_id')));
       return get('/v1/tickets', p);
     },
     getTicket: (id: number | string) => get(`/v1/tickets/${ticketId(id)}`),
