@@ -81,9 +81,8 @@ function drawInstitutionalFooter(doc: jsPDF, documentNumber: string) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(148, 163, 184);
-  const authHash = `HEAL-SEC-${documentNumber}-${new Date().getFullYear()}-AUTHENTIC-RECORD`;
-  doc.text(`Documento emitido pelo Portal de Gestão Operacional HEAL Ops | Hash: ${authHash}`, 14, pageHeight - 10);
-  doc.text(`Via de arquivo e registro formal — Assinatura das partes obrigatória`, 196, pageHeight - 10, { align: 'right' });
+  doc.text(`Portal HEAL Ops | Documento: ${documentNumber} | Conferir registro original`, 14, pageHeight - 10);
+  doc.text('Para assinatura manual e arquivamento fisico', 196, pageHeight - 7, { align: 'right' });
 }
 
 /**
@@ -102,6 +101,21 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
   const contentWidth = 182;
   let currentY = 32;
 
+  // Paginação progressiva de conteúdo e assinaturas em A4.
+  const ensureSpace = (height: number) => {
+    if (currentY + height <= pageHeight - 21) return;
+    doc.addPage();
+    drawInstitutionalHeader(doc, alignment.alignmentNumber, doc.getNumberOfPages());
+    currentY = 32;
+  };
+  const writeParagraph = (value: string, lineHeight = 4) => {
+    const lines: string[] = doc.splitTextToSize(value, contentWidth);
+    lines.forEach(line => {
+      ensureSpace(lineHeight + 1);
+      doc.text(line, marginX, currentY);
+      currentY += lineHeight;
+    });
+  };
   // Página 1
   drawInstitutionalHeader(doc, alignment.alignmentNumber, 1);
 
@@ -171,6 +185,7 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
   currentY += 6;
 
   alignment.participants.forEach((part, idx) => {
+    ensureSpace(7);
     const isEven = idx % 2 === 0;
     if (isEven) {
       doc.setFillColor(255, 255, 255);
@@ -198,6 +213,7 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
   currentY += 4;
 
   // 2. Contexto e Objetivo
+  ensureSpace(14);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(19, 79, 159);
@@ -207,11 +223,11 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(30, 41, 59);
-  const contextLines = doc.splitTextToSize(`Objetivo: ${alignment.objective}\nContexto: ${alignment.context}`, contentWidth);
-  doc.text(contextLines, marginX, currentY);
-  currentY += (contextLines.length * 4) + 3;
+  writeParagraph(`Objetivo: ${alignment.objective}\nContexto: ${alignment.context}`);
+  currentY += 3;
 
   // 3. Fatos e Orientações Transmitidas
+  ensureSpace(14);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(19, 79, 159);
@@ -226,9 +242,9 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(30, 41, 59);
-  const factsLines = doc.splitTextToSize(alignment.observedFactsOrSituations || 'Sem ocorrências adicionais registradas.', contentWidth);
-  doc.text(factsLines, marginX, currentY);
-  currentY += (factsLines.length * 4) + 2;
+  writeParagraph(alignment.observedFactsOrSituations || 'Nenhuma observação adicional registrada.');
+  currentY += 2;
+  ensureSpace(11);
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(71, 85, 105);
@@ -237,18 +253,12 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(30, 41, 59);
-  const orientationLines = doc.splitTextToSize(alignment.transmittedOrientations || 'Orientações orais transmitidas em conformidade com os POPs institucionais.', contentWidth);
-  doc.text(orientationLines, marginX, currentY);
-  currentY += (orientationLines.length * 4) + 4;
+  writeParagraph(alignment.transmittedOrientations || 'Nenhuma orientação adicional registrada.');
+  currentY += 4;
 
   // 4. Compromissos e Acordos Firmados
   // Verifica se precisa quebrar de página antes da tabela de compromissos
-  if (currentY > 210) {
-    drawInstitutionalFooter(doc, alignment.alignmentNumber);
-    doc.addPage();
-    drawInstitutionalHeader(doc, alignment.alignmentNumber, 2);
-    currentY = 32;
-  }
+  ensureSpace(16);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
@@ -281,12 +291,7 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
   } else {
     allCommitments.forEach((commit, idx) => {
       // checa se cabe no espaço restante
-      if (currentY > 260) {
-        drawInstitutionalFooter(doc, alignment.alignmentNumber);
-        doc.addPage();
-        drawInstitutionalHeader(doc, alignment.alignmentNumber, doc.getNumberOfPages());
-        currentY = 32;
-      }
+      ensureSpace(10);
 
       const isEven = idx % 2 === 0;
       doc.setFillColor(isEven ? 255 : 248, isEven ? 255 : 250, isEven ? 255 : 252);
@@ -316,12 +321,7 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
   // 5. Manifestações Individuais (se houver)
   const participantsWithStatements = alignment.participants.filter(p => p.individualStatement && p.individualStatement.trim() !== '');
   if (participantsWithStatements.length > 0) {
-    if (currentY > 230) {
-      drawInstitutionalFooter(doc, alignment.alignmentNumber);
-      doc.addPage();
-      drawInstitutionalHeader(doc, alignment.alignmentNumber, doc.getNumberOfPages());
-      currentY = 32;
-    }
+    ensureSpace(14);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
@@ -330,6 +330,7 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
     currentY += 4;
 
     participantsWithStatements.forEach(p => {
+      ensureSpace(11);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(71, 85, 105);
@@ -339,89 +340,54 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(7.5);
       doc.setTextColor(30, 41, 59);
-      const stmtLines = doc.splitTextToSize(`"${p.individualStatement}"`, contentWidth - 4);
-      doc.text(stmtLines, marginX + 2, currentY);
-      currentY += (stmtLines.length * 3.8) + 2;
+      writeParagraph(`“${p.individualStatement}”`, 3.8);
+      currentY += 2;
     });
     currentY += 2;
   }
 
-  interface PDFSigner {
-    name: string;
-    role: string;
-    signed?: boolean;
-    signedDate?: string;
-  }
-
-  const allSigners: PDFSigner[] = [
-    { 
-      name: alignment.managerName, 
-      role: `${alignment.managerRole} (Condutor / Gestor)`,
-      signed: true,
-      signedDate: alignment.dateTime.split(' ')[0]
-    },
-    ...alignment.participants.map(p => ({
-      name: p.name,
-      role: `${p.role} — ${p.department}`,
-      signed: p.signatureStatus !== 'PENDENTE',
-      signedDate: p.signatureDate
-    }))
+  // Documento para impressão e coleta de assinaturas A MÃO no caderno físico.
+  // Ciência eletrônica não preenche nem substitui linhas de assinatura manuscrita.
+  const signers = [
+    { name: alignment.managerName, role: `${alignment.managerRole} — Gestor / Condutor` },
+    ...alignment.participants.map(p => ({ name: p.name, role: `${p.role} — ${p.department}` }))
   ];
 
-  const signaturesRowCount = Math.ceil(allSigners.length / 2);
-  const neededHeightForSignatures = 25 + (signaturesRowCount * 24);
-
-  if (currentY + neededHeightForSignatures > pageHeight - 20) {
-    drawInstitutionalFooter(doc, alignment.alignmentNumber);
-    doc.addPage();
-    drawInstitutionalHeader(doc, alignment.alignmentNumber, doc.getNumberOfPages());
-    currentY = 32;
-  }
-
+  ensureSpace(21);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(19, 79, 159);
-  doc.text('6. TERMO DE CIÊNCIA E ASSINATURAS', marginX, currentY);
-  currentY += 4;
-
+  doc.text('6. CIÊNCIA E ASSINATURAS MANUSCRITAS', marginX, currentY);
+  currentY += 5;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(71, 85, 105);
-  const termDisclaimer = 'Declaramos para todos os fins que participamos da reunião de alinhamento acima referenciada, tomamos ciência integral do seu teor, diretrizes transmitidas e assumimos os compromissos nos termos e prazos estabelecidos neste documento formal.';
-  const discLines = doc.splitTextToSize(termDisclaimer, contentWidth);
-  doc.text(discLines, marginX, currentY);
-  currentY += (discLines.length * 3.8) + 8;
+  writeParagraph('Documento para ciência e assinaturas presenciais. A assinatura indica conhecimento do registro, sem implicar necessariamente concordância com todas as observações.', 3.8);
+  currentY += 5;
 
-  // Desenha os campos de assinatura em pares de 2 por linha
   const colWidth = 85;
   const colGap = 12;
-
-  allSigners.forEach((signer, index) => {
-    const isSecondCol = index % 2 === 1;
-    const colX = isSecondCol ? marginX + colWidth + colGap : marginX;
-    const rowY = currentY + (Math.floor(index / 2) * 22);
-
-    // Linha de assinatura
-    doc.setDrawColor(148, 163, 184);
-    doc.setLineWidth(0.4);
-    doc.line(colX, rowY + 10, colX + colWidth, rowY + 10);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(15, 23, 42);
-    doc.text(signer.name, colX + (colWidth / 2), rowY + 14, { align: 'center' });
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(100, 116, 139);
-    doc.text(signer.role, colX + (colWidth / 2), rowY + 17.5, { align: 'center' });
-
-    if (signer.signed) {
-      doc.setTextColor(16, 149, 73);
+  for (let index = 0; index < signers.length; index += 2) {
+    ensureSpace(31);
+    signers.slice(index, index + 2).forEach((signer, col) => {
+      const colX = col === 0 ? marginX : marginX + colWidth + colGap;
+      doc.setDrawColor(148, 163, 184);
+      doc.setLineWidth(0.4);
+      doc.line(colX, currentY + 10, colX + colWidth, currentY + 10);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      const nameLines: string[] = doc.splitTextToSize(signer.name || 'Nome não informado', colWidth - 6);
+      doc.text(nameLines.slice(0, 2), colX + colWidth / 2, currentY + 14, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(6.5);
-      doc.text(`[Assinado digitalmente em ${signer.signedDate || 'Arquivo'}]`, colX + (colWidth / 2), rowY + 9, { align: 'center' });
-    }
-  });
+      doc.setTextColor(100, 116, 139);
+      const roleLines: string[] = doc.splitTextToSize(signer.role, colWidth - 6);
+      doc.text(roleLines.slice(0, 2), colX + colWidth / 2, currentY + 22, { align: 'center' });
+      doc.text('Data: ____/____/________', colX + colWidth / 2, currentY + 27, { align: 'center' });
+    });
+    currentY += 31;
+  }
 
   // Desenha rodapés em todas as páginas criadas
   const totalPages = doc.getNumberOfPages();
@@ -689,9 +655,10 @@ export function generateFeedbackPDF(feedback: ManagerialFeedback, download: bool
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(71, 85, 105);
-  const termDisclaimer = 'O colaborador declara ter participado da reunião de feedback, recebido as orientações de desenvolvimento e acordado o plano de metas acima descrito.';
-  doc.text(termDisclaimer, marginX, currentY);
-  currentY += 12;
+  const termDisclaimer = 'Este termo registra o feedback apresentado. A assinatura manuscrita indica ciência do registro, sem concordância automática com todas as observações ou metas propostas.';
+  const termLines = doc.splitTextToSize(termDisclaimer, contentWidth);
+  doc.text(termLines, marginX, currentY);
+  currentY += termLines.length * 3.8 + 8;
 
   // Assinatura Gestor e Colaborador lado a lado
   const colWidth = 85;
@@ -722,11 +689,7 @@ export function generateFeedbackPDF(feedback: ManagerialFeedback, download: bool
   doc.setTextColor(100, 116, 139);
   doc.text(`${feedback.collaboratorRole} — Colaborador`, col2X + (colWidth / 2), currentY + 17.5, { align: 'center' });
 
-  if (feedback.collaboratorSignedScience) {
-    doc.setTextColor(16, 149, 73);
-    doc.setFontSize(6.5);
-    doc.text(`[Ciência confirmada em ${feedback.collaboratorSignedScienceAt || 'Data do Feedback'}]`, col2X + (colWidth / 2), currentY + 9, { align: 'center' });
-  }
+  // Linhas vazias para assinaturas à mão; nenhuma ciência eletrônica é forjada.
 
   // Desenha rodapés em todas as páginas criadas
   const totalPages = doc.getNumberOfPages();
