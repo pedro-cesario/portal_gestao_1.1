@@ -38,11 +38,14 @@ import { Header } from './components/layout/Header';
 
 // Visualizações dos Módulos
 import { OverviewView } from './components/views/OverviewView';
+import { Par2357OverviewPreviewView } from './components/views/Par2357OverviewPreviewView';
 import { TicketsView } from './components/views/TicketsView';
+import { Par2357TicketsPreviewView } from './components/views/Par2357TicketsPreviewView';
 import { TeamView } from './components/views/TeamView';
 import { PendingsView } from './components/views/PendingsView';
 import { AuditsView } from './components/views/AuditsView';
 import { IndicatorsView } from './components/views/IndicatorsView';
+import { Par2357IndicatorsPreviewView } from './components/views/Par2357IndicatorsPreviewView';
 import { AgenteGerencialView } from './components/views/AgenteGerencialView';
 import { DailyAndPanelsView } from './components/views/DailyAndPanelsView';
 import { TemplatesGuideView } from './components/views/TemplatesGuideView';
@@ -268,21 +271,33 @@ export default function App() {
         {/* Viewport dos Módulos — Zero-Scroll com Utilização Dinâmica do Espaço */}
         <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
           {currentRoute === 'visao-geral' && (
-            <OverviewView
-              tickets={tickets}
-              latestAudit={audits[0]}
-              onNavigateToTicket={handleNavigateToTicket}
-              onNavigateToRoute={handleRouteChange}
-              dataSource={dataSource}
-            />
+            import.meta.env.VITE_PAR2357_OVERVIEW_PREVIEW === 'true' ? (
+              <Par2357OverviewPreviewView baseUrl={import.meta.env.VITE_PAR2357_API_BASE_URL || ''} />
+            ) : (
+              <OverviewView
+                tickets={tickets}
+                latestAudit={audits[0]}
+                onNavigateToTicket={handleNavigateToTicket}
+                onNavigateToRoute={handleRouteChange}
+                dataSource={dataSource}
+              />
+            )
           )}
 
           {currentRoute === 'chamados' && (
-            <TicketsView
-              tickets={tickets}
-              initialTicketId={targetTicketId}
-              onClearInitialTicketId={() => setTargetTicketId(null)}
-            />
+            import.meta.env.VITE_PAR2357_TICKETS_PREVIEW === 'true' ? (
+              <Par2357TicketsPreviewView
+                baseUrl={import.meta.env.VITE_PAR2357_API_BASE_URL || ''}
+                initialTicketId={targetTicketId}
+                onClearInitialTicketId={() => setTargetTicketId(null)}
+              />
+            ) : (
+              <TicketsView
+                tickets={tickets}
+                initialTicketId={targetTicketId}
+                onClearInitialTicketId={() => setTargetTicketId(null)}
+              />
+            )
           )}
 
           {currentRoute === 'equipe' && (
@@ -310,7 +325,11 @@ export default function App() {
           )}
 
           {currentRoute === 'indicadores' && (
-            <IndicatorsView />
+            import.meta.env.VITE_PAR2357_INDICATORS_PREVIEW === 'true' ? (
+              <Par2357IndicatorsPreviewView baseUrl={import.meta.env.VITE_PAR2357_API_BASE_URL || ''} />
+            ) : (
+              <IndicatorsView />
+            )
           )}
 
           {currentRoute === 'agente-gerencial' && (
