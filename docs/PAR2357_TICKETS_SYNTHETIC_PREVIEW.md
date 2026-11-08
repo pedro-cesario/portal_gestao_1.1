@@ -41,3 +41,15 @@ O preview consulta `GET /v1/auth/me` primeiro; login fictício da UI não é ide
 6. Revisão humana e PR separada para merges e deploy.
 
 **Nenhum resultado de build, CI ou navegação end-to-end deve ser presumido sem evidência.**
+
+## Próximo estágio: indicadores sintéticos
+
+A branch também contém `Par2357IndicatorsPreviewView`, ativada exclusivamente no build com:
+
+```env
+VITE_PAR2357_INDICATORS_PREVIEW=true
+```
+
+O componente consulta sessão real do backend, então `GET /v1/indicators/overview` com seleção de modo snapshot/realtime, e rejeita qualquer resposta cuja origem não seja `SYNTHETIC_DEMO`. Mostra apenas dois contadores cujo nome foi confirmado no envelope (`total_concluidos_hoje`, `total_concluidos_periodo_30d`), quando `availability_status=AVAILABLE`; caso contrário mostra indisponibilidade explícita. Os demais KPIs do mock original não são apresentados como verdadeiros, nem calculados com base em campos não verificados.
+
+A tela atual de `IndicatorsView` permanece padrão e inalterada. Não existe aprovação para consumo de métricas reais nem publicação. Falta validar o conteúdo efetivo de resposta sintética de `/v1/indicators/overview` e homologar o navegador antes de ativar a flag.
