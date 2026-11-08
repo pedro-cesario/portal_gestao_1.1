@@ -28,14 +28,20 @@ import {
   Eye,
   SlidersHorizontal
 } from 'lucide-react';
-import { ArtifactPanel } from '../../types';
+import { ArtifactPanel, MeetingAgreement, AgreementStatus, CurrentUser } from '../../types';
 import { TemplateSyntheticDashboard } from '../panels/TemplateSyntheticDashboard';
 import { TemplateDetailDrawer } from '../panels/TemplateDetailDrawer';
 import { PresentationModeModal } from '../panels/PresentationModeModal';
 import { HumanReviewModal } from '../panels/HumanReviewModal';
+import { RegisterAgreementModal } from '../panels/RegisterAgreementModal';
+import { AgreementsTrackingDrawer } from '../panels/AgreementsTrackingDrawer';
 
 interface DailyAndPanelsViewProps {
   savedPanels: ArtifactPanel[];
+  agreements?: MeetingAgreement[];
+  onSaveAgreement?: (newAgreement: MeetingAgreement) => void;
+  onUpdateAgreementStatus?: (agreementId: string, newStatus: AgreementStatus, note?: string) => void;
+  currentUser?: CurrentUser | null;
   onNavigateToAgente: (prefillPrompt?: string) => void;
   onOpenTicketById: (ticketId: number) => void;
   onUpdatePanel?: (updatedPanel: ArtifactPanel) => void;
@@ -43,6 +49,10 @@ interface DailyAndPanelsViewProps {
 
 export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   savedPanels,
+  agreements = [],
+  onSaveAgreement = () => {},
+  onUpdateAgreementStatus = () => {},
+  currentUser,
   onNavigateToAgente,
   onOpenTicketById,
   onUpdatePanel
@@ -55,6 +65,8 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState<boolean>(false);
   const [isPresentationOpen, setIsPresentationOpen] = useState<boolean>(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [isRegisterAgreementOpen, setIsRegisterAgreementOpen] = useState<boolean>(false);
+  const [isAgreementsTrackingOpen, setIsAgreementsTrackingOpen] = useState<boolean>(false);
   const [activePanelForModal, setActivePanelForModal] = useState<ArtifactPanel | null>(null);
 
   const filteredPanels = savedPanels.filter(p => {
@@ -311,6 +323,7 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
         <div className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden">
           <TemplateSyntheticDashboard
             panel={selectedPanel}
+            agreements={agreements}
             onOpenPresentation={() => {
               setActivePanelForModal(selectedPanel);
               setIsPresentationOpen(true);
@@ -323,6 +336,14 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
               setActivePanelForModal(selectedPanel);
               setIsReviewModalOpen(true);
             }}
+            onOpenRegisterAgreement={() => {
+              setActivePanelForModal(selectedPanel);
+              setIsRegisterAgreementOpen(true);
+            }}
+            onOpenAgreementsTracking={() => {
+              setActivePanelForModal(selectedPanel);
+              setIsAgreementsTrackingOpen(true);
+            }}
             onBackToCatalog={() => setSelectedPanel(null)}
             onOpenTicketById={onOpenTicketById}
           />
@@ -333,9 +354,13 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
       {isPresentationOpen && activePanelForModal && (
         <PresentationModeModal
           panel={activePanelForModal}
+          agreements={agreements}
           isOpen={isPresentationOpen}
           onClose={() => setIsPresentationOpen(false)}
           onOpenTicketById={onOpenTicketById}
+          onOpenRegisterAgreement={() => setIsRegisterAgreementOpen(true)}
+          onOpenAgreementsTracking={() => setIsAgreementsTrackingOpen(true)}
+          onUpdateAgreementStatus={onUpdateAgreementStatus}
         />
       )}
 
@@ -363,7 +388,39 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
           isOpen={isReviewModalOpen}
           onClose={() => setIsReviewModalOpen(false)}
           panel={activePanelForModal}
+          currentUser={currentUser}
           onSaveReviewedPanel={handleSaveReviewed}
+        />
+      )}
+
+      {/* MODAL DE REGISTRO DE ACORDO (+ Registrar acordo) */}
+      {isRegisterAgreementOpen && activePanelForModal && (
+        <RegisterAgreementModal
+          isOpen={isRegisterAgreementOpen}
+          onClose={() => setIsRegisterAgreementOpen(false)}
+          sourceMeetingType={activePanelForModal.templateType === 'TPL-02' ? 'ALINHAMENTO_SEMANAL' : 'DAILY'}
+          sourceArtifactId={activePanelForModal.id}
+          meetingReferenceDate={activePanelForModal.referenceDate}
+          currentUser={currentUser}
+          onSaveAgreement={onSaveAgreement}
+        />
+      )}
+
+      {/* DRAWER ANALÍTICO DE ACOMPANHAMENTO DE ACORDOS */}
+      {isAgreementsTrackingOpen && activePanelForModal && (
+        <AgreementsTrackingDrawer
+          isOpen={isAgreementsTrackingOpen}
+          onClose={() => setIsAgreementsTrackingOpen(false)}
+          agreements={agreements}
+          sourceMeetingType={activePanelForModal.templateType === 'TPL-02' ? 'ALINHAMENTO_SEMANAL' : 'DAILY'}
+          meetingReferenceDate={activePanelForModal.referenceDate}
+          onOpenRegisterModal={() => {
+            setIsAgreementsTrackingOpen(false);
+            setIsRegisterAgreementOpen(true);
+          }}
+          onUpdateAgreementStatus={onUpdateAgreementStatus}
+          onOpenTicketById={onOpenTicketById}
+          currentUser={currentUser}
         />
       )}
     </div>

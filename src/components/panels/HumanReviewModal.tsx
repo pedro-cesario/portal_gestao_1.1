@@ -17,12 +17,13 @@ import {
   Clock, 
   FileCheck 
 } from 'lucide-react';
-import { ArtifactPanel } from '../../types';
+import { ArtifactPanel, CurrentUser } from '../../types';
 
 interface HumanReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   panel: ArtifactPanel;
+  currentUser?: CurrentUser | null;
   onSaveReviewedPanel: (reviewedPanel: ArtifactPanel) => void;
 }
 
@@ -30,9 +31,13 @@ export const HumanReviewModal: React.FC<HumanReviewModalProps> = ({
   isOpen,
   onClose,
   panel,
+  currentUser,
   onSaveReviewedPanel
 }) => {
   if (!isOpen) return null;
+
+  const reviewerName = currentUser?.name || 'Henrique Vasconcelos';
+  const reviewerTitle = currentUser ? `${currentUser.name} (${currentUser.role || 'Gestor TI'})` : 'Henrique Vasconcelos (Gestor TI)';
 
   const [headline, setHeadline] = useState<string>(panel.summary.headline);
   const [decisionsSummary, setDecisionsSummary] = useState<string>(panel.summary.keyDecisionsSummary);
@@ -51,7 +56,7 @@ export const HumanReviewModal: React.FC<HumanReviewModalProps> = ({
         keyDecisionsSummary: decisionsSummary
       },
       humanReview: {
-        reviewedBy: 'Henrique Vasconcelos (Gestor TI)',
+        reviewedBy: reviewerTitle,
         reviewedAt: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         notes: reviewerNotes,
         status: status
@@ -176,7 +181,7 @@ export const HumanReviewModal: React.FC<HumanReviewModalProps> = ({
               placeholder="Parecer da revisão..."
             />
             <span className="text-[11px] text-slate-400 mt-1 block">
-              Assinado digitalmente por <strong>Henrique Vasconcelos (Gestor TI)</strong>
+              Assinado digitalmente por <strong>{reviewerTitle}</strong>
             </span>
           </div>
         </div>

@@ -1,9 +1,10 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * HEAL Ops — Componente Sintético Executivo Padronizado para Templates (TPL-01, TPL-02, TPL-03, TPL-04)
+ * HEAL Ops — Componente Sintético Executivo Padronizado para Templates (TPL-01 a TPL-04)
  * REGRA MANDATÓRIA: SINTÉTICO PRIMEIRO, ANALÍTICO SOB DEMANDA.
  * Zero-scroll no desktop (100% contido no viewport), revelação analítica apenas sob demanda.
+ * Inclui: "+ Registrar acordo", "Acordos e Encaminhamentos" e "Acordos da reunião anterior".
  */
 
 import React from 'react';
@@ -25,16 +26,22 @@ import {
   TrendingUp,
   Award,
   Milestone,
-  Check
+  Check,
+  Handshake,
+  Plus,
+  RotateCcw
 } from 'lucide-react';
-import { ArtifactPanel } from '../../types';
+import { ArtifactPanel, MeetingAgreement } from '../../types';
 import { EvidenceBadge } from '../common/EvidenceBadge';
 
 interface TemplateSyntheticDashboardProps {
   panel: ArtifactPanel;
+  agreements?: MeetingAgreement[];
   onOpenPresentation: () => void;
   onOpenDetailDrawer: () => void;
   onOpenHumanReview?: () => void;
+  onOpenRegisterAgreement?: () => void;
+  onOpenAgreementsTracking?: () => void;
   onBackToCatalog?: () => void;
   onOpenTicketById?: (ticketId: number) => void;
   isCompactChatMode?: boolean;
@@ -42,9 +49,12 @@ interface TemplateSyntheticDashboardProps {
 
 export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProps> = ({
   panel,
+  agreements = [],
   onOpenPresentation,
   onOpenDetailDrawer,
   onOpenHumanReview,
+  onOpenRegisterAgreement,
+  onOpenAgreementsTracking,
   onBackToCatalog,
   onOpenTicketById,
   isCompactChatMode = false
@@ -88,29 +98,41 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
   const badgeConfig = getTemplateBadge(panel.templateType);
   const TemplateIcon = badgeConfig.icon;
 
+  const isMeetingTemplate = panel.templateType === 'TPL-01' || panel.templateType === 'TPL-02';
+  const meetingType = panel.templateType === 'TPL-01' ? 'DAILY' : 'ALINHAMENTO_SEMANAL';
+
+  // Acordos filtrados para este tipo de reunião
+  const currentMeetingAgreements = agreements.filter(a => a.sourceMeetingType === meetingType && !a.isPreviousMeeting);
+  const previousMeetingAgreements = agreements.filter(a => a.sourceMeetingType === meetingType && a.isPreviousMeeting);
+
+  const totalAgreements = currentMeetingAgreements.length;
+  const completedAgreements = currentMeetingAgreements.filter(a => a.status === 'CONCLUIDO').length;
+  const pendingAgreements = currentMeetingAgreements.filter(a => a.status === 'CONFIRMADO' || a.status === 'EM_ANDAMENTO' || a.status === 'AGUARDANDO_CONFIRMACAO').length;
+  const overdueAgreements = currentMeetingAgreements.filter(a => a.notes?.toLowerCase().includes('atrasad') || (a.status === 'EM_ANDAMENTO' && a.isPreviousMeeting)).length;
+
   return (
-    <div className={`w-full h-full flex flex-col justify-between gap-2.5 overflow-hidden ${isCompactChatMode ? 'p-1' : ''}`}>
+    <div className={`w-full h-full flex flex-col justify-between gap-2 overflow-hidden ${isCompactChatMode ? 'p-1' : ''}`}>
       {/* 1. HEADER EXECUTIVO COMPACTO */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-3 shadow-xs shrink-0">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className={`p-2 rounded-lg border ${badgeConfig.color} shrink-0`}>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 sm:p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`p-1.5 rounded-lg border ${badgeConfig.color} shrink-0`}>
             <TemplateIcon className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${badgeConfig.color}`}>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border ${badgeConfig.color}`}>
                 {panel.templateType}
               </span>
-              <span className="text-[11px] text-slate-400">·</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+              <span className="text-[10px] text-slate-400">·</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 Ref: <strong className="text-slate-800 dark:text-slate-200">{panel.referenceDate}</strong>
               </span>
-              <span className="text-[11px] text-slate-400">·</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+              <span className="text-[10px] text-slate-400">·</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 Fonte: <strong className="text-slate-800 dark:text-slate-200">{panel.source}</strong>
               </span>
-              <span className="text-[11px] text-slate-400">·</span>
-              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+              <span className="text-[10px] text-slate-400">·</span>
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
                 panel.status === 'APROVADO'
                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                   : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
@@ -118,40 +140,53 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
                 {panel.status === 'APROVADO' ? '✓ HOMOLOGADO' : '✎ RASCUNHO / EM REVISÃO'}
               </span>
             </div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5">
+            <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5">
               {panel.title}
             </h2>
           </div>
         </div>
 
         {/* Ações Gerenciais no Topo */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+          {/* AÇÃO DISCRETA REQUISITADA: + Registrar acordo */}
+          {isMeetingTemplate && onOpenRegisterAgreement && (
+            <button
+              type="button"
+              onClick={onOpenRegisterAgreement}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-md transition-colors cursor-pointer shadow-2xs"
+              title="Registrar acordo ou encaminhamento da reunião"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Registrar acordo</span>
+            </button>
+          )}
+
           {onOpenHumanReview && (
             <button
               type="button"
               onClick={onOpenHumanReview}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors cursor-pointer"
               title="Revisão Humana e Homologação"
             >
               <Edit3 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span className="hidden sm:inline">Revisão Humana</span>
+              <span className="hidden sm:inline">Revisão</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={onOpenDetailDrawer}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-md transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-md transition-colors cursor-pointer"
             title="Ver Evidências e Detalhes Analíticos"
           >
             <FileText className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-            <span>Evidências & Detalhes</span>
+            <span>Evidências</span>
           </button>
 
           <button
             type="button"
             onClick={onOpenPresentation}
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-white bg-[#134F9F] hover:bg-blue-800 rounded-md transition-colors shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white bg-[#134F9F] hover:bg-blue-800 rounded-md transition-colors shadow-xs cursor-pointer"
             title="Apresentar em Reunião Executiva"
           >
             <Presentation className="w-3.5 h-3.5" />
@@ -165,7 +200,7 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
         {panel.summary.metricsBrief && panel.summary.metricsBrief.slice(0, 4).map((metric, idx) => (
           <div 
             key={idx}
-            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex flex-col justify-between shadow-2xs hover:border-blue-500/30 transition-colors"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 flex flex-col justify-between shadow-2xs hover:border-blue-500/30 transition-colors"
           >
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
               <span className="truncate font-medium">{metric.label}</span>
@@ -183,8 +218,8 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
                 </span>
               )}
             </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg sm:text-xl font-bold font-mono text-slate-900 dark:text-slate-100">
+            <div className="mt-0.5 flex items-baseline justify-between">
+              <span className="text-base sm:text-lg font-bold font-mono text-slate-900 dark:text-slate-100">
                 {metric.value}
               </span>
               {metric.target && (
@@ -197,35 +232,114 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
         ))}
       </div>
 
-      {/* 3. BLOCO SINTÉTICO CENTRAL: CONCLUSÃO PRINCIPAL + 3 PRIORIDADES / COMBINADOS */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-2.5 overflow-hidden">
+      {/* 3. SEÇÃO SINTÉTICA DE ACORDOS (EXCLUSIVA PARA TPL-01 E TPL-02) */}
+      {isMeetingTemplate && (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 shrink-0">
+          {/* Card Sintético: Acordos e Encaminhamentos */}
+          <div 
+            onClick={onOpenAgreementsTracking}
+            className="md:col-span-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-blue-500/50 cursor-pointer transition-all group"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1.5 rounded-lg bg-blue-500/10 text-[#134F9F] dark:text-blue-400 shrink-0">
+                <Handshake className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#134F9F] transition-colors truncate">
+                    Acordos e Encaminhamentos
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-blue-500/10 text-[#134F9F] dark:text-blue-400">
+                    {totalAgreements}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 font-mono">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{completedAgreements} concluídos</span>
+                  <span>·</span>
+                  <span className="text-blue-600 dark:text-blue-400">{pendingAgreements} pendentes</span>
+                  {overdueAgreements > 0 && (
+                    <>
+                      <span>·</span>
+                      <span className="text-amber-600 dark:text-amber-400 font-bold">{overdueAgreements} atrasados</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0 flex items-center gap-0.5">
+              <span>Detalhar</span>
+              <ArrowRight className="w-3 h-3" />
+            </span>
+          </div>
+
+          {/* Card Sintético: Acordos da Reunião Anterior */}
+          <div 
+            onClick={onOpenAgreementsTracking}
+            className="md:col-span-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-blue-500/50 cursor-pointer transition-all group"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+                <RotateCcw className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 transition-colors truncate">
+                    Acordos da Reunião Anterior
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">
+                    {previousMeetingAgreements.length} assumidos
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 font-mono truncate">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {previousMeetingAgreements.filter(a => a.status === 'CONCLUIDO').length} concluídos
+                  </span>
+                  <span>·</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-bold">
+                    {previousMeetingAgreements.filter(a => a.notes?.toLowerCase().includes('atrasad') || (a.status === 'EM_ANDAMENTO')).length} sob acompanhamento
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0 flex items-center gap-0.5">
+              <span>Evolução</span>
+              <ArrowRight className="w-3 h-3" />
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 4. BLOCO SINTÉTICO CENTRAL: CONCLUSÃO PRINCIPAL + 3 PRIORIDADES / COMBINADOS */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-2 overflow-hidden">
         {/* Lado Esquerdo (7 cols): Conclusão Sintética & Decisões Chave */}
-        <div className="md:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 flex flex-col justify-between overflow-hidden shadow-2xs">
-          <div className="flex-1 min-h-0 flex flex-col justify-between gap-2 overflow-hidden">
+        <div className="md:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 sm:p-3 flex flex-col justify-between overflow-hidden shadow-2xs">
+          <div className="flex-1 min-h-0 flex flex-col justify-between gap-1.5 overflow-hidden">
             <div>
-              <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                 <span>Conclusão Executiva Principal</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[9px] bg-emerald-500/10 px-1.5 py-0.2 rounded">
                   SÍNTESE HOMOLOGADA
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium leading-relaxed italic bg-slate-50 dark:bg-slate-950 p-2.5 rounded border border-slate-200 dark:border-slate-800">
+              <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed italic bg-slate-50 dark:bg-slate-950 p-2 rounded border border-slate-200 dark:border-slate-800 line-clamp-3">
                 "{panel.summary.headline}"
               </p>
             </div>
 
             {/* Destaque das Decisões ou Encaminhamentos */}
-            <div className="mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+            <div className="mt-0.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
                 Decisões & Encaminhamentos Centrais
               </span>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug line-clamp-2">
                 {panel.summary.keyDecisionsSummary}
               </p>
             </div>
 
             {/* Rastreabilidade e Governança */}
-            <div className="mt-1 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+            <div className="mt-0.5 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
               <span className="truncate">
                 Autor: <strong className="text-slate-700 dark:text-slate-300 font-mono">{panel.ownerName}</strong> · Versão: <strong className="text-slate-700 dark:text-slate-300 font-mono">{panel.version}</strong>
               </span>
@@ -239,31 +353,31 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
         </div>
 
         {/* Lado Direito (5 cols): As 3 Prioridades do Dia / Metas / Combinados */}
-        <div className="md:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 flex flex-col justify-between overflow-hidden shadow-2xs">
-          <div className="flex-1 min-h-0 flex flex-col justify-between gap-1.5 overflow-hidden">
-            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+        <div className="md:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 sm:p-3 flex flex-col justify-between overflow-hidden shadow-2xs">
+          <div className="flex-1 min-h-0 flex flex-col justify-between gap-1 overflow-hidden">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
               <span>
                 {panel.templateType === 'TPL-01' ? 'Top 3 Prioridades do Turno' :
                  panel.templateType === 'TPL-02' ? 'Prioridades da Próxima Semana' :
                  panel.templateType === 'TPL-03' ? 'Combinados & Próximos Passos' :
                  'Próximas Entregas Críticas'}
               </span>
-              <span className="text-xs font-mono font-bold text-[#134F9F] dark:text-blue-400">
+              <span className="text-[11px] font-mono font-bold text-[#134F9F] dark:text-blue-400">
                 {panel.summary.topPriorities.length} ITENS
               </span>
             </div>
 
-            <div className="flex-1 min-h-0 flex flex-col justify-between gap-1.5 overflow-hidden">
+            <div className="flex-1 min-h-0 flex flex-col justify-between gap-1 overflow-hidden">
               {panel.summary.topPriorities.slice(0, 3).map((item, index) => (
                 <div 
                   key={index}
-                  className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-start gap-2 hover:border-blue-500/40 transition-colors"
+                  className="p-1.5 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-start gap-1.5 hover:border-blue-500/40 transition-colors"
                 >
-                  <span className="w-5 h-5 rounded-full bg-[#134F9F]/10 text-[#134F9F] dark:text-blue-400 font-mono text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-4 h-4 rounded-full bg-[#134F9F]/10 text-[#134F9F] dark:text-blue-400 font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                     {index + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-snug line-clamp-2">
+                    <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-snug line-clamp-1">
                       {item}
                     </p>
                   </div>
@@ -274,7 +388,7 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
             <button
               type="button"
               onClick={onOpenDetailDrawer}
-              className="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 w-full flex items-center justify-between text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline cursor-pointer"
+              className="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 w-full flex items-center justify-between text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline cursor-pointer"
             >
               <span>Ver todas as seções e evidências ({panel.detail.sections.length} seções)</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -283,14 +397,14 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
         </div>
       </div>
 
-      {/* 4. FOOTER COMPACTO COM ATALHOS ANALÍTICOS */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 shadow-2xs shrink-0">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+      {/* 5. FOOTER COMPACTO COM ATALHOS ANALÍTICOS */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 shadow-2xs shrink-0">
+        <div className="flex items-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
           <span>Contrato Canônico HEAL Ops 1.1 · Resolução desktop sem rolagem vertical</span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {onBackToCatalog && (
             <button
               type="button"

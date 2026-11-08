@@ -11,7 +11,8 @@ import {
   PendingItem, 
   AuditSnapshot, 
   ArtifactPanel,
-  CurrentUser 
+  CurrentUser,
+  MeetingAgreement 
 } from '../types';
 
 export const CURRENT_TIMESTAMP_BRT = '06/11/2026 10:10 (Brasília)';
@@ -766,3 +767,382 @@ export const MOCK_INDICATORS_DATA = {
     ]
   }
 };
+
+export const MOCK_MEETING_AGREEMENTS: MeetingAgreement[] = [
+  // Acordos da Reunião Anterior (Daily de 05/11/2026)
+  {
+    agreementId: 'AGR-2026-101',
+    sourceArtifactId: 'art-daily-20261106',
+    sourceMeetingType: 'DAILY',
+    meetingReferenceDate: '05/11/2026',
+    isPreviousMeeting: true,
+    description: 'Expansão emergencial de tablespace do banco analítico em 100GB para evitar travamentos de relatórios',
+    type: 'tarefa',
+    responsibleId: 101,
+    responsibleName: 'Mariana Costa',
+    deadline: '05/11/2026 18:00',
+    priority: 'ALTA',
+    status: 'CONCLUIDO',
+    destination: 'GLPI',
+    relatedTicketId: 47990,
+    evidenceRefs: ['Tablespace ampliado em 100GB no Oracle ASM', 'Job CDC sincronizado sem latência'],
+    notes: 'Concluído no plantão vespertino com log anexado ao chamado #47990.',
+    createdAt: '05/11/2026 07:35',
+    confirmedAt: '05/11/2026 07:40',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '05/11/2026 17:10',
+    history: [
+      {
+        id: 'h-101-1',
+        timestamp: '05/11/2026 07:40',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado durante o Daily de 05/11',
+        newStatus: 'CONFIRMADO'
+      },
+      {
+        id: 'h-101-2',
+        timestamp: '05/11/2026 17:10',
+        author: 'Mariana Costa',
+        action: 'Conclusão registrada com evidência técnica',
+        previousStatus: 'EM_ANDAMENTO',
+        newStatus: 'CONCLUIDO',
+        notes: 'Espaço em disco validado e alarme de 85% normalizado.'
+      }
+    ]
+  },
+  {
+    agreementId: 'AGR-2026-102',
+    sourceArtifactId: 'art-daily-20261106',
+    sourceMeetingType: 'DAILY',
+    meetingReferenceDate: '05/11/2026',
+    isPreviousMeeting: true,
+    description: 'Substituição física de patch cable e transceiver SFP na UTI Adulto Leitos 09 a 14',
+    type: 'tarefa',
+    responsibleId: 102,
+    responsibleName: 'Carlos Eduardo',
+    deadline: '05/11/2026 16:00',
+    priority: 'P1_CRITICA',
+    status: 'CONCLUIDO',
+    destination: 'GLPI',
+    relatedTicketId: 48219,
+    evidenceRefs: ['Troca realizada no rack R04 leitos UTI', 'Ping sem perda de pacotes na VLAN 104'],
+    notes: 'Cabo ótico substituído. Telemetria ainda apresentou instabilidade residual no nó 12.',
+    createdAt: '05/11/2026 07:38',
+    confirmedAt: '05/11/2026 07:40',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '05/11/2026 15:45',
+    history: [
+      {
+        id: 'h-102-1',
+        timestamp: '05/11/2026 07:40',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado na reunião Daily',
+        newStatus: 'CONFIRMADO'
+      },
+      {
+        id: 'h-102-2',
+        timestamp: '05/11/2026 15:45',
+        author: 'Carlos Eduardo',
+        action: 'Concluído e testado no rack',
+        previousStatus: 'EM_ANDAMENTO',
+        newStatus: 'CONCLUIDO'
+      }
+    ]
+  },
+  {
+    agreementId: 'AGR-2026-103',
+    sourceArtifactId: 'art-daily-20261106',
+    sourceMeetingType: 'DAILY',
+    meetingReferenceDate: '05/11/2026',
+    isPreviousMeeting: true,
+    description: 'Remanejar impressora térmica de pulseiras reserva da administração para a Triagem do PA',
+    type: 'encaminhamento',
+    responsibleId: 105,
+    responsibleName: 'Lucas Mendes',
+    deadline: '05/11/2026 14:00',
+    priority: 'ALTA',
+    status: 'EM_ANDAMENTO',
+    destination: 'GESTAO_HEAL',
+    relatedTicketId: 48098,
+    evidenceRefs: ['Equipamento patrimônio HEAL-04412 localizado no almoxarifado'],
+    notes: 'ATRASADO: Lucas precisou atender emergência no Bloco Cirúrgico; impressora ainda aguarda transporte.',
+    createdAt: '05/11/2026 07:42',
+    confirmedAt: '05/11/2026 07:45',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '05/11/2026 18:30',
+    history: [
+      {
+        id: 'h-103-1',
+        timestamp: '05/11/2026 07:45',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado',
+        newStatus: 'CONFIRMADO'
+      },
+      {
+        id: 'h-103-2',
+        timestamp: '05/11/2026 18:30',
+        author: 'Lucas Mendes',
+        action: 'Prazo excedido devido a suporte prioritário no Centro Cirúrgico',
+        newStatus: 'EM_ANDAMENTO',
+        notes: 'Reprogramado para o turno matinal de hoje (06/11).'
+      }
+    ]
+  },
+  {
+    agreementId: 'AGR-2026-104',
+    sourceArtifactId: 'art-daily-20261106',
+    sourceMeetingType: 'DAILY',
+    meetingReferenceDate: '05/11/2026',
+    isPreviousMeeting: true,
+    description: 'Renegociar protocolo e SLA de retorno com fornecedor do storage PACS para laudos tomográficos',
+    type: 'compromisso',
+    responsibleId: 4801,
+    responsibleName: 'Dr. Roberto Silveira (Grupo 48)',
+    deadline: '06/11/2026 12:00',
+    priority: 'MEDIA',
+    status: 'EM_ANDAMENTO',
+    destination: 'GLPI',
+    relatedTicketId: 48204,
+    notes: 'Reunião agendada com o gerente de contas do fabricante para as 11h de hoje.',
+    createdAt: '05/11/2026 07:45',
+    confirmedAt: '05/11/2026 07:50',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '06/11/2026 08:30',
+    history: [
+      {
+        id: 'h-104-1',
+        timestamp: '05/11/2026 07:50',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado',
+        newStatus: 'CONFIRMADO'
+      }
+    ]
+  },
+
+  // Acordos da Reunião Atual (Daily de 06/11/2026)
+  {
+    agreementId: 'AGR-2026-105',
+    sourceArtifactId: 'art-daily-20261106',
+    sourceMeetingType: 'DAILY',
+    meetingReferenceDate: '06/11/2026',
+    isPreviousMeeting: false,
+    description: 'Normalizar enlace e telemetria cardíaca leitos 12-14 na UTI Geral com validação presencial',
+    type: 'tarefa',
+    responsibleId: 103,
+    responsibleName: 'Rafael Albuquerque',
+    deadline: 'Hoje às 11:00',
+    priority: 'P1_CRITICA',
+    status: 'CONFIRMADO',
+    destination: 'GLPI',
+    relatedTicketId: 48219,
+    evidenceRefs: ['Acompanhamento de telemetria na enfermagem central'],
+    notes: 'Prioridade número 1 do plantão aprovada pela gestão.',
+    createdAt: '06/11/2026 10:10',
+    confirmedAt: '06/11/2026 10:12',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '06/11/2026 10:12',
+    history: [
+      {
+        id: 'h-105-1',
+        timestamp: '06/11/2026 10:12',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo registrado e confirmado durante a reunião',
+        newStatus: 'CONFIRMADO'
+      }
+    ]
+  },
+  {
+    agreementId: 'AGR-2026-106',
+    sourceArtifactId: 'art-daily-20261106',
+    sourceMeetingType: 'DAILY',
+    meetingReferenceDate: '06/11/2026',
+    isPreviousMeeting: false,
+    description: 'Assunção nominal e teste do aprazamento medicamentoso da prescrição no Centro Obstétrico',
+    type: 'encaminhamento',
+    responsibleId: 101,
+    responsibleName: 'Mariana Costa',
+    deadline: 'Hoje às 09:30',
+    priority: 'ALTA',
+    status: 'CONFIRMADO',
+    destination: 'GLPI',
+    relatedTicketId: 48191,
+    notes: 'Chamado sem técnico nominal regularizado em conformidade com POP-TIN-017.',
+    createdAt: '06/11/2026 10:10',
+    confirmedAt: '06/11/2026 10:12',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '06/11/2026 10:12',
+    history: [
+      {
+        id: 'h-106-1',
+        timestamp: '06/11/2026 10:12',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado na Daily',
+        newStatus: 'CONFIRMADO'
+      }
+    ]
+  },
+  {
+    agreementId: 'AGR-2026-107',
+    sourceArtifactId: 'art-daily-20261106',
+    sourceMeetingType: 'DAILY',
+    meetingReferenceDate: '06/11/2026',
+    isPreviousMeeting: false,
+    description: 'Autorizar formalmente acionamento de suporte de garantia com fabricante do storage PACS (DEC-2026-88)',
+    type: 'decisao',
+    responsibleId: 1,
+    responsibleName: 'Henrique Vasconcelos',
+    deadline: 'Hoje às 12:00',
+    priority: 'ALTA',
+    status: 'CONFIRMADO',
+    destination: 'GESTAO_HEAL',
+    relatedTicketId: 48204,
+    notes: 'Decisão gerencial autônoma registrada na ata da reunião.',
+    createdAt: '06/11/2026 10:10',
+    confirmedAt: '06/11/2026 10:12',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '06/11/2026 10:12',
+    history: [
+      {
+        id: 'h-107-1',
+        timestamp: '06/11/2026 10:12',
+        author: 'Henrique Vasconcelos',
+        action: 'Decisão homologada na reunião',
+        newStatus: 'CONFIRMADO'
+      }
+    ]
+  },
+
+  // Acordos do Alinhamento Semanal (Semana 45 e Semana 44)
+  {
+    agreementId: 'AGR-2026-091',
+    sourceArtifactId: 'art-weekly-2026w45',
+    sourceMeetingType: 'ALINHAMENTO_SEMANAL',
+    meetingReferenceDate: 'Semana 44/2026',
+    isPreviousMeeting: true,
+    description: 'Auditoria de aderência documental às 4 regras POP-TIN-017 em 100% dos chamados fechados',
+    type: 'tarefa',
+    responsibleId: 4802,
+    responsibleName: 'Paula Nogueira',
+    deadline: '03/11/2026 17:00',
+    priority: 'MEDIA',
+    status: 'CONCLUIDO',
+    destination: 'GESTAO_HEAL',
+    evidenceRefs: ['Relatório de aderência 88.5% publicado'],
+    notes: 'Meta superada na Semana 44 com relatório auditável congelado.',
+    createdAt: '28/10/2026 14:00',
+    confirmedAt: '28/10/2026 14:10',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '03/11/2026 16:50',
+    history: [
+      {
+        id: 'h-091-1',
+        timestamp: '28/10/2026 14:10',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado no Alinhamento Semanal',
+        newStatus: 'CONFIRMADO'
+      },
+      {
+        id: 'h-091-2',
+        timestamp: '03/11/2026 16:50',
+        author: 'Paula Nogueira',
+        action: 'Conclusão registrada com taxa de 88.5%',
+        newStatus: 'CONCLUIDO'
+      }
+    ]
+  },
+  {
+    agreementId: 'AGR-2026-092',
+    sourceArtifactId: 'art-weekly-2026w45',
+    sourceMeetingType: 'ALINHAMENTO_SEMANAL',
+    meetingReferenceDate: 'Semana 44/2026',
+    isPreviousMeeting: true,
+    description: 'Elaborar plano de contingência para substituição de 5 switches de borda assistenciais obsoletos',
+    type: 'tarefa',
+    responsibleId: 102,
+    responsibleName: 'Carlos Eduardo',
+    deadline: '07/11/2026 18:00',
+    priority: 'ALTA',
+    status: 'EM_ANDAMENTO',
+    destination: 'GESTAO_HEAL',
+    notes: 'Levantamento físico de portas concluído. Orçamento em cotação com fornecedores.',
+    createdAt: '28/10/2026 14:15',
+    confirmedAt: '28/10/2026 14:20',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '04/11/2026 11:30',
+    history: [
+      {
+        id: 'h-092-1',
+        timestamp: '28/10/2026 14:20',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado no Alinhamento Semanal',
+        newStatus: 'CONFIRMADO'
+      }
+    ]
+  },
+  {
+    agreementId: 'AGR-2026-093',
+    sourceArtifactId: 'art-weekly-2026w45',
+    sourceMeetingType: 'ALINHAMENTO_SEMANAL',
+    meetingReferenceDate: 'Semana 44/2026',
+    isPreviousMeeting: true,
+    description: 'Treinamento das novas enfermeiras no leitor beira-leito e contingência de impressão térmica',
+    type: 'compromisso',
+    responsibleId: 105,
+    responsibleName: 'Lucas Mendes',
+    deadline: '04/11/2026 15:00',
+    priority: 'MEDIA',
+    status: 'EM_ANDAMENTO',
+    destination: 'GESTAO_HEAL',
+    notes: 'ATRASADO: 2 turmas concluídas; 1 turma pendente de liberação de escala pela chefia de enfermagem.',
+    createdAt: '28/10/2026 14:20',
+    confirmedAt: '28/10/2026 14:25',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '05/11/2026 09:00',
+    history: [
+      {
+        id: 'h-093-1',
+        timestamp: '28/10/2026 14:25',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado no Alinhamento Semanal',
+        newStatus: 'CONFIRMADO'
+      },
+      {
+        id: 'h-093-2',
+        timestamp: '05/11/2026 09:00',
+        author: 'Lucas Mendes',
+        action: 'Prazo estendido para 09/11',
+        newStatus: 'EM_ANDAMENTO',
+        notes: 'Aguardando confirmação de liberação de escala do Pronto Atendimento.'
+      }
+    ]
+  },
+  {
+    agreementId: 'AGR-2026-094',
+    sourceArtifactId: 'art-weekly-2026w45',
+    sourceMeetingType: 'ALINHAMENTO_SEMANAL',
+    meetingReferenceDate: 'Semana 45/2026',
+    isPreviousMeeting: false,
+    description: 'Reindexação e ajuste fino das tabelas de prescrição eletrônica do Tasy no domingo às 02h00',
+    type: 'compromisso',
+    responsibleId: 101,
+    responsibleName: 'Mariana Costa',
+    deadline: '08/11/2026 05:00',
+    priority: 'ALTA',
+    status: 'CONFIRMADO',
+    destination: 'GESTAO_HEAL',
+    notes: 'Janela de manutenção homologada com a diretoria médica.',
+    createdAt: '06/11/2026 10:10',
+    confirmedAt: '06/11/2026 10:12',
+    confirmedBy: 'Henrique Vasconcelos',
+    updatedAt: '06/11/2026 10:12',
+    history: [
+      {
+        id: 'h-094-1',
+        timestamp: '06/11/2026 10:12',
+        author: 'Henrique Vasconcelos',
+        action: 'Acordo confirmado no Alinhamento Semanal',
+        newStatus: 'CONFIRMADO'
+      }
+    ]
+  }
+];

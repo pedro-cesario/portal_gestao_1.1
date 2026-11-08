@@ -40,15 +40,22 @@ import {
   Calendar,
   X
 } from 'lucide-react';
-import { ChatMessage, ArtifactPanel, Ticket, Technician, PendingItem, ChatSession, PanelTemplateType } from '../../types';
+import { ChatMessage, ArtifactPanel, Ticket, Technician, PendingItem, ChatSession, PanelTemplateType, MeetingAgreement, AgreementStatus, CurrentUser } from '../../types';
 import { PresentationModeModal } from '../panels/PresentationModeModal';
 import { TemplateDetailDrawer } from '../panels/TemplateDetailDrawer';
 import { HumanReviewModal } from '../panels/HumanReviewModal';
+import { RegisterAgreementModal } from '../panels/RegisterAgreementModal';
+import { AgreementsTrackingDrawer } from '../panels/AgreementsTrackingDrawer';
+import { Handshake } from 'lucide-react';
 
 interface AgenteGerencialViewProps {
   tickets: Ticket[];
   technicians: Technician[];
   pendings: PendingItem[];
+  agreements?: MeetingAgreement[];
+  onSaveAgreement?: (newAgreement: MeetingAgreement) => void;
+  onUpdateAgreementStatus?: (agreementId: string, newStatus: AgreementStatus, note?: string) => void;
+  currentUser?: CurrentUser | null;
   onSaveArtifactToCatalog: (artifact: ArtifactPanel) => void;
   onNavigateToSavedPanels: () => void;
   initialPrompt?: string;
@@ -60,6 +67,10 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
   tickets,
   technicians,
   pendings,
+  agreements = [],
+  onSaveAgreement = () => {},
+  onUpdateAgreementStatus = () => {},
+  currentUser,
   onSaveArtifactToCatalog,
   onNavigateToSavedPanels,
   initialPrompt,
@@ -195,6 +206,8 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
   const [isPresentationOpen, setIsPresentationOpen] = useState<boolean>(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState<boolean>(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [isRegisterAgreementOpen, setIsRegisterAgreementOpen] = useState<boolean>(false);
+  const [isAgreementsTrackingOpen, setIsAgreementsTrackingOpen] = useState<boolean>(false);
 
   // Modal / Gaveta de Seleção de Parâmetros Rápidos
   const [activeParamTemplate, setActiveParamTemplate] = useState<PanelTemplateType | null>(null);
@@ -777,7 +790,88 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
         setIsProcessing(false);
       }, 1100);
 
-    // 5. RESPOSTA PADRÃO OPERACIONAL (CONSULTA GERAL GLPI)
+    // 5. COMANDOS DE ACORDOS E COMPROMISSOS (REQUISITO 8)
+    } else if (lower.includes('registre o que') || lower.includes('acordado') || lower.includes('registrar acordo')) {
+      setProcessingStatus('Estruturando propostas de acordos a partir das 3 prioridades da Daily...');
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'assistant',
+          content: `Com base nas deliberações da reunião de hoje (06/11), compilei a seguinte proposta estruturada de acordos para sua confirmação:\n\n1. **[Tarefa]** Normalizar enlace e telemetria cardíaca leitos 12-14 na UTI Geral\n   • **Responsável**: Rafael Albuquerque\n   • **Prazo**: Hoje às 11:00 | **Prioridade**: P1 Crítica\n   • **Destino**: GLPI (Chamado #48219)\n\n2. **[Encaminhamento]** Assunção nominal e teste de timeout do aprazamento no Centro Obstétrico\n   • **Responsável**: Mariana Costa\n   • **Prazo**: Hoje às 09:30 | **Prioridade**: Alta\n   • **Destino**: GLPI (Chamado #48191)\n\n3. **[Decisão]** Autorizar acionamento de suporte com garantia técnica do fabricante do storage PACS (DEC-2026-88)\n   • **Responsável**: Henrique Vasconcelos\n   • **Prazo**: Hoje às 12:00 | **Prioridade**: Alta\n   • **Destino**: Gestão HEAL (Decisão Autônoma)\n\n⚠️ *Regra de Governança: O registro definitivo depende de confirmação explícita do gestor. Nenhuma decisão gerencial é contabilizada automaticamente como atualização do GLPI.*`,
+          timestamp: '10:10 (Brasília)',
+          pathType: 'AGY',
+          sources: ['Deliberações da Daily 06/11', 'Diretrizes POP-TIN-017', 'Catálogo de Governança HEAL'],
+          analyticalDetail: 'Os 3 acordos propostos já estão preparados com vínculos para GLPI e Gestão HEAL. Você pode confirmá-los ou registrar novos acordos adicionais a qualquer momento.'
+        };
+        appendMessageToActiveSession(botMsg, 'Registro de Acordos da Daily');
+        setIsProcessing(false);
+      }, 700);
+
+    } else if (lower.includes('assumimos ontem') || lower.includes('compromissos assumimos') || lower.includes('acordos de ontem') || lower.includes('reunião anterior')) {
+      setProcessingStatus('Consultando acordos registrados no Daily de ontem (05/11)...');
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'assistant',
+          content: `Aqui está o status dos **4 acordos firmados na reunião Daily de ontem (05/11)**:\n\n✓ **AGR-2026-101 [Concluído]**: Expansão emergencial de tablespace do banco analítico em 100GB.\n   • Responsável: Mariana Costa · Concluído às 17h10 com log anexado (#47990).\n\n✓ **AGR-2026-102 [Concluído]**: Substituição física de patch cable e transceiver SFP na UTI Adulto.\n   • Responsável: Carlos Eduardo · Concluído às 15h45 no rack R04 (#48219).\n\n⚠️ **AGR-2026-103 [Atrasado]**: Remanejamento de impressora térmica reserva da administração para a Triagem PA.\n   • Responsável: Lucas Mendes · Prazo era ontem 14:00 (Lucas foi acionado para emergência cirúrgica; reprogramado para hoje).\n\n🔄 **AGR-2026-104 [Em Andamento]**: Renegociação de protocolo e SLA com fabricante do storage PACS.\n   • Responsável: Dr. Roberto Silveira (Grupo 48) · Reunião agendada para hoje às 11:00.`,
+          timestamp: '10:10 (Brasília)',
+          pathType: 'FAST_PATH',
+          sources: ['Banco de Governança de Acordos HEAL', 'Ata Daily 05/11'],
+          analyticalDetail: 'Taxa de conclusão dos acordos de ontem: 50% concluídos no prazo, 25% reprogramados por emergência cirúrgica e 25% com agenda externa de fornecedor.'
+        };
+        appendMessageToActiveSession(botMsg, 'Compromissos de Ontem');
+        setIsProcessing(false);
+      }, 600);
+
+    } else if (lower.includes('atrasad') || lower.includes('acordos estão atrasados') || lower.includes('acordos atrasados')) {
+      setProcessingStatus('Varrendo acordos com prazo expirado...');
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'assistant',
+          content: `Identifiquei **2 acordos com prazo expirado (atrasados)** sob acompanhamento:\n\n1. ⚠️ **AGR-2026-103 — Impressora de contingência para Triagem PA**\n   • **Responsável**: Lucas Mendes\n   • **Prazo original**: 05/11/2026 às 14:00 (Atraso de ~20 horas)\n   • **Motivo**: O analista foi deslocado para suporte emergencial no Centro Cirúrgico.\n   • **Recomendação**: Confirmar a entrega física hoje antes das 11:30.\n\n2. ⚠️ **AGR-2026-093 — Treinamento no leitor beira-leito e contingência**\n   • **Responsável**: Lucas Mendes\n   • **Prazo original**: 04/11/2026 às 15:00\n   • **Motivo**: 2 turmas concluídas; 1 turma aguarda liberação de escala pela coordenação de enfermagem.\n   • **Recomendação**: Reprogramar para o início da próxima semana (09/11).`,
+          timestamp: '10:10 (Brasília)',
+          pathType: 'FAST_PATH',
+          sources: ['Acompanhamento de Compromissos HEAL', 'Histórico de Entregas'],
+          analyticalDetail: 'Nenhum dos atrasos gerou incidente de gravidade assistencial P1. Ambos estão mapeados e em processo de regularização com os respectivos setores.'
+        };
+        appendMessageToActiveSession(botMsg, 'Acordos Atrasados');
+        setIsProcessing(false);
+      }, 550);
+
+    } else if (lower.includes('pendente') && (lower.includes('alinhamento') || lower.includes('semanal'))) {
+      setProcessingStatus('Verificando compromissos pendentes do Alinhamento Semanal...');
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'assistant',
+          content: `Do **Alinhamento Semanal (Semana 44/45)**, temos os seguintes compromissos pendentes de conclusão:\n\n• **AGR-2026-092 [Em Andamento]**: Plano de contingência e cotação para substituição dos 5 switches de borda obsoletos.\n  • Responsável: Carlos Eduardo · Prazo: 07/11 às 18:00.\n\n• **AGR-2026-094 [Confirmado]**: Reindexação e ajuste fino das tabelas de prescrição eletrônica no Oracle Tasy.\n  • Responsável: Mariana Costa · Janela homologada: Domingo das 02h00 às 05h00.\n\n• **AGR-2026-093 [Atrasado]**: Treinamento da última turma de enfermeiras no leitor beira-leito.\n  • Responsável: Lucas Mendes · Prazo em renegociação.`,
+          timestamp: '10:10 (Brasília)',
+          pathType: 'FAST_PATH',
+          sources: ['Alinhamento Semanal 44/45', 'Governança HEAL'],
+          analyticalDetail: 'Todos os 3 compromissos possuem planos de ação ativos e nenhum possui impedimento orçamentário não resolvido.'
+        };
+        appendMessageToActiveSession(botMsg, 'Pendências do Alinhamento');
+        setIsProcessing(false);
+      }, 600);
+
+    } else if (lower.includes('quem ficou responsável') || lower.includes('responsável por') || lower.includes('responsaveis')) {
+      setProcessingStatus('Mapeando matriz nominal de responsabilidades ativas...');
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'assistant',
+          content: `Aqui está a atribuição nominal de responsabilidades definida nas últimas reuniões:\n\n• **Telemetria e Redes da UTI Geral**: Rafael Albuquerque (Suporte UTI) com apoio de Carlos Eduardo (Infraestrutura).\n• **Prescrição Eletrônica e Banco Tasy**: Mariana Costa (Sistemas Clínicos) com apoio de Fernanda Lima.\n• **Periféricos, Leitores e Impressoras do PA**: Lucas Mendes (Suporte Presencial N1/N2).\n• **Storage PACS & Interface de Imagens CDI**: Henrique Vasconcelos (Gestor TI) e Dr. Roberto Silveira (Grupo 48).\n• **Auditoria de Qualidade Documental (POP-TIN-017)**: Paula Nogueira (Processos e Auditoria).`,
+          timestamp: '10:10 (Brasília)',
+          pathType: 'FAST_PATH',
+          sources: ['Matriz RACI HEAL Ops', 'Atas das Reuniões Daily e Semanal'],
+          analyticalDetail: 'A matriz de responsabilidades está 100% aderente ao Subitem 3.1 da norma POP-TIN-017, garantindo atribuição nominal sem chamados órfãos em setores assistenciais.'
+        };
+        appendMessageToActiveSession(botMsg, 'Matriz de Responsáveis');
+        setIsProcessing(false);
+      }, 500);
+
+    // 6. RESPOSTA PADRÃO OPERACIONAL (CONSULTA GERAL GLPI)
     } else {
       setProcessingStatus('Processando consulta com réplica GLPI e regras POP-TIN-017...');
       setTimeout(() => {
@@ -1381,9 +1475,13 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
       {isPresentationOpen && modalArtifact && (
         <PresentationModeModal
           panel={modalArtifact}
+          agreements={agreements}
           isOpen={isPresentationOpen}
           onClose={() => setIsPresentationOpen(false)}
           onOpenTicketById={onOpenTicketById}
+          onOpenRegisterAgreement={() => setIsRegisterAgreementOpen(true)}
+          onOpenAgreementsTracking={() => setIsAgreementsTrackingOpen(true)}
+          onUpdateAgreementStatus={onUpdateAgreementStatus}
         />
       )}
 
@@ -1411,7 +1509,39 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
           isOpen={isReviewModalOpen}
           onClose={() => setIsReviewModalOpen(false)}
           panel={modalArtifact}
+          currentUser={currentUser}
           onSaveReviewedPanel={handleSaveReviewedFromModal}
+        />
+      )}
+
+      {/* MODAL DE REGISTRO DE ACORDO (+ Registrar acordo) */}
+      {isRegisterAgreementOpen && (
+        <RegisterAgreementModal
+          isOpen={isRegisterAgreementOpen}
+          onClose={() => setIsRegisterAgreementOpen(false)}
+          sourceMeetingType={modalArtifact?.templateType === 'TPL-02' ? 'ALINHAMENTO_SEMANAL' : 'DAILY'}
+          sourceArtifactId={modalArtifact?.id}
+          meetingReferenceDate={modalArtifact?.referenceDate || '06/11/2026'}
+          currentUser={currentUser}
+          onSaveAgreement={onSaveAgreement}
+        />
+      )}
+
+      {/* DRAWER ANALÍTICO DE ACOMPANHAMENTO DE ACORDOS */}
+      {isAgreementsTrackingOpen && (
+        <AgreementsTrackingDrawer
+          isOpen={isAgreementsTrackingOpen}
+          onClose={() => setIsAgreementsTrackingOpen(false)}
+          agreements={agreements}
+          sourceMeetingType={modalArtifact?.templateType === 'TPL-02' ? 'ALINHAMENTO_SEMANAL' : 'DAILY'}
+          meetingReferenceDate={modalArtifact?.referenceDate || '06/11/2026'}
+          onOpenRegisterModal={() => {
+            setIsAgreementsTrackingOpen(false);
+            setIsRegisterAgreementOpen(true);
+          }}
+          onUpdateAgreementStatus={onUpdateAgreementStatus}
+          onOpenTicketById={onOpenTicketById}
+          currentUser={currentUser}
         />
       )}
     </div>

@@ -30,15 +30,20 @@ import {
   Calendar,
   Layers
 } from 'lucide-react';
-import { ArtifactPanel, ArtifactSectionItem } from '../../types';
+import { ArtifactPanel, ArtifactSectionItem, MeetingAgreement, AgreementStatus } from '../../types';
 import { EvidenceBadge } from '../common/EvidenceBadge';
+import { Handshake, Plus, RotateCcw } from 'lucide-react';
 
 interface PresentationModeModalProps {
   panel: ArtifactPanel;
   isOpen: boolean;
   onClose: () => void;
   onOpenTicketById?: (ticketId: number) => void;
-  onOpenDetailDrawer?: (item: ArtifactSectionItem) => void;
+  onOpenDetailDrawer?: (item?: ArtifactSectionItem) => void;
+  agreements?: MeetingAgreement[];
+  onOpenRegisterAgreement?: () => void;
+  onOpenAgreementsTracking?: () => void;
+  onUpdateAgreementStatus?: (agreementId: string, newStatus: AgreementStatus, note?: string) => void;
 }
 
 export const PresentationModeModal: React.FC<PresentationModeModalProps> = ({
@@ -46,7 +51,11 @@ export const PresentationModeModal: React.FC<PresentationModeModalProps> = ({
   isOpen,
   onClose,
   onOpenTicketById,
-  onOpenDetailDrawer
+  onOpenDetailDrawer,
+  agreements = [],
+  onOpenRegisterAgreement,
+  onOpenAgreementsTracking,
+  onUpdateAgreementStatus
 }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -141,6 +150,19 @@ export const PresentationModeModal: React.FC<PresentationModeModalProps> = ({
 
         {/* Ações da Apresentação */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* AÇÃO DISCRETA REQUISITADA: + Registrar acordo */}
+          {(panel.templateType === 'TPL-01' || panel.templateType === 'TPL-02') && onOpenRegisterAgreement && (
+            <button
+              type="button"
+              onClick={onOpenRegisterAgreement}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer shrink-0"
+              title="Registrar Acordo da Reunião sem sair da Apresentação"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Registrar acordo</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setIsDarkTheme(!isDarkTheme)}
@@ -491,42 +513,104 @@ export const PresentationModeModal: React.FC<PresentationModeModalProps> = ({
               </div>
 
               {/* Decisões e Encaminhamentos (5 colunas) */}
-              <div className={`lg:col-span-5 p-6 rounded-2xl border flex flex-col justify-between ${
+              <div className={`lg:col-span-5 p-6 rounded-2xl border flex flex-col justify-between overflow-hidden ${
                 isDarkTheme ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
               }`}>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-500 block mb-3">
-                    Decisões & Encaminhamentos Institucionais
-                  </span>
+                <div className="flex-1 min-h-0 flex flex-col justify-between gap-3 overflow-hidden">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-500">
+                      Decisões & Acordos de Reunião
+                    </span>
+                    {(panel.templateType === 'TPL-01' || panel.templateType === 'TPL-02') && onOpenRegisterAgreement && (
+                      <button
+                        type="button"
+                        onClick={onOpenRegisterAgreement}
+                        className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Novo Acordo</span>
+                      </button>
+                    )}
+                  </div>
 
-                  <div className="space-y-3">
-                    <div className={`p-4 rounded-xl border ${
-                      isDarkTheme ? 'bg-blue-950/30 border-blue-900/50 text-blue-200' : 'bg-blue-50 border-blue-200 text-blue-950'
-                    }`}>
-                      <strong className="block text-xs font-bold mb-1">
-                        Encaminhamento Principal:
-                      </strong>
-                      <p className="text-xs leading-relaxed font-medium">
-                        {panel.summary.keyDecisionsSummary}
-                      </p>
-                    </div>
+                  {/* Resumo Sintético de Acordos e Encaminhamentos */}
+                  {(panel.templateType === 'TPL-01' || panel.templateType === 'TPL-02') && (
+                    <div className="space-y-2">
+                      <div 
+                        onClick={onOpenAgreementsTracking}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all hover:border-blue-500/50 ${
+                          isDarkTheme ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-xs font-bold mb-1">
+                          <span className="flex items-center gap-1.5">
+                            <Handshake className="w-3.5 h-3.5 text-[#134F9F] dark:text-blue-400" />
+                            <span>Acordos e Encaminhamentos</span>
+                          </span>
+                          <span className="font-mono text-[#134F9F] dark:text-blue-400">
+                            {agreements.filter(a => a.sourceMeetingType === (panel.templateType === 'TPL-01' ? 'DAILY' : 'ALINHAMENTO_SEMANAL') && !a.isPreviousMeeting).length} registrados
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1 text-[11px] text-center font-mono pt-1">
+                          <span className="p-1 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
+                            {agreements.filter(a => a.sourceMeetingType === (panel.templateType === 'TPL-01' ? 'DAILY' : 'ALINHAMENTO_SEMANAL') && !a.isPreviousMeeting && a.status === 'CONCLUIDO').length} concl.
+                          </span>
+                          <span className="p-1 rounded bg-blue-500/10 text-[#134F9F] dark:text-blue-300 font-bold">
+                            {agreements.filter(a => a.sourceMeetingType === (panel.templateType === 'TPL-01' ? 'DAILY' : 'ALINHAMENTO_SEMANAL') && !a.isPreviousMeeting && a.status !== 'CONCLUIDO').length} pend.
+                          </span>
+                          <span className="p-1 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">
+                            {agreements.filter(a => a.sourceMeetingType === (panel.templateType === 'TPL-01' ? 'DAILY' : 'ALINHAMENTO_SEMANAL') && !a.isPreviousMeeting && a.notes?.toLowerCase().includes('atrasad')).length} atras.
+                          </span>
+                        </div>
+                      </div>
 
-                    <div className={`p-4 rounded-xl border space-y-1.5 ${
-                      isDarkTheme ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'
-                    }`}>
-                      <strong className="block text-xs font-bold">
-                        Revisão Humana:
-                      </strong>
-                      <p className="text-xs opacity-80 leading-relaxed">
-                        Revisado e validado por <strong>{panel.ownerName}</strong> em {panel.generationDate}.
-                      </p>
+                      {/* Acordos da Reunião Anterior */}
+                      <div 
+                        onClick={onOpenAgreementsTracking}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all hover:border-indigo-500/50 ${
+                          isDarkTheme ? 'bg-indigo-950/20 border-indigo-900/40 text-indigo-200' : 'bg-indigo-50/50 border-indigo-200 text-indigo-950'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-xs font-bold mb-1">
+                          <span className="flex items-center gap-1.5">
+                            <RotateCcw className="w-3.5 h-3.5 text-indigo-500" />
+                            <span>Acordos da Reunião Anterior</span>
+                          </span>
+                          <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                            {agreements.filter(a => a.sourceMeetingType === (panel.templateType === 'TPL-01' ? 'DAILY' : 'ALINHAMENTO_SEMANAL') && a.isPreviousMeeting).length} assumidos
+                          </span>
+                        </div>
+                        <p className="text-[11px] opacity-80 leading-snug truncate">
+                          {agreements.filter(a => a.sourceMeetingType === (panel.templateType === 'TPL-01' ? 'DAILY' : 'ALINHAMENTO_SEMANAL') && a.isPreviousMeeting && a.status === 'CONCLUIDO').length} concluídos · {agreements.filter(a => a.sourceMeetingType === (panel.templateType === 'TPL-01' ? 'DAILY' : 'ALINHAMENTO_SEMANAL') && a.isPreviousMeeting && a.notes?.toLowerCase().includes('atrasad')).length} atrasados sob renegociação
+                        </p>
+                      </div>
                     </div>
+                  )}
+
+                  {/* Encaminhamento Principal da Diretoria */}
+                  <div className={`p-3 rounded-xl border ${
+                    isDarkTheme ? 'bg-blue-950/30 border-blue-900/50 text-blue-200' : 'bg-blue-50 border-blue-200 text-blue-950'
+                  }`}>
+                    <strong className="block text-xs font-bold mb-0.5">
+                      Encaminhamento Central Homologado:
+                    </strong>
+                    <p className="text-xs leading-relaxed font-medium line-clamp-2">
+                      {panel.summary.keyDecisionsSummary}
+                    </p>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-black/10 dark:border-white/10 flex items-center justify-between text-xs opacity-60">
                   <span>Validade: 24 horas</span>
-                  <span className="font-mono text-emerald-500 font-bold">Pronto para Encerramento</span>
+                  {onOpenAgreementsTracking && (
+                    <button
+                      type="button"
+                      onClick={onOpenAgreementsTracking}
+                      className="font-mono text-emerald-500 font-bold hover:underline cursor-pointer"
+                    >
+                      Ver Todos os Acordos →
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

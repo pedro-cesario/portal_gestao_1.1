@@ -201,6 +201,53 @@ export interface ArtifactPanel {
     evidenceLogs?: { timestamp: string; source: string; entry: string }[];
   };
   humanReview?: ArtifactHumanReview;
+  agreementsSummary?: {
+    total: number;
+    completed: number;
+    pending: number;
+    overdue: number;
+    renegotiated?: number;
+  };
+}
+
+export type AgreementType = 'decisao' | 'tarefa' | 'encaminhamento' | 'compromisso';
+export type AgreementStatus = 'RASCUNHO' | 'AGUARDANDO_CONFIRMACAO' | 'CONFIRMADO' | 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
+export type AgreementDestination = 'GLPI' | 'GESTAO_HEAL';
+export type AgreementPriority = 'P1_CRITICA' | 'ALTA' | 'MEDIA' | 'BAIXA';
+export type SourceMeetingType = 'DAILY' | 'ALINHAMENTO_SEMANAL' | 'REUNIAO_GERENCIAL';
+
+export interface AgreementHistoryItem {
+  id: string;
+  timestamp: string;
+  author: string;
+  action: string;
+  notes?: string;
+  previousStatus?: AgreementStatus;
+  newStatus?: AgreementStatus;
+}
+
+export interface MeetingAgreement {
+  agreementId: string;
+  sourceArtifactId?: string;
+  sourceMeetingType: SourceMeetingType;
+  meetingReferenceDate?: string; // ex: '05/11/2026' ou 'Semana 44/2026'
+  isPreviousMeeting?: boolean; // indica se é da reunião anterior
+  description: string;
+  type: AgreementType;
+  responsibleId?: number;
+  responsibleName: string;
+  deadline: string;
+  priority: AgreementPriority;
+  status: AgreementStatus;
+  destination: AgreementDestination;
+  relatedTicketId?: number;
+  evidenceRefs?: string[];
+  notes?: string;
+  createdAt: string;
+  confirmedAt?: string;
+  confirmedBy?: string;
+  updatedAt: string;
+  history: AgreementHistoryItem[];
 }
 
 export interface ChatMessage {

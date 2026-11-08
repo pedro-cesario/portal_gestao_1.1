@@ -16,7 +16,9 @@ import {
   ArtifactPanel,
   PopSpecification,
   OperationalCalculationSettings,
-  NavMenuItemConfig
+  NavMenuItemConfig,
+  MeetingAgreement,
+  AgreementStatus
 } from './types';
 import { 
   MOCK_USERS, 
@@ -24,7 +26,8 @@ import {
   MOCK_TECHNICIANS, 
   MOCK_PENDINGS, 
   MOCK_AUDITS, 
-  MOCK_SAVED_PANELS 
+  MOCK_SAVED_PANELS,
+  MOCK_MEETING_AGREEMENTS
 } from './data/mockData';
 import {
   DEFAULT_POP_SPEC,
@@ -76,6 +79,7 @@ export default function App() {
   const [pendings, setPendings] = useState<PendingItem[]>(MOCK_PENDINGS);
   const [audits, setAudits] = useState<AuditSnapshot[]>(MOCK_AUDITS);
   const [savedPanels, setSavedPanels] = useState<ArtifactPanel[]>(MOCK_SAVED_PANELS);
+  const [agreements, setAgreements] = useState<MeetingAgreement[]>(MOCK_MEETING_AGREEMENTS);
 
   // Parâmetros de Governança, Regras POP-TIN-017 e Fórmulas de Cálculo
   const [popSpec, setPopSpec] = useState<PopSpecification>(DEFAULT_POP_SPEC);
@@ -191,6 +195,40 @@ export default function App() {
   // Atualizar painel existente (ex: após revisão humana)
   const handleUpdatePanel = (updatedPanel: ArtifactPanel) => {
     setSavedPanels(prev => prev.map(p => p.id === updatedPanel.id ? updatedPanel : p));
+  };
+
+  // Registrar novo acordo assumido durante reunião Daily ou Alinhamento
+  const handleSaveAgreement = (newAgreement: MeetingAgreement) => {
+    setAgreements(prev => [newAgreement, ...prev]);
+  };
+
+  // Atualizar status e auditoria de acordo existente
+  const handleUpdateAgreementStatus = (agreementId: string, newStatus: AgreementStatus, note?: string) => {
+    setAgreements(prev => prev.map(a => {
+      if (a.agreementId === agreementId) {
+        const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const authorName = currentUser?.name || 'Henrique Vasconcelos';
+        return {
+          ...a,
+          status: newStatus,
+          updatedAt: nowTimestamp,
+          notes: note || a.notes,
+          history: [
+            ...a.history,
+            {
+              id: `h-${Date.now()}`,
+              timestamp: nowTimestamp,
+              author: authorName,
+              action: `Status alterado para ${newStatus}`,
+              previousStatus: a.status,
+              newStatus,
+              notes: note
+            }
+          ]
+        };
+      }
+      return a;
+    }));
   };
 
   // Disparo de Auditoria Manual
@@ -323,6 +361,10 @@ export default function App() {
               tickets={tickets}
               technicians={technicians}
               pendings={pendings}
+              agreements={agreements}
+              onSaveAgreement={handleSaveAgreement}
+              onUpdateAgreementStatus={handleUpdateAgreementStatus}
+              currentUser={currentUser}
               onSaveArtifactToCatalog={handleSaveArtifact}
               onNavigateToSavedPanels={() => handleRouteChange('daily-paineis')}
               initialPrompt={agenteInitialPrompt}
@@ -334,6 +376,10 @@ export default function App() {
           {currentRoute === 'daily-paineis' && (
             <DailyAndPanelsView
               savedPanels={savedPanels}
+              agreements={agreements}
+              onSaveAgreement={handleSaveAgreement}
+              onUpdateAgreementStatus={handleUpdateAgreementStatus}
+              currentUser={currentUser}
               onNavigateToAgente={(prompt) => prompt ? handleOpenAgenteWithPrompt(prompt) : handleRouteChange('agente-gerencial')}
               onOpenTicketById={handleNavigateToTicket}
               onUpdatePanel={handleUpdatePanel}
