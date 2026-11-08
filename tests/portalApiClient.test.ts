@@ -66,3 +66,25 @@ test('non-JSON responses cannot silently become Portal DTOs', async () => {
   });
   await assert.rejects(api.getOverview(), PortalApiError);
 });
+
+
+test('validated ticket facade checks backend schema before UI consumption', async () => {
+  const payload = {
+    items: [{
+      id: 970001, titulo: '[SINTÉTICO] Teste', status: 2, prioridade: 4,
+      data_abertura: '2026-11-08T10:00:00-03:00', origem_dados: 'SYNTHETIC_DEMO',
+    }],
+    total: 1, page: 1, page_size: 6, has_next: false,
+    source: 'SYNTHETIC_DEMO', generated_at: '2026-11-08T13:00:00Z', limitations: [],
+  };
+  const api = createPortalApiClient({
+    enabled: true,
+    fetchImpl: (async () => new Response(JSON.stringify(payload), {
+      status: 200, headers: { 'content-type': 'application/json' },
+    })) as typeof fetch,
+  });
+  const page = await api.getValidatedTicketPage({ page: 1, page_size: 6 });
+  assert.equal(page.items[0].id, 970001);
+  payload.items[0].status = 99;
+  await assert.rejects(api.getValidatedTicketPage({ page: 1, page_size: 6 }));
+});
