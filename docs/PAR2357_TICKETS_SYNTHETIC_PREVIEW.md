@@ -105,3 +105,13 @@ O harness inline, limitado aos testes Python sintéticos, já validou o contrato
 - GitHub Actions execução **42456298375**, commit `cc22a1e7a41edca8d70d0b61dca81d573ac664ee`: **5 passed (4.4 s)** no Chromium, type-check PASS, testes TS PASS, build padrão PASS, build com flags ligadas PASS.
 
 **Status:** interface e fluxo de contrato mockado homologados no navegador; autenticação e leitura sintética comprovadas em harness ASGI com SQLite descartável; resta homologação integrada browser → FastAPI sintético real sem mock, e verificação do comportamento threadpool operacional fora da limitação de sandbox.
+
+## Fase 4.2C — contrato de sessão do backend validado (08/11/2026)
+
+Auditoria do MCP `heal20-17795d4cc59543e0b5d77019fbfaf9d5` verificou que `GET /v1/auth/me` retorna um objeto direto com `status=authenticated`, `user_id`, `username`, `full_name`, `roles`, `permissions`, `csrf_token`, `must_change_password` e `auth_transport`, protegido por sessão validada no backend. `name`/identidade mockada do frontend não são esse contrato.
+
+O módulo `src/integrations/par2357Dtos.ts` agora inclui `parsePar2357Session`: para as prévias de navegador, aceita somente `status=authenticated`, ID, username/full name não vazios, arrays de roles/permissões, `READ_OPERATIONAL` ou `ADMIN`, `must_change_password=false` e `auth_transport=cookie`. Retorno HTTP 200 não é evidência suficiente sem validação do payload. `portalApiClient` expõe `getValidatedCurrentUser`; as três prévias verificam essa sessão antes de qualquer leitura.
+
+CI `42457187883`, commit `74fa24a0e1c4c000e7bce17e453050cc731de118`: SUCCESS, **6/6 testes Playwright Chromium** incluindo rejeição de `/v1/auth/me` HTTP 200 com payload incompleto. TypeScript, testes DTO e builds padrão/flags opt-in aprovados.
+
+Auditoria de viabilidade MCP `heal20-ea46879ac16b429fa5b600384bc8e590`: Matrix contém backend e `frontend/dist`, mas não Chromium/Playwright/tsx nem fonte web; não há launcher Uvicorn reproduzível comprovado. GitHub CI dispõe de frontend e Chromium, mas não do backend FastAPI privado. **O teste browser→FastAPI real sem mocks permanece PENDENTE** até prover backend e frontend em ambiente E2E efêmero e autenticado, sem dados reais. Não alegar homologação integrada por causa de Playwright mockado.
