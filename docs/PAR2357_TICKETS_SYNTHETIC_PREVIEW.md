@@ -88,3 +88,20 @@ Padrão **desligado**. A Visão Geral original `OverviewView` permanece intacta.
 No worker isolado, rota assíncrona mínima FastAPI/ASGI passou, rota síncrona mínima expirou em `anyio.to_thread.run_sync`. Em diagnóstico separado, uma thread Python simples executou e encerrou normalmente, o que **não prova indisponibilidade geral de threads**. `NoNewPrivs=1` e seccomp ativo são observados, mas nenhuma causalidade foi confirmada.
 
 O harness inline, limitado aos testes Python sintéticos, já validou o contrato HTTP, mas **não** homologou threadpool real, navegador, login, sessão, ou operação produtiva. Corrigir ou reproduzir a falha sem mexer na sandbox/serviços e, então, validar a cadeia de autenticação sintética em banco descartável antes do próximo gate de release.
+
+## Fase 4.1 / 4.2 — Evidências em 08/11/2026
+
+### Login e logout com banco descartável
+
+- O teste `backend/contracts/test_auth_cookie_ephemeral.py` foi corrigido por tarefa MCP `heal20-d601e56b953248c39e77f585fbf014fe`, após manter CSRF intacto e enviar `Origin` permitido e `X-CSRF-Token` da sessão fictícia.
+- Execução na sandbox de desenvolvimento com diretório temporário permitido: `1 passed` (exit 0). Respostas verificadas: health 200, login 200, /v1/auth/me 200, /v1/tickets 200, logout 200, /v1/auth/me após logout 401.
+- **Limite de auditoria:** regressão independente sob política somente leitura: 15 testes de contrato passaram, mas o teste que cria SQLite temporário falhou no mkdir com `Read-only file system`. Tentativas de liberar escrita só em `.tmp/par2357_auth_harness/` foram bloqueadas pela política MCP (`blocked_scope:unsafe_scope_flag`); não houve execução nem bypass. O `1 passed` acima é evidência do worker com escrita isolada, não validação independente de toda a regressão em readonly.
+
+### Navegador Chromium + Playwright com API inteiramente simulada
+
+- Configuração `playwright.synthetic.config.ts` liga as três flags opt-in exclusivamente no servidor de teste.
+- `tests/browser/par2357.synthetic.spec.ts` intercepta `/v1/**` no navegador com respostas sintéticas e verifica Visão Geral, Chamados, Indicadores, bloqueio de 401 e rejeição de origem não sintética. **Não acessa GLPI/TASY nem backend HTTP real.**
+- CI `.github/workflows/par2357-preview-checks.yml` agora contém job `browser` e job `checks`; browser baixa Chromium isolado e retém artefatos de falha.
+- GitHub Actions execução **42456298375**, commit `cc22a1e7a41edca8d70d0b61dca81d573ac664ee`: **5 passed (4.4 s)** no Chromium, type-check PASS, testes TS PASS, build padrão PASS, build com flags ligadas PASS.
+
+**Status:** interface e fluxo de contrato mockado homologados no navegador; autenticação e leitura sintética comprovadas em harness ASGI com SQLite descartável; resta homologação integrada browser → FastAPI sintético real sem mock, e verificação do comportamento threadpool operacional fora da limitação de sandbox.
