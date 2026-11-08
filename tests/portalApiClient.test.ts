@@ -39,9 +39,9 @@ test('invalid page size and ticket IDs are rejected before any call', async () =
       throw new Error('unexpected fetch');
     }) as typeof fetch,
   });
-  await assert.rejects(api.listTickets({ page_size: 101 }), TypeError);
-  await assert.rejects(api.getTicket('../secrets'), TypeError);
-  await assert.rejects(api.getTicket(0), TypeError);
+  assert.throws(() => api.listTickets({ page_size: 101 }), TypeError);
+  assert.throws(() => api.getTicket('../secrets'), TypeError);
+  assert.throws(() => api.getTicket(0), TypeError);
   assert.equal(calls, 0);
 });
 
