@@ -582,3 +582,181 @@ export interface ManagedProject {
   changeLogs: ProjectChangeLog[];
 }
 
+// ==========================================
+// PARTE C: EVOLUÇÃO DO TPL-03 — FEEDBACK E ALINHAMENTOS
+// ==========================================
+
+export type AlignmentCategory = 
+  | 'ORIENTACAO_CONDUTA'
+  | 'RECONHECIMENTO'
+  | 'ALINHAMENTO_OPERACIONAL'
+  | 'PASSAGEM_PLATAOR_ESCALA'
+  | 'AJUSTE_DE_ESCALA'
+  | 'AJUSTE_FERIAS'
+  | 'DEFINICAO_PAPEL'
+  | 'ORIENTACAO_TECNICA'
+  | 'FEEDBACK_GERENCIAL'
+  | 'LIVRE'
+  | 'ORIENTACAO_CONDUTA_PROCEDIMENTO'
+  | 'ELOGIO_RECONHECIMENTO_FORMAL'
+  | 'TROCA_DE_PLANTAO'
+  | 'AJUSTE_PERIODO_FERIAS'
+  | 'DEFINICAO_RESPONSABILIDADES'
+  | 'REGISTRO_LIVRE_OUTROS';
+
+export type AlignmentParticipantRole = 'CONDUTOR' | 'PARTICIPANTE' | 'RELATOR' | 'OUVINTE';
+export type AlignmentPresence = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO';
+export type AlignmentScienceStatus = 'PENDENTE_CIENCIA' | 'CIENTE' | 'SOLICITOU_CORRECAO';
+export type AlignmentSignatureStatus = 'PENDENTE' | 'ASSINADO_FISICO' | 'ASSINADO_DIGITAL';
+
+export interface AlignmentParticipant {
+  id: string | number;
+  collaboratorId?: number;
+  name: string;
+  role: string;
+  department: string;
+  alignmentRole: AlignmentParticipantRole;
+  presence: AlignmentPresence;
+  individualStatement?: string; // manifestação individual do participante
+  scienceStatus: AlignmentScienceStatus;
+  scienceDate?: string;
+  signatureStatus: AlignmentSignatureStatus;
+  signatureDate?: string;
+}
+
+export interface AlignmentCommitment {
+  id: string;
+  description: string;
+  responsibleName: string;
+  responsibleId?: number;
+  isCollective: boolean; // Coletivo (geral) ou individual
+  assignedParticipantIds?: (string | number)[];
+  deadline: string;
+  successCriteria: string;
+  status: 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
+}
+
+export interface FormalAlignment {
+  id: string;
+  alignmentNumber: string; // ex: 'ALN-2026-088'
+  dateTime: string; // ex: '06/11/2026 14:30'
+  location: string;
+  managerId: string | number;
+  managerName: string;
+  managerRole: string;
+  periodicity: 'PERIODICO_MENSAL' | 'ESPORADICO';
+  scope: 'INDIVIDUAL' | 'COLETIVO';
+  category: AlignmentCategory;
+  subject: string;
+  objective: string;
+  context: string;
+  topicsDiscussed: string[];
+  observedFactsOrSituations: string;
+  transmittedOrientations: string;
+  participants: AlignmentParticipant[];
+  generalCommitments: AlignmentCommitment[];
+  individualCommitments: { participantId: string | number; participantName: string; commitment: AlignmentCommitment }[];
+  decisions: string[];
+  nextReviewDate?: string;
+  status: 'RASCUNHO' | 'EM_REVISAO' | 'APROVADO' | 'ARQUIVADO';
+  version: string;
+  elaboratedBy: string;
+  reviewedBy?: string;
+  approvedAt?: string;
+  archivingInfo?: { 
+    isArchivedPhysical: boolean; 
+    bookNumber?: string; 
+    physicalLocation?: string; 
+    scannedPdfUploaded?: boolean; 
+    uploadedAt?: string;
+  };
+  history: { timestamp: string; author: string; action: string; note?: string }[];
+}
+
+export interface FeedbackStrength {
+  id: string;
+  title: string;
+  description: string;
+  category?: string;
+}
+
+export interface FeedbackDevelopmentPoint {
+  id: string;
+  title: string;
+  description: string;
+  operationalImpact?: string;
+  category?: string;
+}
+
+export type GoalStatus = 
+  | 'NAO_INICIADA'
+  | 'EM_ANDAMENTO'
+  | 'ATINGIDA'
+  | 'PARCIALMENTE_ATINGIDA'
+  | 'NAO_ATINGIDA'
+  | 'RENEGOCIADA'
+  | 'CANCELADA';
+
+export interface DevelopmentGoal {
+  id: string;
+  objective: string;
+  target: string;
+  practicalActions: string[];
+  responsible: string;
+  startDate: string;
+  deadline: string;
+  successCriteria: string;
+  expectedEvidences: string;
+  status: GoalStatus;
+  reviewDate?: string;
+  justification?: string;
+}
+
+export interface ManagerialFeedback {
+  id: string;
+  feedbackNumber: string; // ex: 'FDB-2026-042'
+  collaboratorId: number;
+  collaboratorName: string;
+  collaboratorRole: string;
+  collaboratorDepartment: string;
+  managerId: string | number;
+  managerName: string;
+  managerRole: string;
+  feedbackDate: string;
+  periodEvaluated: string;
+  feedbackType: 'PERIODICO_MENSAL' | 'DESENVOLVIMENTO' | 'TECNICO' | 'PONTUAL' | 'PROBATORIO';
+  previousFeedbackRefId?: string;
+  strengths: FeedbackStrength[];
+  developmentPoints: FeedbackDevelopmentPoint[];
+  technicalMetrics?: { label: string; value: string | number; source?: string; target?: string; period?: string }[];
+  managerialEvaluation: { 
+    collaboration?: string; 
+    communication?: string; 
+    organization?: string; 
+    posture?: string; 
+    autonomy?: string; 
+    commitmentsCompliance?: string; 
+    notes?: string; 
+  };
+  developmentGoals: DevelopmentGoal[];
+  collaboratorStatement?: string;
+  collaboratorSignedScience?: boolean;
+  collaboratorSignedScienceAt?: string;
+  status: 'RASCUNHO' | 'EM_REVISAO' | 'HOMOLOGADO' | 'ARQUIVADO';
+  version: string;
+  archivingInfo?: { isArchivedPhysical: boolean; bookNumber?: string; physicalLocation?: string };
+  history: { timestamp: string; author: string; action: string; note?: string }[];
+}
+
+export interface FeedbackAndAlignmentSettings {
+  defaultPeriodicityMonths: number;
+  enableMultiParticipantSignatures: boolean;
+  documentNumberingPrefix: string;
+  requireIndividualStatements: boolean;
+  scienceDeadlineDays: number;
+  pdfHeaderInstitutionName: string;
+  pdfHeaderDepartmentName: string;
+  archivingBookDefault: string;
+  categoriesConfig: { id: AlignmentCategory; label: string; isEnabled: boolean }[];
+}
+

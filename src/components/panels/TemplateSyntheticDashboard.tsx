@@ -29,7 +29,8 @@ import {
   Check,
   Handshake,
   Plus,
-  RotateCcw
+  RotateCcw,
+  Users
 } from 'lucide-react';
 import { ArtifactPanel, MeetingAgreement, DevelopmentCommitment, ManagedProject } from '../../types';
 import { EvidenceBadge } from '../common/EvidenceBadge';
@@ -49,6 +50,9 @@ interface TemplateSyntheticDashboardProps {
   onOpenRegisterCommitment?: () => void;
   onOpenDevelopmentPlans?: () => void;
   onOpenProjectManagement?: () => void;
+  onOpenRegisterFeedback?: () => void;
+  onOpenRegisterAlignment?: () => void;
+  onOpenFeedbackAndAlignments?: () => void;
   onBackToCatalog?: () => void;
   onOpenTicketById?: (ticketId: number) => void;
   isCompactChatMode?: boolean;
@@ -67,6 +71,9 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
   onOpenRegisterCommitment,
   onOpenDevelopmentPlans,
   onOpenProjectManagement,
+  onOpenRegisterFeedback,
+  onOpenRegisterAlignment,
+  onOpenFeedbackAndAlignments,
   onBackToCatalog,
   onOpenTicketById,
   isCompactChatMode = false
@@ -89,7 +96,7 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
       case 'TPL-03':
         return {
           icon: User,
-          label: 'Feedback Individual',
+          label: 'Feedback e Alinhamentos',
           color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
         };
       case 'TPL-04':
@@ -204,6 +211,43 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
             >
               <FolderKanban className="w-3.5 h-3.5" />
               <span>Gestão do Projeto</span>
+            </button>
+          )}
+
+          {/* AÇÕES DISCRETAS: TPL-03 Feedback e Alinhamentos */}
+          {panel.templateType === 'TPL-03' && onOpenRegisterFeedback && (
+            <button
+              type="button"
+              onClick={onOpenRegisterFeedback}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-md transition-colors cursor-pointer shadow-2xs"
+              title="Registrar novo feedback individual de desenvolvimento"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Novo Feedback</span>
+            </button>
+          )}
+
+          {panel.templateType === 'TPL-03' && onOpenRegisterAlignment && (
+            <button
+              type="button"
+              onClick={onOpenRegisterAlignment}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#134F9F] dark:text-blue-300 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 rounded-md transition-colors cursor-pointer shadow-2xs"
+              title="Registrar alinhamento coletivo ou esporádico com coleta de assinaturas"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Novo Alinhamento</span>
+            </button>
+          )}
+
+          {panel.templateType === 'TPL-03' && onOpenFeedbackAndAlignments && (
+            <button
+              type="button"
+              onClick={onOpenFeedbackAndAlignments}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-md transition-colors cursor-pointer shadow-2xs"
+              title="Abrir painel analítico de feedbacks, alinhamentos e termos A4"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Gestão de Termos</span>
             </button>
           )}
 
@@ -516,6 +560,84 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
             <span>Abrir Gestão Completa</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </span>
+        </div>
+      ) : panel.templateType === 'TPL-03' ? (
+        // FEEDBACK E ALINHAMENTOS (TPL-03): 3 Cards Sintéticos
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 shrink-0">
+          <div 
+            onClick={onOpenFeedbackAndAlignments}
+            className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-emerald-500/50 cursor-pointer transition-all group"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Award className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 transition-colors truncate">
+                    Feedbacks & Metas
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    2 homologados
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
+                  <span className="text-emerald-600 font-semibold">Mariana & Lucas</span> · 92% metas
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 shrink-0" />
+          </div>
+
+          <div 
+            onClick={onOpenFeedbackAndAlignments}
+            className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-blue-500/50 cursor-pointer transition-all group"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-blue-500/10 text-[#134F9F] dark:text-blue-400 shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#134F9F] transition-colors truncate">
+                    Alinhamentos Coletivos
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1 py-0.2 rounded bg-blue-500/10 text-[#134F9F] dark:text-blue-400">
+                    3 registros
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
+                  <span className="text-[#134F9F] dark:text-blue-400 font-semibold">Passagem Plantão (3 part.)</span> · Conduta
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
+          </div>
+
+          <div 
+            onClick={onOpenFeedbackAndAlignments}
+            className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-purple-500/50 cursor-pointer transition-all group"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 transition-colors truncate">
+                    Termos A4 & Assinaturas
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                    PDF & Físico
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
+                  <span className="text-emerald-600 font-semibold">4 assinados</span> · 1 pendente ciência
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600 shrink-0" />
+          </div>
         </div>
       ) : null}
 

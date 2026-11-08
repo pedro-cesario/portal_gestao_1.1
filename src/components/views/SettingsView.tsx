@@ -38,7 +38,8 @@ import {
   Eye,
   EyeOff,
   LayoutList,
-  GripVertical
+  GripVertical,
+  Award
 } from 'lucide-react';
 import { 
   CurrentUser, 
@@ -48,9 +49,11 @@ import {
   SettingsAuditLog,
   EvidenceLevel,
   NavMenuItemConfig,
-  NavigationRoute
+  NavigationRoute,
+  FeedbackAndAlignmentSettings
 } from '../../types';
 import { DEFAULT_MENU_CONFIG } from '../../data/settingsDefaults';
+import { DEFAULT_FEEDBACK_SETTINGS } from '../../data/mockData';
 import { EvidenceBadge } from '../common/EvidenceBadge';
 import { Modal } from '../common/Modal';
 
@@ -66,6 +69,8 @@ interface SettingsViewProps {
   onUpdateCalculationSettings: (newSettings: OperationalCalculationSettings) => void;
   menuConfig?: NavMenuItemConfig[];
   onUpdateMenuConfig?: (newConfig: NavMenuItemConfig[]) => void;
+  feedbackSettings?: FeedbackAndAlignmentSettings;
+  onUpdateFeedbackSettings?: (newSettings: FeedbackAndAlignmentSettings) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -79,15 +84,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   calculationSettings,
   onUpdateCalculationSettings,
   menuConfig,
-  onUpdateMenuConfig
+  onUpdateMenuConfig,
+  feedbackSettings,
+  onUpdateFeedbackSettings
 }) => {
   // Aba ativa nas configurações
-  const [activeTab, setActiveTab] = useState<'pop-rules' | 'calculations' | 'team' | 'automation' | 'menu-order' | 'audit-log'>('pop-rules');
+  const [activeTab, setActiveTab] = useState<'pop-rules' | 'calculations' | 'feedback-alignments' | 'team' | 'automation' | 'menu-order' | 'audit-log'>('pop-rules');
 
   // Estado local para edições pendentes
   const [localPopSpec, setLocalPopSpec] = useState<PopSpecification>(popSpec);
   const [localSettings, setLocalSettings] = useState<OperationalCalculationSettings>(calculationSettings);
   const [localMenuConfig, setLocalMenuConfig] = useState<NavMenuItemConfig[]>(menuConfig || DEFAULT_MENU_CONFIG);
+  const [localFeedbackSettings, setLocalFeedbackSettings] = useState<FeedbackAndAlignmentSettings>(
+    feedbackSettings || DEFAULT_FEEDBACK_SETTINGS
+  );
   const [saveSuccessNotice, setSaveSuccessNotice] = useState<string | null>(null);
   const [rulesPage, setRulesPage] = useState<number>(1);
 
@@ -386,6 +396,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         >
           <Calculator className="w-4.5 h-4.5" />
           <span>Fórmulas & Tempo Médio</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('feedback-alignments')}
+          className={`px-3.5 py-2 font-bold border-b-2 flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap rounded-t-md ${
+            activeTab === 'feedback-alignments'
+              ? 'border-[#134F9F] text-[#134F9F] dark:border-blue-400 dark:text-blue-400 bg-blue-50/60 dark:bg-blue-950/30'
+              : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+          }`}
+        >
+          <Award className="w-4.5 h-4.5" />
+          <span>Feedbacks & Alinhamentos</span>
         </button>
 
         <button
@@ -804,6 +827,197 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     className="w-20 p-1.5 rounded-md border border-slate-300 dark:border-slate-700 text-center bg-white dark:bg-slate-950 font-bold"
                   />
                   <span className="font-bold text-slate-700 dark:text-slate-300">horas</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* ABA: FEEDBACKS, ALINHAMENTOS & TERMOS (TPL-03)           */}
+        {/* ======================================================== */}
+        {activeTab === 'feedback-alignments' && (
+          <div className="space-y-4">
+            {/* Header do Módulo */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-xs space-y-3 text-xs sm:text-sm">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5 text-[#134F9F] dark:text-blue-400" />
+                  <div>
+                    <h3 className="font-bold text-slate-900 dark:text-slate-100">
+                      Central de Configurações: Feedbacks e Alinhamentos Formais
+                    </h3>
+                    <p className="text-2xs text-slate-500 mt-0.5">
+                      Desenvolvimento profissional, orientações, reconhecimento e acompanhamento de compromissos.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onUpdateFeedbackSettings) {
+                      onUpdateFeedbackSettings(localFeedbackSettings);
+                    }
+                    setSaveSuccessNotice('Parâmetros de Feedbacks & Alinhamentos salvos com sucesso.');
+                    setTimeout(() => setSaveSuccessNotice(null), 3000);
+                  }}
+                  className="px-3.5 py-1.5 bg-[#134F9F] text-white hover:bg-blue-700 rounded-md font-semibold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Salvar Parâmetros</span>
+                </button>
+              </div>
+
+              {/* Grid de Parâmetros Operacionais */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800">
+                  <span className="block text-2xs font-bold text-slate-500 uppercase mb-1">Periodicidade Padrão</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={12}
+                      value={localFeedbackSettings.defaultPeriodicityMonths}
+                      onChange={(e) => setLocalFeedbackSettings({
+                        ...localFeedbackSettings,
+                        defaultPeriodicityMonths: Number(e.target.value)
+                      })}
+                      className="w-16 p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-center"
+                    />
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">mês(es)</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800">
+                  <span className="block text-2xs font-bold text-slate-500 uppercase mb-1">Prazo para Ciência Formal</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={localFeedbackSettings.scienceDeadlineDays}
+                      onChange={(e) => setLocalFeedbackSettings({
+                        ...localFeedbackSettings,
+                        scienceDeadlineDays: Number(e.target.value)
+                      })}
+                      className="w-16 p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-center"
+                    />
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">dias úteis</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800">
+                  <span className="block text-2xs font-bold text-slate-500 uppercase mb-1">Prefixo de Protocolo</span>
+                  <input
+                    type="text"
+                    value={localFeedbackSettings.documentNumberingPrefix}
+                    onChange={(e) => setLocalFeedbackSettings({
+                      ...localFeedbackSettings,
+                      documentNumberingPrefix: e.target.value
+                    })}
+                    className="w-full p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                    placeholder="ALN-2026"
+                  />
+                </div>
+              </div>
+
+              {/* Toggles de Governança */}
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <label className="flex items-center gap-2.5 cursor-pointer p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-950">
+                  <input
+                    type="checkbox"
+                    checked={localFeedbackSettings.enableMultiParticipantSignatures}
+                    onChange={(e) => setLocalFeedbackSettings({
+                      ...localFeedbackSettings,
+                      enableMultiParticipantSignatures: e.target.checked
+                    })}
+                    className="w-4 h-4 rounded border-slate-300 text-[#134F9F] focus:ring-0 cursor-pointer"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm block">
+                      Habilitar Coleta de Assinaturas Múltiplas Independentes em Alinhamentos Coletivos
+                    </span>
+                    <span className="text-2xs text-slate-500">
+                      Garante que cada participante assine individualmente, sem substituição ou confirmação única compartilhada.
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-2.5 cursor-pointer p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-950">
+                  <input
+                    type="checkbox"
+                    checked={localFeedbackSettings.requireIndividualStatements}
+                    onChange={(e) => setLocalFeedbackSettings({
+                      ...localFeedbackSettings,
+                      requireIndividualStatements: e.target.checked
+                    })}
+                    className="w-4 h-4 rounded border-slate-300 text-[#134F9F] focus:ring-0 cursor-pointer"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm block">
+                      Exigir Campo de Manifestação Individual do Colaborador
+                    </span>
+                    <span className="text-2xs text-slate-500">
+                      Permite que o participante registre suas impressões, acordos ou ressalvas diretamente no termo formal.
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Cabeçalho Institucional do PDF */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  Layout de Cabeçalho Institucional nos Documentos Gerados (PDF & Impressão A4)
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-2xs text-slate-500 font-semibold mb-1">Instituição Mantenedora</label>
+                    <input
+                      type="text"
+                      value={localFeedbackSettings.pdfHeaderInstitutionName}
+                      onChange={(e) => setLocalFeedbackSettings({
+                        ...localFeedbackSettings,
+                        pdfHeaderInstitutionName: e.target.value
+                      })}
+                      className="w-full p-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-2xs text-slate-500 font-semibold mb-1">Diretoria / Setor de Governança</label>
+                    <input
+                      type="text"
+                      value={localFeedbackSettings.pdfHeaderDepartmentName}
+                      onChange={(e) => setLocalFeedbackSettings({
+                        ...localFeedbackSettings,
+                        pdfHeaderDepartmentName: e.target.value
+                      })}
+                      className="w-full p-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Categorias de Alinhamentos Habilitadas */}
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  Categorias de Alinhamentos Formais Habilitadas no Sistema
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {localFeedbackSettings.categoriesConfig.map((cat, idx) => (
+                    <label key={cat.id} className="flex items-center justify-between p-2.5 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer">
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{cat.label}</span>
+                      <input
+                        type="checkbox"
+                        checked={cat.isEnabled}
+                        onChange={(e) => {
+                          const updated = [...localFeedbackSettings.categoriesConfig];
+                          updated[idx] = { ...cat, isEnabled: e.target.checked };
+                          setLocalFeedbackSettings({ ...localFeedbackSettings, categoriesConfig: updated });
+                        }}
+                        className="w-4 h-4 rounded text-[#134F9F] focus:ring-0 cursor-pointer"
+                      />
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>

@@ -60,16 +60,17 @@ export const TemplatesGuideView: React.FC<TemplatesGuideViewProps> = ({
     },
     {
       id: 'TPL-03',
-      code: 'TPL-03 — Feedback Individual',
+      code: 'TPL-03 — Feedback e Alinhamentos',
       status: 'HOMOLOGADO',
       statusColor: 'text-emerald-500 bg-emerald-500/10',
-      description: 'Dossiê contextual e revisável pelo gestor, baseado estritamente em evidências factuais do GLPI, com pontos positivos, desenvolvimento e combinados pactuados.',
+      description: 'Desenvolvimento profissional, orientações, reconhecimento e acompanhamento de compromissos. Registros individuais e coletivos (passagem de plantão, escala, conduta), metas longitudinais, emissão de termos formais para impressão A4 e arquivamento físico.',
       sections: [
-        '1. Evidências Factuais e Métricas Observadas',
-        '2. Pontos Positivos Comprovados',
-        '3. Plano de Desenvolvimento & Combinados'
+        '1. Feedback Individual & Metas de Desenvolvimento',
+        '2. Alinhamentos Coletivos (Passagem de Plantão e Escala)',
+        '3. Orientações de Conduta, Postura e Reconhecimento',
+        '4. Termos Formais A4, Assinaturas Independentes & Tomos DTI'
       ],
-      rules: 'Sem conclusões disciplinares automáticas; contextualização assistencial mandatória e sigilo ético.'
+      rules: 'Coleta individual de ciência e assinatura obrigatória; suporte a 1 ou múltiplos participantes; arquivamento com livro e tomos.'
     },
     {
       id: 'TPL-04',

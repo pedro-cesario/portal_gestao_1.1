@@ -22,7 +22,10 @@ import {
   DevelopmentCommitment,
   DevelopmentCommitmentStatus,
   ManagedProject,
-  ProjectTaskStatus
+  ProjectTaskStatus,
+  FormalAlignment,
+  ManagerialFeedback,
+  FeedbackAndAlignmentSettings
 } from './types';
 import { 
   MOCK_USERS, 
@@ -33,7 +36,10 @@ import {
   MOCK_SAVED_PANELS,
   MOCK_MEETING_AGREEMENTS,
   MOCK_DEVELOPMENT_COMMITMENTS,
-  MOCK_MANAGED_PROJECTS
+  MOCK_MANAGED_PROJECTS,
+  MOCK_FORMAL_ALIGNMENTS,
+  MOCK_MANAGERIAL_FEEDBACKS,
+  DEFAULT_FEEDBACK_SETTINGS
 } from './data/mockData';
 import {
   DEFAULT_POP_SPEC,
@@ -88,6 +94,9 @@ export default function App() {
   const [agreements, setAgreements] = useState<MeetingAgreement[]>(MOCK_MEETING_AGREEMENTS);
   const [developmentCommitments, setDevelopmentCommitments] = useState<DevelopmentCommitment[]>(MOCK_DEVELOPMENT_COMMITMENTS);
   const [managedProjects, setManagedProjects] = useState<ManagedProject[]>(MOCK_MANAGED_PROJECTS);
+  const [formalAlignments, setFormalAlignments] = useState<FormalAlignment[]>(MOCK_FORMAL_ALIGNMENTS);
+  const [managerialFeedbacks, setManagerialFeedbacks] = useState<ManagerialFeedback[]>(MOCK_MANAGERIAL_FEEDBACKS);
+  const [feedbackSettings, setFeedbackSettings] = useState<FeedbackAndAlignmentSettings>(DEFAULT_FEEDBACK_SETTINGS);
 
   // Parâmetros de Governança, Regras POP-TIN-017 e Fórmulas de Cálculo
   const [popSpec, setPopSpec] = useState<PopSpecification>(DEFAULT_POP_SPEC);
@@ -380,6 +389,71 @@ export default function App() {
     })));
   };
 
+  // Gestão de Alinhamentos Formais e Feedbacks (TPL-03)
+  const handleSaveAlignment = (newAlignment: FormalAlignment) => {
+    setFormalAlignments(prev => [newAlignment, ...prev]);
+  };
+
+  const handleSaveFeedback = (newFeedback: ManagerialFeedback) => {
+    setManagerialFeedbacks(prev => [newFeedback, ...prev]);
+  };
+
+  const handleConfirmScience = (docId: string, participantId: string | number) => {
+    const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    setFormalAlignments(prev => prev.map(a => {
+      if (a.id === docId || a.alignmentNumber === docId) {
+        return {
+          ...a,
+          participants: a.participants.map(p => {
+            if (p.id === participantId) {
+              return {
+                ...p,
+                scienceStatus: 'CIENTE',
+                scienceDate: nowTimestamp,
+                signatureStatus: 'ASSINADO_DIGITAL',
+                signatureDate: nowTimestamp
+              };
+            }
+            return p;
+          })
+        };
+      }
+      return a;
+    }));
+  };
+
+  const handleArchivePhysical = (docId: string, bookNumber: string, physicalLocation: string) => {
+    const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    setFormalAlignments(prev => prev.map(a => {
+      if (a.id === docId || a.alignmentNumber === docId) {
+        return {
+          ...a,
+          archivingInfo: {
+            isArchivedPhysical: true,
+            bookNumber,
+            physicalLocation,
+            uploadedAt: nowTimestamp
+          }
+        };
+      }
+      return a;
+    }));
+
+    setManagerialFeedbacks(prev => prev.map(f => {
+      if (f.id === docId || f.feedbackNumber === docId) {
+        return {
+          ...f,
+          archivingInfo: {
+            isArchivedPhysical: true,
+            bookNumber,
+            physicalLocation
+          }
+        };
+      }
+      return f;
+    }));
+  };
+
   // Disparo de Auditoria Manual
   const handleTriggerManualAudit = () => {
     setIsAuditing(true);
@@ -539,6 +613,12 @@ export default function App() {
               onToggleSubtask={handleToggleSubtask}
               onReportBlock={handleReportBlock}
               currentUser={currentUser}
+              formalAlignments={formalAlignments}
+              onSaveAlignment={handleSaveAlignment}
+              managerialFeedbacks={managerialFeedbacks}
+              onSaveFeedback={handleSaveFeedback}
+              onConfirmScience={handleConfirmScience}
+              onArchivePhysical={handleArchivePhysical}
               onNavigateToAgente={(prompt) => prompt ? handleOpenAgenteWithPrompt(prompt) : handleRouteChange('agente-gerencial')}
               onOpenTicketById={handleNavigateToTicket}
               onUpdatePanel={handleUpdatePanel}
@@ -564,6 +644,8 @@ export default function App() {
               onUpdateCalculationSettings={(c) => setCalculationSettings(c)}
               menuConfig={menuConfig}
               onUpdateMenuConfig={handleUpdateMenuConfig}
+              feedbackSettings={feedbackSettings}
+              onUpdateFeedbackSettings={(s) => setFeedbackSettings(s)}
             />
           )}
         </main>

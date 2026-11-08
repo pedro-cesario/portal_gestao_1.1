@@ -257,11 +257,11 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
     },
     {
       id: 'TPL-03' as PanelTemplateType,
-      label: 'Feedback Individual',
+      label: 'Feedback e Alinhamentos',
       code: 'TPL-03',
       icon: User,
       color: 'hover:border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10',
-      prompt: 'Gere um feedback individual do colaborador.'
+      prompt: 'Gere um feedback estruturado e alinhamento formal para o colaborador.'
     },
     {
       id: 'TPL-04' as PanelTemplateType,
@@ -584,8 +584,8 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
         const feedbackArtifact: ArtifactPanel = {
           id: `art-feedback-${Date.now()}`,
           templateType: 'TPL-03',
-          templateName: 'TPL-03 — Feedback Individual',
-          title: `Dossiê de Feedback Técnico — ${targetTech}`,
+          templateName: 'TPL-03 — Feedback e Alinhamentos',
+          title: `Feedback e Alinhamentos — ${targetTech}`,
           ownerName: 'Henrique Vasconcelos',
           referenceDate: 'Ciclo Outubro / Novembro 2026',
           generationDate: '06/11/2026 10:10',
@@ -669,7 +669,7 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
         const botMsg: ChatMessage = {
           id: `bot-${Date.now()}`,
           role: 'assistant',
-          content: `Dossiê de Feedback Individual estruturado para **${targetTech}** gerado com sucesso sob o modelo **TPL-03**! As evidências foram fundamentadas diretamente nos registros do GLPI e no POP-TIN-017, garantindo caráter construtivo, objetivo e livre de notas punitivas automatizadas.`,
+          content: `Painel de **Feedback e Alinhamentos** estruturado para **${targetTech}** gerado com sucesso sob o modelo **TPL-03**! As evidências foram fundamentadas diretamente nos registros do GLPI e no POP-TIN-017, com termo formal para impressão A4, metas longitudinais e registro de assinaturas.`,
           timestamp: '10:10 (Brasília)',
           pathType: 'AGY',
           sources: [`Histórico Nominal GLPI (${targetTech})`, 'Auditorias POP-TIN-017', 'Logs de Fechamento de Chamados'],
@@ -677,7 +677,7 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
           analyticalDetail: `Métricas do colaborador no ciclo: 58 chamados resolvidos, tempo médio de 18.4h, taxa de reabertura de 1.7% e índice de qualidade documental de 94%.`
         };
 
-        appendMessageToActiveSession(botMsg, `Feedback Individual — ${targetTech}`, 'TPL-03');
+        appendMessageToActiveSession(botMsg, `Feedback e Alinhamentos — ${targetTech}`, 'TPL-03');
         setIsProcessing(false);
       }, 1000);
 

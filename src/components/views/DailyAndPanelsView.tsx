@@ -47,6 +47,11 @@ import { AgreementsTrackingDrawer } from '../panels/AgreementsTrackingDrawer';
 import { RegisterImprovementCommitmentModal } from '../panels/RegisterImprovementCommitmentModal';
 import { DevelopmentPlansDrawer } from '../panels/DevelopmentPlansDrawer';
 import { ProjectManagementDrawer } from '../panels/ProjectManagementDrawer';
+import { FormalAlignment, ManagerialFeedback } from '../../types';
+import { RegisterFeedbackModal } from '../panels/RegisterFeedbackModal';
+import { RegisterAlignmentModal } from '../panels/RegisterAlignmentModal';
+import { FeedbackAndAlignmentsDrawer } from '../panels/FeedbackAndAlignmentsDrawer';
+import { DocumentPreviewModal } from '../panels/DocumentPreviewModal';
 
 interface DailyAndPanelsViewProps {
   savedPanels: ArtifactPanel[];
@@ -63,6 +68,12 @@ interface DailyAndPanelsViewProps {
   onUpdateTaskProgress?: (taskId: string, progress: number) => void;
   onToggleSubtask?: (taskId: string, subtaskId: string) => void;
   onReportBlock?: (taskId: string, reason: string, action: string) => void;
+  formalAlignments?: FormalAlignment[];
+  onSaveAlignment?: (alignment: FormalAlignment) => void;
+  managerialFeedbacks?: ManagerialFeedback[];
+  onSaveFeedback?: (feedback: ManagerialFeedback) => void;
+  onConfirmScience?: (documentId: string, participantId: string | number) => void;
+  onArchivePhysical?: (documentId: string, bookNumber: string, physicalLocation: string) => void;
   currentUser?: CurrentUser | null;
   onNavigateToAgente: (prefillPrompt?: string) => void;
   onOpenTicketById: (ticketId: number) => void;
@@ -84,6 +95,12 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   onUpdateTaskProgress = () => {},
   onToggleSubtask = () => {},
   onReportBlock = () => {},
+  formalAlignments = [],
+  onSaveAlignment = () => {},
+  managerialFeedbacks = [],
+  onSaveFeedback = () => {},
+  onConfirmScience = () => {},
+  onArchivePhysical = () => {},
   currentUser,
   onNavigateToAgente,
   onOpenTicketById,
@@ -102,7 +119,31 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   const [isRegisterCommitmentOpen, setIsRegisterCommitmentOpen] = useState<boolean>(false);
   const [isDevelopmentPlansOpen, setIsDevelopmentPlansOpen] = useState<boolean>(false);
   const [isProjectManagementOpen, setIsProjectManagementOpen] = useState<boolean>(false);
+  
+  // TPL-03 Feedback e Alinhamentos
+  const [isRegisterFeedbackOpen, setIsRegisterFeedbackOpen] = useState<boolean>(false);
+  const [isRegisterAlignmentOpen, setIsRegisterAlignmentOpen] = useState<boolean>(false);
+  const [isFeedbackAndAlignmentsOpen, setIsFeedbackAndAlignmentsOpen] = useState<boolean>(false);
+  const [isPreviewDocModalOpen, setIsPreviewDocModalOpen] = useState<boolean>(false);
+  const [previewDocType, setPreviewDocType] = useState<'ALIGNMENT' | 'FEEDBACK'>('ALIGNMENT');
+  const [selectedAlignmentForPreview, setSelectedAlignmentForPreview] = useState<FormalAlignment | null>(null);
+  const [selectedFeedbackForPreview, setSelectedFeedbackForPreview] = useState<ManagerialFeedback | null>(null);
+
   const [activePanelForModal, setActivePanelForModal] = useState<ArtifactPanel | null>(null);
+
+  const handlePreviewAlignment = (aln: FormalAlignment) => {
+    setSelectedAlignmentForPreview(aln);
+    setSelectedFeedbackForPreview(null);
+    setPreviewDocType('ALIGNMENT');
+    setIsPreviewDocModalOpen(true);
+  };
+
+  const handlePreviewFeedback = (fdb: ManagerialFeedback) => {
+    setSelectedFeedbackForPreview(fdb);
+    setSelectedAlignmentForPreview(null);
+    setPreviewDocType('FEEDBACK');
+    setIsPreviewDocModalOpen(true);
+  };
 
   const filteredPanels = savedPanels.filter(p => {
     if (templateFilter !== 'all' && p.templateType !== templateFilter) return false;
@@ -393,6 +434,9 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
               setActivePanelForModal(selectedPanel);
               setIsProjectManagementOpen(true);
             }}
+            onOpenRegisterFeedback={() => setIsRegisterFeedbackOpen(true)}
+            onOpenRegisterAlignment={() => setIsRegisterAlignmentOpen(true)}
+            onOpenFeedbackAndAlignments={() => setIsFeedbackAndAlignmentsOpen(true)}
             onBackToCatalog={() => setSelectedPanel(null)}
             onOpenTicketById={onOpenTicketById}
           />
@@ -516,6 +560,69 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
           onToggleSubtask={onToggleSubtask}
           onReportBlock={onReportBlock}
           onOpenTicketById={onOpenTicketById}
+        />
+      )}
+
+      {/* NOVO FEEDBACK MODAL (TPL-03) */}
+      {isRegisterFeedbackOpen && (
+        <RegisterFeedbackModal
+          isOpen={isRegisterFeedbackOpen}
+          onClose={() => setIsRegisterFeedbackOpen(false)}
+          onSaveFeedback={(newFdb) => {
+            onSaveFeedback(newFdb);
+            handlePreviewFeedback(newFdb);
+          }}
+          existingFeedbacks={managerialFeedbacks}
+        />
+      )}
+
+      {/* NOVO ALINHAMENTO MODAL (TPL-03) */}
+      {isRegisterAlignmentOpen && (
+        <RegisterAlignmentModal
+          isOpen={isRegisterAlignmentOpen}
+          onClose={() => setIsRegisterAlignmentOpen(false)}
+          onSaveAlignment={(newAln) => {
+            onSaveAlignment(newAln);
+            handlePreviewAlignment(newAln);
+          }}
+        />
+      )}
+
+      {/* DRAWER ANALÍTICO FEEDBACK E ALINHAMENTOS (TPL-03) */}
+      {isFeedbackAndAlignmentsOpen && (
+        <FeedbackAndAlignmentsDrawer
+          isOpen={isFeedbackAndAlignmentsOpen}
+          onClose={() => setIsFeedbackAndAlignmentsOpen(false)}
+          alignments={formalAlignments}
+          feedbacks={managerialFeedbacks}
+          onOpenNewFeedback={() => {
+            setIsFeedbackAndAlignmentsOpen(false);
+            setIsRegisterFeedbackOpen(true);
+          }}
+          onOpenNewAlignment={() => {
+            setIsFeedbackAndAlignmentsOpen(false);
+            setIsRegisterAlignmentOpen(true);
+          }}
+          onPreviewAlignment={(aln) => {
+            handlePreviewAlignment(aln);
+          }}
+          onPreviewFeedback={(fdb) => {
+            handlePreviewFeedback(fdb);
+          }}
+          onConfirmParticipantScience={onConfirmScience}
+        />
+      )}
+
+      {/* MODAL DE PRÉ-VISUALIZAÇÃO, IMPRESSÃO E ARQUIVAMENTO FÍSICO A4 */}
+      {isPreviewDocModalOpen && (
+        <DocumentPreviewModal
+          isOpen={isPreviewDocModalOpen}
+          onClose={() => setIsPreviewDocModalOpen(false)}
+          documentType={previewDocType}
+          alignment={selectedAlignmentForPreview}
+          feedback={selectedFeedbackForPreview}
+          onConfirmScience={onConfirmScience}
+          onArchivePhysical={onArchivePhysical}
         />
       )}
     </div>

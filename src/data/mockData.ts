@@ -15,7 +15,10 @@ import {
   MeetingAgreement,
   DevelopmentCommitment,
   ManagedProject,
-  DevelopmentPlanSummary
+  DevelopmentPlanSummary,
+  FormalAlignment,
+  ManagerialFeedback,
+  FeedbackAndAlignmentSettings
 } from '../types';
 
 export const CURRENT_TIMESTAMP_BRT = '06/11/2026 10:10 (Brasília)';
@@ -627,8 +630,8 @@ export const MOCK_SAVED_PANELS: ArtifactPanel[] = [
   {
     id: 'art-feedback-mariana',
     templateType: 'TPL-03',
-    templateName: 'TPL-03 — Feedback Individual',
-    title: 'Dossiê de Feedback Técnico — Mariana Costa',
+    templateName: 'TPL-03 — Feedback e Alinhamentos',
+    title: 'Feedback e Alinhamentos — Mariana Costa',
     ownerName: 'Henrique Vasconcelos',
     referenceDate: 'Outubro / Novembro 2026',
     generationDate: '02/11/2026 16:30',
@@ -1873,3 +1876,574 @@ export const getDevelopmentPlanSummary = (commitments: DevelopmentCommitment[]):
     awaitingValidation
   };
 };
+
+// ==========================================
+// TPL-03: FEEDBACK E ALINHAMENTOS FORMAIS
+// ==========================================
+
+export const MOCK_FORMAL_ALIGNMENTS: FormalAlignment[] = [
+  // 1. Alinhamento Coletivo: Passagem de Plantão e Escala do Fim de Semana (3 Participantes)
+  {
+    id: 'aln-2026-088',
+    alignmentNumber: 'ALN-2026-088',
+    dateTime: '06/11/2026 11:30',
+    location: 'Sala de Operações DTI / Presencial e Sala Segura',
+    managerId: 1,
+    managerName: 'Henrique Vasconcelos',
+    managerRole: 'Gestor Operacional de TI',
+    periodicity: 'ESPORADICO',
+    scope: 'COLETIVO',
+    category: 'PASSAGEM_PLATAOR_ESCALA',
+    subject: 'Passagem de Plantão e Escala de Cobertura de TI no Fim de Semana',
+    objective: 'Organizar transição de plantão presencial e de sobreaviso para a janela crítica de reindexação do Tasy e cobertura da UTI Adulto.',
+    context: 'Reunião de alinhamento com a equipe de campo e sistemas antes da janela de manutenção programada das 02h de domingo.',
+    topicsDiscussed: [
+      'Alinhamento do rádio comunicador HT e telefone de emergência da TI',
+      'Janela de manutenção do Tasy (domingo 02h às 05h) e suporte presencial no Bloco Cirúrgico',
+      'Ronda preventiva nos leitos de UTI para verificação de transceivers de rede e impressoras de pulseiras'
+    ],
+    observedFactsOrSituations: 'No último fim de semana houve descontinuidade de comunicação entre a equipe de plantão e a supervisão assistencial durante a substituição de cabeamento na UTI.',
+    transmittedOrientations: 'O técnico de plantão presencial deve realizar ronda preventiva a cada 4 horas nas áreas de risco vital (UTI e Pronto Atendimento) e manter o chamado de passagem registrado antes do encerramento do turno.',
+    participants: [
+      {
+        id: 'p-1',
+        collaboratorId: 105,
+        name: 'Lucas Mendes',
+        role: 'Analista de Suporte Presencial N1/N2',
+        department: 'Suporte Assistencial & Periféricos',
+        alignmentRole: 'PARTICIPANTE',
+        presence: 'PRESENTE',
+        individualStatement: 'Confirmo o recebimento do rádio HT e farei as rondas preventivas nos horários acordados (14h, 18h e 22h).',
+        scienceStatus: 'CIENTE',
+        scienceDate: '06/11/2026 12:00',
+        signatureStatus: 'ASSINADO_DIGITAL',
+        signatureDate: '06/11/2026 12:05'
+      },
+      {
+        id: 'p-2',
+        collaboratorId: 104,
+        name: 'Rafael Albuquerque',
+        role: 'Analista de Redes e Infraestrutura N2',
+        department: 'Infraestrutura & Redes Críticas',
+        alignmentRole: 'RELATOR',
+        presence: 'PRESENTE',
+        individualStatement: 'Vou monitorar os switches de borda da UTI e deixei cabos e transceivers sobressalentes identificados na gaveta A2 do datacenter.',
+        scienceStatus: 'CIENTE',
+        scienceDate: '06/11/2026 12:02',
+        signatureStatus: 'ASSINADO_DIGITAL',
+        signatureDate: '06/11/2026 12:08'
+      },
+      {
+        id: 'p-3',
+        collaboratorId: 101,
+        name: 'Mariana Costa',
+        role: 'Analista Sênior de Sistemas Clínicos (Tasy)',
+        department: 'Sistemas Hospitalares (Tasy/PACS)',
+        alignmentRole: 'PARTICIPANTE',
+        presence: 'PRESENTE',
+        individualStatement: 'Ficarei em sobreaviso remoto na janela das 02h às 05h de domingo e configurei alertas automáticos de locks no banco.',
+        scienceStatus: 'PENDENTE_CIENCIA',
+        signatureStatus: 'PENDENTE'
+      }
+    ],
+    generalCommitments: [
+      {
+        id: 'gc-01',
+        description: 'Checklist físico de passagem assinado conjuntamente entre o plantonista que entra e o que sai',
+        responsibleName: 'Equipe de Plantão',
+        isCollective: true,
+        deadline: '06/11/2026 19:00',
+        successCriteria: 'Checklist anexado no GLPI no chamado de turno.',
+        status: 'EM_ANDAMENTO'
+      },
+      {
+        id: 'gc-02',
+        description: 'Testes de comunicação via rádio HT a cada troca de período',
+        responsibleName: 'Lucas Mendes e Rafael Albuquerque',
+        isCollective: true,
+        deadline: '08/11/2026 22:00',
+        successCriteria: '100% dos testes com resposta imediata registrada.',
+        status: 'EM_ANDAMENTO'
+      }
+    ],
+    individualCommitments: [
+      {
+        participantId: 'p-1',
+        participantName: 'Lucas Mendes',
+        commitment: {
+          id: 'ic-01',
+          description: 'Ronda presencial nas 3 UTIs às 14h, 18h e 22h com validação das impressoras de pulseiras',
+          responsibleName: 'Lucas Mendes',
+          responsibleId: 105,
+          isCollective: false,
+          deadline: '07/11/2026 23:00',
+          successCriteria: 'Zero impressoras travadas sem suporte em menos de 15 minutos.',
+          status: 'EM_ANDAMENTO'
+        }
+      },
+      {
+        participantId: 'p-3',
+        participantName: 'Mariana Costa',
+        commitment: {
+          id: 'ic-02',
+          description: 'Acompanhamento do job de reindexação do banco do Tasy e liberação do sistema até 05h00',
+          responsibleName: 'Mariana Costa',
+          responsibleId: 101,
+          isCollective: false,
+          deadline: '08/11/2026 05:00',
+          successCriteria: 'Sistema disponível para prescrição médica matinal sem lentidão.',
+          status: 'EM_ANDAMENTO'
+        }
+      }
+    ],
+    decisions: [
+      'Aprovada escala especial de sobreaviso com bonificação conforme acordo coletivo HEAL.',
+      'Definido Rafael Albuquerque como ponto focal de escalonamento em caso de indisponibilidade de links.'
+    ],
+    nextReviewDate: '09/11/2026 09:00 (Daily da manhã)',
+    status: 'EM_REVISAO',
+    version: 'v1.0 (Oficial)',
+    elaboratedBy: 'Henrique Vasconcelos',
+    reviewedBy: 'Henrique Vasconcelos',
+    archivingInfo: {
+      isArchivedPhysical: false,
+      bookNumber: 'Livro de Plantão e Alinhamentos — Tomo 03/2026',
+      physicalLocation: 'Armário DTI / Pasta 12-B'
+    },
+    history: [
+      {
+        timestamp: '06/11/2026 11:30',
+        author: 'Henrique Vasconcelos',
+        action: 'Alinhamento coletivo aberto e minuta gerada'
+      },
+      {
+        timestamp: '06/11/2026 12:05',
+        author: 'Lucas Mendes',
+        action: 'Assinatura digital e confirmação de ciência realizadas'
+      },
+      {
+        timestamp: '06/11/2026 12:08',
+        author: 'Rafael Albuquerque',
+        action: 'Assinatura digital e confirmação de ciência realizadas'
+      }
+    ]
+  },
+
+  // 2. Alinhamento Individual: Orientação de Conduta e Postura (Lucas Mendes)
+  {
+    id: 'aln-2026-089',
+    alignmentNumber: 'ALN-2026-089',
+    dateTime: '28/10/2026 15:00',
+    location: 'Sala de Reuniões da Gestão de TI',
+    managerId: 1,
+    managerName: 'Henrique Vasconcelos',
+    managerRole: 'Gestor Operacional de TI',
+    periodicity: 'ESPORADICO',
+    scope: 'INDIVIDUAL',
+    category: 'ORIENTACAO_CONDUTA',
+    subject: 'Alinhamento Formal de Comunicação e Atendimento Assistencial',
+    objective: 'Orientar o colaborador sobre postura empática e linguagem humanizada nas interações com a equipe de enfermagem do Pronto Atendimento.',
+    context: 'Registro de queixa sobre resposta ríspida em chamado da Triagem no dia 27/10/2026.',
+    topicsDiscussed: [
+      'Impacto do estresse na área assistencial e papel do suporte como facilitador',
+      'Uso de termos acolhedores e proibição de apontamentos que culpabilizem o usuário',
+      'Treinamento em Comunicação Não-Violenta e mentoria com analista sênior'
+    ],
+    observedFactsOrSituations: 'Apontamento no chamado #48098: "usuário não soube usar o leitor e travou a fila", gerando ruído desnecessário.',
+    transmittedOrientations: 'Orientado que o atendimento em ambiente hospitalar exige compreensão da sobrecarga da enfermagem. O papel da TI é pedagógico e de apoio incondicional.',
+    participants: [
+      {
+        id: 'p-lucas',
+        collaboratorId: 105,
+        name: 'Lucas Mendes',
+        role: 'Analista de Suporte Presencial N1/N2',
+        department: 'Suporte Assistencial & Periféricos',
+        alignmentRole: 'PARTICIPANTE',
+        presence: 'PRESENTE',
+        individualStatement: 'Entendi plenamente a situação. Não tive a intenção de ser ríspido, mas reconheço que errei na escolha das palavras e assumo o compromisso de melhorar.',
+        scienceStatus: 'CIENTE',
+        scienceDate: '28/10/2026 15:40',
+        signatureStatus: 'ASSINADO_FISICO',
+        signatureDate: '28/10/2026 15:45'
+      }
+    ],
+    generalCommitments: [],
+    individualCommitments: [
+      {
+        participantId: 'p-lucas',
+        participantName: 'Lucas Mendes',
+        commitment: {
+          id: 'ic-03',
+          description: 'Conclusão do curso de Comunicação Não-Violenta (Plataforma HEAL Ensino) e mentoria quinzenal',
+          responsibleName: 'Lucas Mendes',
+          responsibleId: 105,
+          isCollective: false,
+          deadline: '05/11/2026',
+          successCriteria: 'Certificado de conclusão entregue e zero reincidências em 60 dias.',
+          status: 'CONCLUIDO'
+        }
+      }
+    ],
+    decisions: [
+      'Alinhamento formal homologado sem aplicação de sanção disciplinar, de natureza educativa e preventiva.',
+      'Acompanhamento nos próximos alinhamentos semanais.'
+    ],
+    nextReviewDate: '12/11/2026',
+    status: 'APROVADO',
+    version: 'v1.0 (Homologado)',
+    elaboratedBy: 'Henrique Vasconcelos',
+    reviewedBy: 'Henrique Vasconcelos',
+    approvedAt: '28/10/2026 16:00',
+    archivingInfo: {
+      isArchivedPhysical: true,
+      bookNumber: 'Livro de Registros Formais DTI — 2026',
+      physicalLocation: 'Arquivo Geral DTI / Pasta Funcional Mendes, L.',
+      scannedPdfUploaded: true,
+      uploadedAt: '29/10/2026 09:15'
+    },
+    history: [
+      {
+        timestamp: '28/10/2026 15:00',
+        author: 'Henrique Vasconcelos',
+        action: 'Reunião de alinhamento individual conduzida'
+      },
+      {
+        timestamp: '28/10/2026 15:45',
+        author: 'Henrique Vasconcelos',
+        action: 'Termo assinado fisicamente por ambas as partes e arquivado'
+      }
+    ]
+  },
+
+  // 3. Alinhamento Individual: Reconhecimento e Elogio Formal (Mariana Costa)
+  {
+    id: 'aln-2026-090',
+    alignmentNumber: 'ALN-2026-090',
+    dateTime: '03/11/2026 16:00',
+    location: 'Gabinete da Gestão DTI',
+    managerId: 1,
+    managerName: 'Henrique Vasconcelos',
+    managerRole: 'Gestor Operacional de TI',
+    periodicity: 'ESPORADICO',
+    scope: 'INDIVIDUAL',
+    category: 'RECONHECIMENTO',
+    subject: 'Reconhecimento Formal por Atuação de Destaque no Incidente do Banco Analítico',
+    objective: 'Registrar formalmente elogio funcional à colaboradora pelo diagnóstico ágil e recuperação íntegra do módulo de faturamento hospitalar.',
+    context: 'Atuação excepcional no chamado de crise #47990 no dia 28/10, evitando prejuízos financeiros e atrasos nas remessas SUS.',
+    topicsDiscussed: [
+      'Elogio formal da Diretoria de Finanças e Faturamento Hospitalar',
+      'Registro do feito no prontuário profissional da colaboradora',
+      'Indicação como multiplicadora interna para as rotinas de CDC e replicação'
+    ],
+    observedFactsOrSituations: 'Identificou saturação de tablespace antes de corrupção de índices e aplicou script de rebalanceamento em tempo recorde de 40 minutos.',
+    transmittedOrientations: 'Parabenizada formalmente em nome do Instituto HEAL. Estimulada a liderar os workshops de boas práticas de banco de dados para a equipe.',
+    participants: [
+      {
+        id: 'p-mariana',
+        collaboratorId: 101,
+        name: 'Mariana Costa',
+        role: 'Analista Sênior de Sistemas Clínicos (Tasy)',
+        department: 'Sistemas Hospitalares (Tasy/PACS)',
+        alignmentRole: 'PARTICIPANTE',
+        presence: 'PRESENTE',
+        individualStatement: 'Agradeço imensamente o reconhecimento da gestão. Foi um trabalho árduo, mas a colaboração da equipe foi fundamental para o sucesso.',
+        scienceStatus: 'CIENTE',
+        scienceDate: '03/11/2026 16:15',
+        signatureStatus: 'ASSINADO_DIGITAL',
+        signatureDate: '03/11/2026 16:20'
+      }
+    ],
+    generalCommitments: [],
+    individualCommitments: [
+      {
+        participantId: 'p-mariana',
+        participantName: 'Mariana Costa',
+        commitment: {
+          id: 'ic-04',
+          description: 'Apresentar estudo de caso do incidente no próximo Alinhamento Mensal da equipe de TI',
+          responsibleName: 'Mariana Costa',
+          responsibleId: 101,
+          isCollective: false,
+          deadline: '19/11/2026',
+          successCriteria: 'Slides e roteiro compartilhados na base de conhecimento interna.',
+          status: 'EM_ANDAMENTO'
+        }
+      }
+    ],
+    decisions: [
+      'Encaminhada cópia do presente termo ao Departamento de Recursos Humanos para assentamento funcional.',
+      'Concessão de folga compensatória programada para 17/11/2026.'
+    ],
+    status: 'APROVADO',
+    version: 'v1.0 (Publicado)',
+    elaboratedBy: 'Henrique Vasconcelos',
+    reviewedBy: 'Henrique Vasconcelos',
+    approvedAt: '03/11/2026 16:30',
+    archivingInfo: {
+      isArchivedPhysical: true,
+      bookNumber: 'Livro de Elogios e Reconhecimentos DTI — 2026',
+      physicalLocation: 'Armário DTI / Pasta Elogios 2026'
+    },
+    history: [
+      {
+        timestamp: '03/11/2026 16:00',
+        author: 'Henrique Vasconcelos',
+        action: 'Termo de Reconhecimento homologado e assinado digitalmente'
+      }
+    ]
+  }
+];
+
+export const MOCK_MANAGERIAL_FEEDBACKS: ManagerialFeedback[] = [
+  // 1. Mariana Costa (TPL-03 Oficial)
+  {
+    id: 'fdb-2026-042',
+    feedbackNumber: 'FDB-2026-042',
+    collaboratorId: 101,
+    collaboratorName: 'Mariana Costa',
+    collaboratorRole: 'Analista Sênior de Sistemas Clínicos (Tasy)',
+    collaboratorDepartment: 'Sistemas Hospitalares (Tasy/PACS)',
+    managerId: 1,
+    managerName: 'Henrique Vasconcelos',
+    managerRole: 'Gestor Operacional de TI',
+    feedbackDate: '02/11/2026',
+    periodEvaluated: 'Outubro de 2026',
+    feedbackType: 'PERIODICO_MENSAL',
+    previousFeedbackRefId: 'FDB-2026-035',
+    strengths: [
+      {
+        id: 'str-01',
+        title: 'Alta resolutividade em incidentes de alta criticidade no ERP Tasy',
+        description: 'Capacidade diferenciada de resolução rápida em chamados assistenciais críticos, com 98.3% de resolução sem reabertura.'
+      },
+      {
+        id: 'str-02',
+        title: 'Excelente relacionamento interpessoal com o corpo clínico e enfermagem',
+        description: 'Constante postura colaborativa elogiada pelos médicos e coordenações assistenciais do Bloco Cirúrgico e UTI.'
+      },
+      {
+        id: 'str-03',
+        title: 'Capacidade de mentoria técnica para novos analistas',
+        description: 'Disponibilidade contínua para esclarecer dúvidas de regras de negócio em prontuário eletrônico para a equipe N1.'
+      }
+    ],
+    developmentPoints: [
+      {
+        id: 'dp-01',
+        title: 'Apontamento tempestivo de follow-ups intermediários no GLPI',
+        description: 'Chamados em atendimento durante a tarde permanecem sem atualização de texto antes das 17h, gerando falsos indícios de estagnação no snapshot noturno das 04h.',
+        operationalImpact: 'Auditoria documental aponta risco de inconformidade por ausência de registro humano tempestivo.'
+      },
+      {
+        id: 'dp-02',
+        title: 'Documentação de POPs de contingência para módulos secundários',
+        description: 'Necessidade de estruturar a documentação de procedimentos para permitir que o suporte de campo atue com autonomia nos finais de semana.'
+      }
+    ],
+    technicalMetrics: [
+      { label: 'Chamados Resolvidos no Mês', value: 58, source: 'GLPI MariaDB', target: '≥ 45' },
+      { label: 'Taxa de Não-Reabertura', value: '98.3%', source: 'Auditoria POP-TIN-017', target: '≥ 95%' },
+      { label: 'Índice de Qualidade Documental', value: '94.0%', source: 'Governança DTI', target: '≥ 85%' },
+      { label: 'Tempo Médio Observado', value: '18.4h', source: 'GLPI Histórico', target: '≤ 24h' }
+    ],
+    managerialEvaluation: {
+      collaboration: 'Exemplar — Sempre solícita e engajada com os objetivos da equipe.',
+      communication: 'Muito boa — Clara e polida nas interações assistenciais e técnicas.',
+      organization: 'Adequada — Precisa consolidar os registros no GLPI antes do final do turno.',
+      posture: 'Exemplar — Pontual, ética e referência técnica positiva.',
+      autonomy: 'Alta — Conduz incidentes complexos com independência técnica irretocável.',
+      commitmentsCompliance: '92% dos combinados do ciclo anterior foram rigorosamente cumpridos.'
+    },
+    developmentGoals: [
+      {
+        id: 'dg-01',
+        objective: 'Follow-ups tempestivos no GLPI até 17h00',
+        target: '100% dos chamados em andamento com registro humano antes das 17h',
+        practicalActions: [
+          'Definir alarme de calendário às 16h45 para conferência de chamados abertos',
+          'Utilizar modelo rápido de apontamento com causa raiz preliminar'
+        ],
+        responsible: 'Mariana Costa',
+        startDate: '02/11/2026',
+        deadline: '02/12/2026',
+        successCriteria: 'Zero ocorrências de chamados > 24h sem apontamento humano.',
+        expectedEvidences: 'Relatório da auditoria noturna SNAPSHOT_04H sem apontamentos de estagnação.',
+        status: 'EM_ANDAMENTO'
+      },
+      {
+        id: 'dg-02',
+        objective: 'Elaboração de 2 novos POPs de Contingência do Tasy',
+        target: 'Publicação dos POPs de Contingência do Bloco Cirúrgico e Farmácia no portal',
+        practicalActions: [
+          'Mapear fluxo de contingência manual da farmácia hospitalar',
+          'Revisar com a coordenação farmacêutica e homologar com o gestor'
+        ],
+        responsible: 'Mariana Costa',
+        startDate: '02/11/2026',
+        deadline: '20/11/2026',
+        successCriteria: 'Documentos homologados e disponíveis na base do DTI.',
+        expectedEvidences: 'POPs aprovados com número de registro POP-TIN-022 e 023.',
+        status: 'EM_ANDAMENTO'
+      },
+      {
+        id: 'dg-03',
+        objective: 'Meta do Ciclo Anterior: Ampliação de Tablespace e Redução de Latência',
+        target: 'Expansão de 100GB concluída e replicação sincronizada',
+        practicalActions: ['Execução de script no Oracle ASM', 'Validação no job CDC'],
+        responsible: 'Mariana Costa',
+        startDate: '01/10/2026',
+        deadline: '31/10/2026',
+        successCriteria: 'Latência de banco < 200ms.',
+        expectedEvidences: 'Chamado #47990 concluído com logs anexados.',
+        status: 'ATINGIDA',
+        reviewDate: '02/11/2026',
+        justification: 'Concluído com êxito absoluto antes do prazo regulamentar.'
+      }
+    ],
+    collaboratorStatement: 'Concordo com os pontos destacados pelo gestor. De fato, a correria no período da tarde às vezes dificulta o registro no GLPI, mas vou adotar o alarme às 16h45 para garantir que nenhum chamado fique sem apontamento.',
+    collaboratorSignedScience: true,
+    collaboratorSignedScienceAt: '02/11/2026 17:15',
+    status: 'HOMOLOGADO',
+    version: 'v1.0 (Homologado)',
+    archivingInfo: {
+      isArchivedPhysical: true,
+      bookNumber: 'Livro de Feedbacks e Desempenho DTI — 2026',
+      physicalLocation: 'Armário DTI / Pasta Funcional Mariana Costa'
+    },
+    history: [
+      {
+        timestamp: '02/11/2026 16:30',
+        author: 'Henrique Vasconcelos',
+        action: 'Reunião de feedback concluída e minuta elaborada'
+      },
+      {
+        timestamp: '02/11/2026 17:15',
+        author: 'Mariana Costa',
+        action: 'Ciência formal e assinatura digital registradas'
+      }
+    ]
+  },
+
+  // 2. Lucas Mendes (TPL-03 Suporte de Campo)
+  {
+    id: 'fdb-2026-043',
+    feedbackNumber: 'FDB-2026-043',
+    collaboratorId: 105,
+    collaboratorName: 'Lucas Mendes',
+    collaboratorRole: 'Analista de Suporte Presencial N1/N2',
+    collaboratorDepartment: 'Suporte Assistencial & Periféricos',
+    managerId: 1,
+    managerName: 'Henrique Vasconcelos',
+    managerRole: 'Gestor Operacional de TI',
+    feedbackDate: '28/10/2026',
+    periodEvaluated: 'Outubro de 2026',
+    feedbackType: 'PERIODICO_MENSAL',
+    strengths: [
+      {
+        id: 'str-lm-01',
+        title: 'Agilidade no atendimento presencial de chamados no Pronto Atendimento',
+        description: 'Tempo de resposta física menor que 10 minutos para chamados de risco no PA.'
+      },
+      {
+        id: 'str-lm-02',
+        title: 'Dedicação e prontidão nos plantões de cobertura',
+        description: 'Disponibilidade imediata para cobrir ausências e intervir em falhas de hardware.'
+      }
+    ],
+    developmentPoints: [
+      {
+        id: 'dp-lm-01',
+        title: 'Comunicação e Atendimento Humanizado',
+        description: 'Adotar comunicação empática nas interações e nos textos públicos do GLPI, evitando expressões que possam ser interpretadas como indelicadeza.',
+        operationalImpact: 'Preservar a harmonia entre o suporte e a enfermagem assistencial.'
+      },
+      {
+        id: 'dp-lm-02',
+        title: 'Anexação de Evidências Conclusivas (POP-TIN-017 Subitem 6.3)',
+        description: 'Garantir que todo chamado solucionado contenha print ou comprovante de teste antes do encerramento.'
+      }
+    ],
+    technicalMetrics: [
+      { label: 'Chamados Resolvidos no Mês', value: 42, source: 'GLPI MariaDB', target: '≥ 40' },
+      { label: 'Tempo de Primeira Resposta Presencial', value: '11 min', source: 'GLPI Histórico', target: '≤ 15 min' },
+      { label: 'Qualidade Documental', value: '82.0%', source: 'POP-TIN-017', target: '≥ 85%' }
+    ],
+    managerialEvaluation: {
+      collaboration: 'Boa — Tem excelente vontade e disponibilidade para auxiliar colegas.',
+      communication: 'Em evolução — Requer atenção contínua na modulação de tom com usuários sob estresse.',
+      organization: 'Boa — Mantém suas ferramentas e equipamentos em ordem.',
+      posture: 'Em evolução — Demonstrou grande maturidade ao aceitar o alinhamento de conduta.',
+      autonomy: 'Média — Resolve questões de hardware com autonomia; precisa de suporte em regras de negócio.'
+    },
+    developmentGoals: [
+      {
+        id: 'dg-lm-01',
+        objective: 'Concluir Capacitação em Comunicação Não-Violenta e Empatia',
+        target: 'Certificado anexado no RH e nota máxima no módulo de atendimento',
+        practicalActions: ['Realizar módulos online', 'Sessão de mentoria com Rafael'],
+        responsible: 'Lucas Mendes',
+        startDate: '28/10/2026',
+        deadline: '05/11/2026',
+        successCriteria: 'Zero reclamações assistenciais no ciclo.',
+        expectedEvidences: 'Certificado HEAL Ensino.',
+        status: 'ATINGIDA',
+        reviewDate: '06/11/2026',
+        justification: 'Concluído em 04/11 com nota 10 no módulo prático.'
+      },
+      {
+        id: 'dg-lm-02',
+        objective: 'Auditoria de Evidência Conclusiva em 100% dos Chamados Fechados',
+        target: '100% de conformidade com Subitem 6.3 do POP-TIN-017',
+        practicalActions: [
+          'Anexar foto ou print do teste de impressão realizado com usuário',
+          'Coletar visto no chamado pelo usuário solicitante'
+        ],
+        responsible: 'Lucas Mendes',
+        startDate: '28/10/2026',
+        deadline: '28/11/2026',
+        successCriteria: 'Índice de conformidade documental > 90%.',
+        expectedEvidences: 'Auditoria semanal de chamados fechados.',
+        status: 'EM_ANDAMENTO'
+      }
+    ],
+    collaboratorStatement: 'Reconheço a importância da comunicação no ambiente hospitalar. Já concluí o curso e estou aplicando a saudação cordial em todos os atendimentos.',
+    collaboratorSignedScience: true,
+    collaboratorSignedScienceAt: '28/10/2026 16:30',
+    status: 'HOMOLOGADO',
+    version: 'v1.0 (Oficial)',
+    archivingInfo: {
+      isArchivedPhysical: true,
+      bookNumber: 'Livro de Feedbacks e Desempenho DTI — 2026',
+      physicalLocation: 'Armário DTI / Pasta Funcional Lucas Mendes'
+    },
+    history: [
+      {
+        timestamp: '28/10/2026 15:30',
+        author: 'Henrique Vasconcelos',
+        action: 'Feedback periódico realizado'
+      }
+    ]
+  }
+];
+
+export const DEFAULT_FEEDBACK_SETTINGS: FeedbackAndAlignmentSettings = {
+  defaultPeriodicityMonths: 1,
+  enableMultiParticipantSignatures: true,
+  documentNumberingPrefix: 'ALN-2026',
+  requireIndividualStatements: true,
+  scienceDeadlineDays: 3,
+  pdfHeaderInstitutionName: 'Instituto HEAL — Gestão Hospitalar & Saúde Assistencial',
+  pdfHeaderDepartmentName: 'Diretoria de Tecnologia da Informação — DTI / HEAL Ops',
+  archivingBookDefault: 'Livro de Registro de Alinhamentos e Feedbacks DTI — 2026',
+  categoriesConfig: [
+    { id: 'ALINHAMENTO_OPERACIONAL', label: 'Alinhamento Operacional Geral', isEnabled: true },
+    { id: 'ORIENTACAO_CONDUTA', label: 'Orientação de Conduta e Postura', isEnabled: true },
+    { id: 'ORIENTACAO_TECNICA', label: 'Orientação Técnica & POPs', isEnabled: true },
+    { id: 'RECONHECIMENTO', label: 'Reconhecimento & Elogio Formal', isEnabled: true },
+    { id: 'PASSAGEM_PLATAOR_ESCALA', label: 'Passagem de Plantão e Escala', isEnabled: true },
+    { id: 'AJUSTE_FERIAS', label: 'Ajuste de Férias e Folgas', isEnabled: true },
+    { id: 'DEFINICAO_PAPEL', label: 'Definição de Papel e Atribuições', isEnabled: true },
+    { id: 'LIVRE', label: 'Registro Livre de Alinhamento', isEnabled: true }
+  ]
+};
+
