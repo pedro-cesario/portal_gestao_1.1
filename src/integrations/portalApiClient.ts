@@ -5,6 +5,8 @@
  * claim DTO compatibility, or enable any hospital connection.
  * Runtime payloads remain unknown until a backend DTO contract is validated.
  */
+import { parsePar2357Overview, parsePar2357TicketPage } from './par2357Dtos';
+
 export type PortalReadEndpoint =
   | '/health'
   | '/v1/auth/me'
@@ -123,6 +125,22 @@ export function createPortalApiClient(options: PortalApiOptions = {}) {
     getTicket: (id: number | string) => get(`/v1/tickets/${ticketId(id)}`),
     getTicketTimeline: (id: number | string) => get(`/v1/tickets/${ticketId(id)}/timeline`),
     getTicketUpdates: (id: number | string) => get(`/v1/tickets/${ticketId(id)}/updates`),
+    /** Strictly validated typed read facade; does not mutate the UI. */
+    getValidatedOverview: async (query: OverviewQuery = {}) => {
+      const p = new URLSearchParams();
+      if (query.mode) p.set('mode', query.mode);
+      return parsePar2357Overview(await get('/v1/indicators/overview', p));
+    },
+    getValidatedTicketPage: async (query: TicketPageQuery = {}) => {
+      const p = new URLSearchParams();
+      if (query.page !== undefined) p.set('page', String(positiveInt(query.page, 'page')));
+      if (query.page_size !== undefined) p.set('page_size', String(positiveInt(query.page_size, 'page_size', 100)));
+      if (query.status) p.set('status', query.status);
+      if (query.technician_id !== undefined) p.set('technician_id', String(positiveInt(query.technician_id, 'technician_id')));
+      if (query.group_id !== undefined) p.set('group_id', String(positiveInt(query.group_id, 'group_id')));
+      if (query.categoria_id !== undefined) p.set('categoria_id', String(positiveInt(query.categoria_id, 'categoria_id')));
+      return parsePar2357TicketPage(await get('/v1/tickets', p));
+    },
     getDailyOperations: () => get('/v1/operations/daily'),
     getPanelsHistory: () => get('/v1/operations/panels/history'),
   };
