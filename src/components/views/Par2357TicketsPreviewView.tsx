@@ -60,6 +60,11 @@ export function Par2357TicketsPreviewView({
       if (signal.aborted) return;
       const result = await api.getValidatedTicketPage({ page, page_size: PAGE_SIZE });
       if (signal.aborted) return;
+      // This preview is an exclusively synthetic homologation surface.
+      // It must not render live hospital tickets without a separate release gate.
+      if (result.source !== 'SYNTHETIC_DEMO' || result.items.some(item => item.origem_dados !== 'SYNTHETIC_DEMO')) {
+        throw new Error('Non-synthetic source is not authorized in the preview');
+      }
       setData(result);
     } catch (cause) {
       if (!signal.aborted) setError(humanError(cause));
@@ -89,7 +94,7 @@ export function Par2357TicketsPreviewView({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Chamados — Consulta PAR2357</h2>
-            <p className="text-xs text-slate-500">Dados do backend validados. Sem cálculos gerenciais presumidos.</p>
+            <p className="text-xs text-slate-500">Prévia exclusivamente sintética; os demais módulos permanecem em demonstração.</p>
           </div>
           <button
             type="button"
