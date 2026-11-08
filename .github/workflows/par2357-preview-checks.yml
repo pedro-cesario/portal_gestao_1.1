@@ -33,3 +33,10 @@ jobs:
         run: node --import tsx --test tests/par2357Dtos.test.ts tests/portalApiClient.test.ts tests/ticketContractBoundary.test.ts
       - name: Compile frontend
         run: npm run build
+      - name: Compile synthetic-only opt-in previews
+        env:
+          VITE_PAR2357_OVERVIEW_PREVIEW: 'true'
+          VITE_PAR2357_TICKETS_PREVIEW: 'true'
+          VITE_PAR2357_INDICATORS_PREVIEW: 'true'
+          VITE_PAR2357_API_BASE_URL: ''
+        run: npm run build
