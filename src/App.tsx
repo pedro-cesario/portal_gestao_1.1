@@ -185,7 +185,12 @@ export default function App() {
 
   // Salvar artefato aprovado no catálogo de Daily e Painéis
   const handleSaveArtifact = (artifact: ArtifactPanel) => {
-    setSavedPanels(prev => [artifact, ...prev]);
+    setSavedPanels(prev => [artifact, ...prev.filter(p => p.id !== artifact.id)]);
+  };
+
+  // Atualizar painel existente (ex: após revisão humana)
+  const handleUpdatePanel = (updatedPanel: ArtifactPanel) => {
+    setSavedPanels(prev => prev.map(p => p.id === updatedPanel.id ? updatedPanel : p));
   };
 
   // Disparo de Auditoria Manual
@@ -322,14 +327,16 @@ export default function App() {
               onNavigateToSavedPanels={() => handleRouteChange('daily-paineis')}
               initialPrompt={agenteInitialPrompt}
               onClearInitialPrompt={() => setAgenteInitialPrompt(undefined)}
+              onOpenTicketById={handleNavigateToTicket}
             />
           )}
 
           {currentRoute === 'daily-paineis' && (
             <DailyAndPanelsView
               savedPanels={savedPanels}
-              onNavigateToAgente={() => handleRouteChange('agente-gerencial')}
+              onNavigateToAgente={(prompt) => prompt ? handleOpenAgenteWithPrompt(prompt) : handleRouteChange('agente-gerencial')}
               onOpenTicketById={handleNavigateToTicket}
+              onUpdatePanel={handleUpdatePanel}
             />
           )}
 

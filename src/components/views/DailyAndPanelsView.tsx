@@ -4,13 +4,13 @@
  * HEAL Ops — Módulo Daily e Painéis (Biblioteca & Histórico de Artefatos Gerados)
  * REGRA MANDATÓRIA: Exclusivamente catálogo e visualização dos painéis homologados.
  * Criação sob demanda é realizada estritamente pelo Agente Gerencial.
+ * UX: SINTÉTICO PRIMEIRO, ANALÍTICO SOB DEMANDA (Desktop Zero-Scroll).
  */
 
 import React, { useState } from 'react';
 import { 
   FileSpreadsheet, 
   Search, 
-  Filter, 
   Sparkles, 
   Calendar, 
   User, 
@@ -19,28 +19,43 @@ import {
   ChevronRight, 
   ArrowLeft,
   Printer,
-  Share2,
   FileText,
-  Info
+  Info,
+  Presentation,
+  Edit3,
+  Layers,
+  FolderKanban,
+  Eye,
+  SlidersHorizontal
 } from 'lucide-react';
-import { ArtifactPanel, PanelTemplateType } from '../../types';
-import { EvidenceBadge } from '../common/EvidenceBadge';
+import { ArtifactPanel } from '../../types';
+import { TemplateSyntheticDashboard } from '../panels/TemplateSyntheticDashboard';
+import { TemplateDetailDrawer } from '../panels/TemplateDetailDrawer';
+import { PresentationModeModal } from '../panels/PresentationModeModal';
+import { HumanReviewModal } from '../panels/HumanReviewModal';
 
 interface DailyAndPanelsViewProps {
   savedPanels: ArtifactPanel[];
-  onNavigateToAgente: () => void;
+  onNavigateToAgente: (prefillPrompt?: string) => void;
   onOpenTicketById: (ticketId: number) => void;
+  onUpdatePanel?: (updatedPanel: ArtifactPanel) => void;
 }
 
 export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   savedPanels,
   onNavigateToAgente,
-  onOpenTicketById
+  onOpenTicketById,
+  onUpdatePanel
 }) => {
   const [selectedPanel, setSelectedPanel] = useState<ArtifactPanel | null>(null);
   const [templateFilter, setTemplateFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'summary' | 'detail'>('summary');
+  
+  // Modais e gavetas
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState<boolean>(false);
+  const [isPresentationOpen, setIsPresentationOpen] = useState<boolean>(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [activePanelForModal, setActivePanelForModal] = useState<ArtifactPanel | null>(null);
 
   const filteredPanels = savedPanels.filter(p => {
     if (templateFilter !== 'all' && p.templateType !== templateFilter) return false;
@@ -59,34 +74,71 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   const totalPages = Math.ceil(filteredPanels.length / pageSize) || 1;
   const paginatedPanels = filteredPanels.slice((catalogPage - 1) * pageSize, catalogPage * pageSize);
 
+  const handleOpenPresentationForPanel = (panel: ArtifactPanel) => {
+    setActivePanelForModal(panel);
+    setIsPresentationOpen(true);
+  };
+
+  const handleOpenDetailForPanel = (panel: ArtifactPanel) => {
+    setActivePanelForModal(panel);
+    setIsDetailDrawerOpen(true);
+  };
+
+  const handleOpenReviewForPanel = (panel: ArtifactPanel) => {
+    setActivePanelForModal(panel);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleSaveReviewed = (reviewed: ArtifactPanel) => {
+    if (onUpdatePanel) {
+      onUpdatePanel(reviewed);
+    }
+    if (selectedPanel && selectedPanel.id === reviewed.id) {
+      setSelectedPanel(reviewed);
+    }
+  };
+
+  const getTemplateIcon = (type: string) => {
+    switch (type) {
+      case 'TPL-01': return FileSpreadsheet;
+      case 'TPL-02': return Layers;
+      case 'TPL-03': return User;
+      case 'TPL-04': return FolderKanban;
+      default: return FileSpreadsheet;
+    }
+  };
+
   return (
-    <div className="w-full h-full flex flex-col justify-between p-3 sm:p-4 overflow-hidden gap-3">
+    <div className="w-full h-full flex flex-col justify-between p-2.5 sm:p-3 overflow-hidden gap-2.5">
       {/* SE NÃO HOUVER PAINEL SELECIONADO: EXIBIR O CATÁLOGO (NÍVEL 1 SINTÉTICO) */}
       {!selectedPanel ? (
-        <div className="flex-1 min-h-0 flex flex-col justify-between gap-3 overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col justify-between gap-2.5 overflow-hidden">
           {/* Banner de Governança da Biblioteca */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs shrink-0">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-2.5 shadow-xs shrink-0">
             <div>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <FileSpreadsheet className="w-5 h-5 text-[#134F9F] dark:text-blue-400" />
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
-                  Biblioteca Oficial de Painéis e Dailies Operacionais
+                  Catálogo Oficial de Painéis e Dailies Operacionais
                 </h2>
+                <span className="text-[10px] font-mono font-bold bg-blue-500/10 text-[#134F9F] dark:text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">
+                  HEAL Ops 1.1
+                </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Catálogo histórico de artefatos homologados · Versões auditadas e congeladas
+                Artefatos gerenciais padronizados (TPL-01 a TPL-04) · Sintético primeiro, analítico sob demanda
               </p>
             </div>
 
-            {/* Aviso e Botão Mandatório: Criação é no Agente Gerencial */}
-            <div className="flex items-center gap-2.5">
+            {/* Ação: Gerar Novo Painel no Agente Gerencial */}
+            <div className="flex items-center gap-2">
               <span className="hidden sm:inline text-xs text-slate-400">
                 Novo painel sob demanda?
               </span>
               <button
                 type="button"
-                onClick={onNavigateToAgente}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white bg-[#134F9F] hover:bg-blue-800 rounded-md transition-colors shadow-xs cursor-pointer"
+                onClick={() => onNavigateToAgente()}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white bg-[#134F9F] hover:bg-blue-800 rounded-md transition-colors shadow-xs cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Solicitar ao Agente Gerencial</span>
@@ -117,9 +169,9 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
                   setTemplateFilter(e.target.value);
                   setCatalogPage(1);
                 }}
-                className="text-xs px-2 py-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded text-slate-700 dark:text-slate-300 focus:outline-none"
+                className="text-xs px-2 py-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
               >
-                <option value="all">Todos os Modelos</option>
+                <option value="all">Todos os Modelos (TPL-01 a TPL-04)</option>
                 <option value="TPL-01">TPL-01 — Daily Operacional</option>
                 <option value="TPL-02">TPL-02 — Alinhamento Semanal</option>
                 <option value="TPL-03">TPL-03 — Feedback Individual</option>
@@ -128,63 +180,104 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
             </div>
 
             <div className="text-slate-400 text-[11px] font-mono">
-              {filteredPanels.length} artefatos catalogados
+              {filteredPanels.length} artefatos disponíveis
             </div>
           </div>
 
-          {/* GRADE DE ARTEFATOS SALVOS (NÍVEL 1 SINTÉTICO) */}
+          {/* GRADE DE ARTEFATOS DO CATÁLOGO (COM AS 3 AÇÕES: VISUALIZAR, APRESENTAR, DETALHAR) */}
           <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 overflow-hidden">
-            {paginatedPanels.map(panel => (
-              <div
-                key={panel.id}
-                onClick={() => {
-                  setSelectedPanel(panel);
-                  setActiveTab('summary');
-                }}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 flex flex-col justify-between hover:border-blue-500/50 cursor-pointer transition-all group shadow-xs hover:shadow-sm"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-[11px] mb-1.5">
-                    <span className="font-mono font-bold text-[#134F9F] dark:text-blue-400">
-                      {panel.templateType}
-                    </span>
-                    <span className="font-mono text-slate-400 text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                      {panel.source}
-                    </span>
+            {paginatedPanels.map(panel => {
+              const Icon = getTemplateIcon(panel.templateType);
+              return (
+                <div
+                  key={panel.id}
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 flex flex-col justify-between hover:border-blue-500/50 transition-all group shadow-2xs hover:shadow-sm"
+                >
+                  <div>
+                    {/* Topline do Card: Tipo de Template, Status e Fonte */}
+                    <div className="flex items-center justify-between text-[11px] mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <Icon className="w-3.5 h-3.5 text-[#134F9F] dark:text-blue-400" />
+                        <span className="font-mono font-bold text-[#134F9F] dark:text-blue-400">
+                          {panel.templateType}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                          panel.status === 'APROVADO'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        }`}>
+                          {panel.status === 'APROVADO' ? 'HOMOLOGADO' : 'RASCUNHO'}
+                        </span>
+                        <span className="font-mono text-slate-400 text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                          {panel.source}
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#134F9F] dark:group-hover:text-blue-400 transition-colors line-clamp-1">
+                      {panel.title}
+                    </h3>
+
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 italic">
+                      "{panel.summary.headline}"
+                    </p>
+
+                    {/* Metadados: Data de Referência e Atualização */}
+                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 gap-2 text-[11px] text-slate-400">
+                      <div>
+                        <span>Referência:</span>
+                        <strong className="block text-slate-700 dark:text-slate-300 font-mono truncate">{panel.referenceDate}</strong>
+                      </div>
+                      <div>
+                        <span>Última Atualização:</span>
+                        <strong className="block text-slate-700 dark:text-slate-300 font-mono truncate">{panel.generationDate.split(' ')[0]}</strong>
+                      </div>
+                    </div>
                   </div>
 
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#134F9F] dark:group-hover:text-blue-400 transition-colors line-clamp-1">
-                    {panel.title}
-                  </h3>
+                  {/* AS 3 AÇÕES EXPLICITAS CONFORME ITEM 5: VISUALIZAR, APRESENTAR, DETALHAR */}
+                  <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPanel(panel)}
+                      className="inline-flex items-center justify-center gap-1 py-1 px-1.5 text-xs font-semibold text-[#134F9F] dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded transition-colors cursor-pointer"
+                      title="Visualizar Painel Sintético"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Visualizar</span>
+                    </button>
 
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 italic">
-                    "{panel.summary.headline}"
-                  </p>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenPresentationForPanel(panel)}
+                      className="inline-flex items-center justify-center gap-1 py-1 px-1.5 text-xs font-semibold text-white bg-[#134F9F] hover:bg-blue-800 rounded transition-colors shadow-2xs cursor-pointer"
+                      title="Modo Apresentação Executivo"
+                    >
+                      <Presentation className="w-3.5 h-3.5" />
+                      <span>Apresentar</span>
+                    </button>
 
-                  <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 gap-2 text-[11px] text-slate-400">
-                    <div>
-                      <span>Referência:</span>
-                      <strong className="block text-slate-700 dark:text-slate-300 font-mono">{panel.referenceDate}</strong>
-                    </div>
-                    <div>
-                      <span>Autor:</span>
-                      <strong className="block text-slate-700 dark:text-slate-300 truncate">{panel.ownerName}</strong>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDetailForPanel(panel)}
+                      className="inline-flex items-center justify-center gap-1 py-1 px-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
+                      title="Detalhar Evidências Analíticas"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Detalhar</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="mt-2 pt-1.5 flex items-center justify-between text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                  <span>Abrir Painel Salvo</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* RODAPÉ DE PAGINAÇÃO DA BIBLIOTECA */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 flex items-center justify-between text-xs text-slate-500 shadow-2xs shrink-0">
             <div>
-              Mostrando <strong className="font-mono text-slate-900 dark:text-slate-100">{paginatedPanels.length}</strong> de <strong className="font-mono">{filteredPanels.length}</strong> artefatos
+              Mostrando <strong className="font-mono text-slate-900 dark:text-slate-100">{paginatedPanels.length}</strong> de <strong className="font-mono">{filteredPanels.length}</strong> artefatos homologados
             </div>
 
             <div className="flex items-center gap-2">
@@ -214,193 +307,64 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
           </div>
         </div>
       ) : (
-        /* VISUALIZAÇÃO COMPLETA DO PAINEL SELECIONADO (NÍVEL 2 / ROLÁVEL COM AMBAS AS CAMADAS) */
-        <div className="space-y-4">
-          {/* Top Bar de Navegação do Painel */}
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => setSelectedPanel(null)}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Voltar ao Catálogo de Painéis</span>
-            </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 transition-colors"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Imprimir / Exportar</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Header Executivo do Painel Salvo */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 space-y-4 shadow-xs">
-            <div className="flex flex-wrap items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-xs font-bold text-[#134F9F] dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">
-                    {selectedPanel.templateName}
-                  </span>
-                  <span className="text-xs text-slate-400">·</span>
-                  <span className="text-xs font-mono text-emerald-500 font-semibold">
-                    {selectedPanel.status}
-                  </span>
-                  <span className="text-xs text-slate-400">·</span>
-                  <span className="text-xs text-slate-500 font-mono">
-                    Versão {selectedPanel.version}
-                  </span>
-                </div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  {selectedPanel.title}
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Data de Referência: <strong className="text-slate-700 dark:text-slate-300">{selectedPanel.referenceDate}</strong> · Gerado em: {selectedPanel.generationDate} · Fonte: {selectedPanel.source}
-                </p>
-              </div>
-
-              {/* Seletor de Camada Semântica (Summary vs Detail) */}
-              <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('summary')}
-                  className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                    activeTab === 'summary'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  Síntese Executiva (Summary)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('detail')}
-                  className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                    activeTab === 'detail'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  Visão Analítica Completa (Detail)
-                </button>
-              </div>
-            </div>
-
-            {/* CONTEÚDO DA CAMADA SUMMARY (SINTÉTICA) */}
-            {activeTab === 'summary' && (
-              <div className="space-y-4">
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-                    Conclusão Sintética Principal
-                  </span>
-                  <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
-                    "{selectedPanel.summary.headline}"
-                  </p>
-                </div>
-
-                {/* Métricas Sintéticas */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {selectedPanel.summary.metricsBrief.map((m, idx) => (
-                    <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded text-center">
-                      <span className="text-[10px] text-slate-400 block">{m.label}</span>
-                      <span className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-0.5 block">
-                        {m.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* As 3 Prioridades Principais */}
-                <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md space-y-2">
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-                    As 3 Prioridades Mandatórias
-                  </h3>
-                  <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-                    {selectedPanel.summary.topPriorities.map((pri, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="font-mono font-bold text-[#134F9F] dark:text-blue-400">0{idx + 1}.</span>
-                        <span>{pri}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Decisões e Encaminhamentos */}
-                <div className="p-3.5 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-md text-xs text-blue-950 dark:text-blue-200">
-                  <strong className="block mb-1">Decisões Registradas:</strong>
-                  {selectedPanel.summary.keyDecisionsSummary}
-                </div>
-              </div>
-            )}
-
-            {/* CONTEÚDO DA CAMADA DETAIL (ANALÍTICA E ROLÁVEL) */}
-            {activeTab === 'detail' && (
-              <div className="space-y-6 pt-2">
-                {selectedPanel.detail.sections.map((section, sIdx) => (
-                  <div key={sIdx} className="space-y-3">
-                    <div className="pb-1.5 border-b border-slate-200 dark:border-slate-800">
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                        {section.title}
-                      </h3>
-                      {section.description && (
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {section.description}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      {section.items.map((item, iIdx) => (
-                        <div
-                          key={iIdx}
-                          className="p-3 rounded bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1"
-                        >
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <span className="font-bold text-slate-900 dark:text-slate-100">
-                              {item.title}
-                            </span>
-                            {item.evidenceLevel && (
-                              <EvidenceBadge level={item.evidenceLevel} size="sm" />
-                            )}
-                          </div>
-                          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                            {item.description}
-                          </p>
-                          {(item.responsible || item.deadline || item.relatedTicketId) && (
-                            <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1">
-                              {item.responsible && <span>Responsável: <strong className="text-slate-700 dark:text-slate-300">{item.responsible}</strong></span>}
-                              {item.deadline && <span>Prazo: <strong className="text-slate-700 dark:text-slate-300 font-mono">{item.deadline}</strong></span>}
-                              {item.relatedTicketId && (
-                                <button
-                                  type="button"
-                                  onClick={() => onOpenTicketById(item.relatedTicketId!)}
-                                  className="text-blue-600 dark:text-blue-400 font-semibold underline font-mono"
-                                >
-                                  Ver Chamado #{item.relatedTicketId}
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {selectedPanel.detail.governanceNotes && (
-                  <div className="p-3 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500">
-                    <strong>Notas de Governança Institucional:</strong> {selectedPanel.detail.governanceNotes}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+        /* VISUALIZAÇÃO SINTÉTICA EXECUTIVA DO PAINEL SELECIONADO (ZERO-SCROLL) */
+        <div className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden">
+          <TemplateSyntheticDashboard
+            panel={selectedPanel}
+            onOpenPresentation={() => {
+              setActivePanelForModal(selectedPanel);
+              setIsPresentationOpen(true);
+            }}
+            onOpenDetailDrawer={() => {
+              setActivePanelForModal(selectedPanel);
+              setIsDetailDrawerOpen(true);
+            }}
+            onOpenHumanReview={() => {
+              setActivePanelForModal(selectedPanel);
+              setIsReviewModalOpen(true);
+            }}
+            onBackToCatalog={() => setSelectedPanel(null)}
+            onOpenTicketById={onOpenTicketById}
+          />
         </div>
+      )}
+
+      {/* MODAL MODO APRESENTAÇÃO EXECUTIVO */}
+      {isPresentationOpen && activePanelForModal && (
+        <PresentationModeModal
+          panel={activePanelForModal}
+          isOpen={isPresentationOpen}
+          onClose={() => setIsPresentationOpen(false)}
+          onOpenTicketById={onOpenTicketById}
+        />
+      )}
+
+      {/* DRAWER ANALÍTICO SOB DEMANDA */}
+      {isDetailDrawerOpen && activePanelForModal && (
+        <TemplateDetailDrawer
+          isOpen={isDetailDrawerOpen}
+          onClose={() => setIsDetailDrawerOpen(false)}
+          panel={activePanelForModal}
+          onOpenTicketById={onOpenTicketById}
+          onOpenPresentation={() => {
+            setIsDetailDrawerOpen(false);
+            setIsPresentationOpen(true);
+          }}
+          onOpenHumanReview={() => {
+            setIsDetailDrawerOpen(false);
+            setIsReviewModalOpen(true);
+          }}
+        />
+      )}
+
+      {/* MODAL DE REVISÃO HUMANA */}
+      {isReviewModalOpen && activePanelForModal && (
+        <HumanReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+          panel={activePanelForModal}
+          onSaveReviewedPanel={handleSaveReviewed}
+        />
       )}
     </div>
   );

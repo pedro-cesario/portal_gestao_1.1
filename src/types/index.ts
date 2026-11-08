@@ -133,6 +133,40 @@ export interface AuditSnapshot {
 
 export type PanelTemplateType = 'TPL-01' | 'TPL-02' | 'TPL-03' | 'TPL-04';
 
+export interface ArtifactMetric {
+  label: string;
+  value: string | number;
+  trend?: 'up' | 'down' | 'stable' | { value: string; isPositive: boolean };
+  target?: string;
+  isAvailable?: boolean;
+  evidenceRef?: string;
+}
+
+export interface ArtifactSectionItem {
+  title: string;
+  description: string;
+  responsible?: string;
+  deadline?: string;
+  status?: string;
+  evidenceLevel?: EvidenceLevel;
+  relatedTicketId?: number;
+  metrics?: { label: string; value: string | number }[];
+}
+
+export interface ArtifactSection {
+  title: string;
+  description?: string;
+  items: ArtifactSectionItem[];
+}
+
+export interface ArtifactHumanReview {
+  reviewedBy?: string;
+  reviewDate?: string;
+  reviewedAt?: string;
+  notes?: string;
+  status: 'RASCUNHO' | 'EM_REVISAO' | 'APROVADO' | 'ARQUIVADO';
+}
+
 export interface ArtifactPanel {
   id: string;
   templateType: PanelTemplateType;
@@ -143,30 +177,30 @@ export interface ArtifactPanel {
   generationDate: string;
   source: 'REALTIME' | 'SNAPSHOT_04H';
   version: string;
-  status: 'APROVADO' | 'RASCUNHO' | 'ARQUIVADO';
+  status: 'APROVADO' | 'RASCUNHO' | 'EM_REVISAO' | 'ARQUIVADO';
+  parameters?: {
+    period?: string;
+    targetCollaboratorId?: number;
+    targetCollaboratorName?: string;
+    targetProjectId?: string;
+    targetProjectName?: string;
+    collaboratorName?: string;
+    projectName?: string;
+  };
   summary: {
     headline: string;
     criticalAlertsCount: number;
     topPriorities: string[];
     keyDecisionsSummary: string;
-    metricsBrief: { label: string; value: string | number }[];
+    metricsBrief: ArtifactMetric[];
   };
   detail: {
-    sections: {
-      title: string;
-      description?: string;
-      items: {
-        title: string;
-        description: string;
-        responsible?: string;
-        deadline?: string;
-        status?: string;
-        evidenceLevel?: EvidenceLevel;
-        relatedTicketId?: number;
-      }[];
-    }[];
+    sections: ArtifactSection[];
     governanceNotes?: string;
+    limitations?: string[];
+    evidenceLogs?: { timestamp: string; source: string; entry: string }[];
   };
+  humanReview?: ArtifactHumanReview;
 }
 
 export interface ChatMessage {
