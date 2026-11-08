@@ -66,3 +66,25 @@ Validação independente MCP 2.0, tarefa `heal20-a403ed2534354a058361e633fa89ae0
 - nenhuma modificação realizada pela tarefa de auditoria.
 
 Pendências: verificar threadpool do worker em ambiente autorizado sem contornar a sandbox; homologar login/sessão e navegador em infraestrutura sintética própria; não confundir teste de contrato in-process com E2E real.
+
+## Visão Geral sintética — terceira etapa web
+
+O arquivo `src/components/views/Par2357OverviewPreviewView.tsx` implementa uma Visão Geral executiva separada, habilitada **somente em build isolado** com:
+
+```env
+VITE_PAR2357_OVERVIEW_PREVIEW=true
+```
+
+Padrão **desligado**. A Visão Geral original `OverviewView` permanece intacta.
+
+- Verifica `GET /v1/auth/me` e então busca `GET /v1/tickets?page=1&page_size=6`; ambas origem do envelope e origem de cada item devem ser `SYNTHETIC_DEMO`.
+- Utiliza `total` do envelope paginado como total reportado pelo servidor; não estima total a partir dos seis itens retornados.
+- Consulta `GET /v1/indicators/overview?mode=SNAPSHOT_04H` separadamente. Exibe somente os contadores com fonte `SYNTHETIC_DEMO`, status `AVAILABLE` e números válidos; caso contrário mostra `Indisponível` sem influenciar a listagem de chamados.
+- Painel sintético primeiro e detalhes do chamado ao clicar. Não atribui última ação humana, impacto assistencial, prioridade gerencial, POP ou avaliação de SLA sem dados confirmados.
+- Sem deploy, acesso GLPI produtivo, merge, nem ativação implícita de flags.
+
+### Diagnóstico do worker — sem alterar segurança
+
+No worker isolado, rota assíncrona mínima FastAPI/ASGI passou, rota síncrona mínima expirou em `anyio.to_thread.run_sync`. Em diagnóstico separado, uma thread Python simples executou e encerrou normalmente, o que **não prova indisponibilidade geral de threads**. `NoNewPrivs=1` e seccomp ativo são observados, mas nenhuma causalidade foi confirmada.
+
+O harness inline, limitado aos testes Python sintéticos, já validou o contrato HTTP, mas **não** homologou threadpool real, navegador, login, sessão, ou operação produtiva. Corrigir ou reproduzir a falha sem mexer na sandbox/serviços e, então, validar a cadeia de autenticação sintética em banco descartável antes do próximo gate de release.
