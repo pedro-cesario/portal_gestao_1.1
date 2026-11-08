@@ -12,7 +12,10 @@ import {
   AuditSnapshot, 
   ArtifactPanel,
   CurrentUser,
-  MeetingAgreement 
+  MeetingAgreement,
+  DevelopmentCommitment,
+  ManagedProject,
+  DevelopmentPlanSummary
 } from '../types';
 
 export const CURRENT_TIMESTAMP_BRT = '06/11/2026 10:10 (Brasília)';
@@ -1146,3 +1149,727 @@ export const MOCK_MEETING_AGREEMENTS: MeetingAgreement[] = [
     ]
   }
 ];
+
+// ==========================================
+// PARTE A: PLANOS DE EVOLUÇÃO INDIVIDUAL
+// ==========================================
+
+export const MOCK_DEVELOPMENT_COMMITMENTS: DevelopmentCommitment[] = [
+  // 1. Lucas Mendes: Comunicação e Atendimento Humanizado (Origem: Semana 44, acompanhamento na Semana 45)
+  {
+    id: 'DEV-2026-01',
+    sourceMeetingType: 'ALINHAMENTO_SEMANAL',
+    meetingReferenceDate: 'Semana 44/2026',
+    isPreviousAlignment: true,
+    collaboratorId: 105,
+    collaboratorName: 'Lucas Mendes',
+    collaboratorRole: 'Analista de Suporte Presencial N1/N2',
+    registeredAt: '28/10/2026 14:40',
+    developmentArea: 'Comunicação e Atendimento Humanizado',
+    observedSituation: 'Durante o plantão de triagem no Pronto Atendimento, foram identificados registros nos chamados com termos ásperos ("usuário não soube usar o leitor e travou a fila"), gerando queixa formal de postura da supervisão assistencial.',
+    evidencesObserved: [
+      'Chamado #48098 (Nota de acompanhamento registrada às 14:22 de 27/10)',
+      'Relato da Supervisora de Enfermagem do PA encaminhado à Gestão de TI em 28/10'
+    ],
+    operationalImpact: 'Ruído de relacionamento entre enfermagem e suporte de campo, elevando atrito na abertura de chamados críticos de risco assistencial.',
+    agreedGoal: 'Adotar comunicação empática e acolhedora em 100% dos atendimentos presenciais e notas públicas no GLPI, com zero incidentes de atrito no ciclo de 30 dias.',
+    collaboratorProposedCommitment: 'Compreendo o impacto no atendimento ao paciente. Comprometo-me a revisar todas as respostas antes de postar, manter saudação cordial e pedir auxílio ao Rafael sempre que identificar estresse na área.',
+    practicalActions: [
+      {
+        id: 'act-01-1',
+        description: 'Concluir treinamento interno de Comunicação Não-Violenta e Empatia em Saúde (Plataforma HEAL Ensino)',
+        deadline: '05/11/2026',
+        completed: true,
+        completedAt: '04/11/2026 16:30',
+        evidenceRef: 'Certificado anexado no portal RH'
+      },
+      {
+        id: 'act-01-2',
+        description: 'Adotar roteiro padronizado de saudação e explicação técnica amigável no atendimento presencial',
+        deadline: '12/11/2026',
+        completed: false
+      },
+      {
+        id: 'act-01-3',
+        description: 'Alinhamento quinzenal de escuta com o mentor Rafael Albuquerque',
+        deadline: '18/11/2026',
+        completed: false
+      }
+    ],
+    mentorOrManagerId: 1,
+    mentorOrManagerName: 'Henrique Vasconcelos',
+    startDate: '28/10/2026',
+    deadlineOrNextReview: '12/11/2026 (Próximo Alinhamento Semanal)',
+    successCriteria: 'Zero queixas de postura pela enfermagem e elogio espontâneo registrado no fechamento dos chamados.',
+    collaboratorNotes: 'Treinamento concluído. Já notei melhor receptividade da equipe do PA ao iniciar o atendimento cumprimentando nominalmente.',
+    collaboratorSignedScience: true,
+    collaboratorSignedScienceAt: '28/10/2026 16:00',
+    managerNotes: 'Evolução notória na última semana. Lucas demonstrou maturidade profissional ao reconhecer a oportunidade de melhoria.',
+    status: 'EM_ANDAMENTO',
+    history: [
+      {
+        id: 'h-dev01-1',
+        timestamp: '28/10/2026 14:40',
+        author: 'Henrique Vasconcelos',
+        action: 'Compromisso de melhoria registrado após alinhamento presencial',
+        newValue: 'AGUARDANDO_CIENCIA'
+      },
+      {
+        id: 'h-dev01-2',
+        timestamp: '28/10/2026 16:00',
+        author: 'Lucas Mendes',
+        action: 'Colaborador assinou ciência formal no Portal',
+        previousValue: 'AGUARDANDO_CIENCIA',
+        newValue: 'EM_ANDAMENTO',
+        justification: 'Ciência e aceite integral das ações pactuadas.'
+      },
+      {
+        id: 'h-dev01-3',
+        timestamp: '04/11/2026 16:30',
+        author: 'Lucas Mendes',
+        action: 'Ação 1 concluída com evidência',
+        justification: 'Certificado de Comunicação Não-Violenta concluído.'
+      }
+    ]
+  },
+
+  // 2. Mariana Costa: Gestão de Prazos e Follow-ups no Turno Vespertino (Semana 44)
+  {
+    id: 'DEV-2026-02',
+    sourceMeetingType: 'ALINHAMENTO_SEMANAL',
+    meetingReferenceDate: 'Semana 44/2026',
+    isPreviousAlignment: true,
+    collaboratorId: 101,
+    collaboratorName: 'Mariana Costa',
+    collaboratorRole: 'Analista Sênior de Sistemas Clínicos (Tasy)',
+    registeredAt: '29/10/2026 10:15',
+    developmentArea: 'Gestão de Prazos e Follow-ups Tempestivos',
+    observedSituation: 'Chamados em andamento de alta complexidade do Tasy foram mantidos sem apontamento no GLPI durante a tarde, disparando falso alerta de estagnação na auditoria noturna das 04h.',
+    evidencesObserved: [
+      'Chamado #48191 (Prescrição Centro Obstétrico - 22h sem apontamento humano)',
+      'Relatório de Auditoria Noturna SNAPSHOT_04H de 29/10/2026'
+    ],
+    operationalImpact: 'Distorção nos indicadores de auditoria de conformidade POP-TIN-017 e sobrecarga na conferência matinal do gestor.',
+    agreedGoal: 'Registrar apontamento humano intermediário em todos os chamados ativos antes das 17h00.',
+    collaboratorProposedCommitment: 'Criar rotina pessoal às 16h45 para checar o painel e documentar o status atual das demandas.',
+    practicalActions: [
+      {
+        id: 'act-02-1',
+        description: 'Configurar alarme recorrente de fechamento de turno às 16h45 no Google Calendar',
+        deadline: '30/10/2026',
+        completed: true,
+        completedAt: '30/10/2026 09:00',
+        evidenceRef: 'Configuração validada'
+      },
+      {
+        id: 'act-02-2',
+        description: 'Manter zero chamados sem evolução >24h durante 10 dias úteis consecutivos',
+        deadline: '10/11/2026',
+        completed: false
+      }
+    ],
+    mentorOrManagerId: 1,
+    mentorOrManagerName: 'Henrique Vasconcelos',
+    startDate: '29/10/2026',
+    deadlineOrNextReview: '10/11/2026',
+    successCriteria: 'Zero falsos positivos de estagnação no snapshot das 04h atribuídos à analista.',
+    collaboratorNotes: 'Rotina implantada. Apenas 1 chamado na sexta-feira ficou no limite devido a reunião com a diretoria médica.',
+    collaboratorSignedScience: true,
+    collaboratorSignedScienceAt: '29/10/2026 11:00',
+    managerNotes: 'Mariana é altamente resolutiva; o ajuste de horário de apontamento já trouxe grande ganho nos relatórios noturnos.',
+    status: 'EM_ANDAMENTO',
+    history: [
+      {
+        id: 'h-dev02-1',
+        timestamp: '29/10/2026 10:15',
+        author: 'Henrique Vasconcelos',
+        action: 'Compromisso registrado',
+        newValue: 'AGUARDANDO_CIENCIA'
+      },
+      {
+        id: 'h-dev02-2',
+        timestamp: '29/10/2026 11:00',
+        author: 'Mariana Costa',
+        action: 'Ciência confirmada',
+        previousValue: 'AGUARDANDO_CIENCIA',
+        newValue: 'EM_ANDAMENTO'
+      }
+    ]
+  },
+
+  // 3. Carlos Eduardo: Homologação e Testes Formais com Evidência Anexa (Semana 45 - AGUARDANDO_VALIDACAO)
+  {
+    id: 'DEV-2026-03',
+    sourceMeetingType: 'ALINHAMENTO_SEMANAL',
+    meetingReferenceDate: 'Semana 45/2026',
+    isPreviousAlignment: false,
+    collaboratorId: 102,
+    collaboratorName: 'Carlos Eduardo Ramos',
+    collaboratorRole: 'Especialista em Redes & Infraestrutura Crítica',
+    registeredAt: '03/11/2026 15:30',
+    developmentArea: 'Qualidade Documental POP-TIN-017 e Evidências Técnicas',
+    observedSituation: 'Intervenções em patch cables e racks de switches concluídas com status de solucionado, porém sem anexo de teste de ping contínuo ou print de porta de fibra no GLPI.',
+    evidencesObserved: [
+      'Chamado #48219 (Telemetria UTI - sem print de console de portas anexado)',
+      'POP-TIN-017 Subitem 6.3 (Solução com Evidência Técnica Auditável)'
+    ],
+    operationalImpact: 'Impossibilidade de auditar preventivamente a integridade dos uplinks sem nova visita presencial.',
+    agreedGoal: 'Anexar evidência técnica auditável (log/print de porta/teste de banda) em 100% dos chamados de infraestrutura concluídos.',
+    collaboratorProposedCommitment: 'Padronizar a captura de prints do console dos switches e medições de atenuação ótica diretamente pelo app corporativo.',
+    practicalActions: [
+      {
+        id: 'act-03-1',
+        description: 'Criar template de evidência rápida para intervenções de infraestrutura física',
+        deadline: '05/11/2026',
+        completed: true,
+        completedAt: '05/11/2026 14:00',
+        evidenceRef: 'Template compartilhado na pasta da equipe'
+      },
+      {
+        id: 'act-03-2',
+        description: 'Submeter 5 chamados consecutivos com evidência anexada e homologada',
+        deadline: '07/11/2026',
+        completed: true,
+        completedAt: '06/11/2026 09:30',
+        evidenceRef: 'Chamados #48219, #47952, #47880, #47810, #47790'
+      }
+    ],
+    mentorOrManagerId: 1,
+    mentorOrManagerName: 'Henrique Vasconcelos',
+    startDate: '03/11/2026',
+    deadlineOrNextReview: '07/11/2026',
+    successCriteria: '100% de conformidade com Subitem 6.3 do POP-TIN-017 nos chamados finalizados.',
+    collaboratorNotes: 'Todas as ações foram concluídas e os 5 chamados anexados com comprovação de console. Solicito validação pelo gestor.',
+    collaboratorSignedScience: true,
+    collaboratorSignedScienceAt: '03/11/2026 16:00',
+    managerNotes: 'Aguardando revisão formal no final do turno de hoje para homologação.',
+    status: 'AGUARDANDO_VALIDACAO',
+    history: [
+      {
+        id: 'h-dev03-1',
+        timestamp: '03/11/2026 15:30',
+        author: 'Henrique Vasconcelos',
+        action: 'Compromisso registrado',
+        newValue: 'AGUARDANDO_CIENCIA'
+      },
+      {
+        id: 'h-dev03-2',
+        timestamp: '03/11/2026 16:00',
+        author: 'Carlos Eduardo Ramos',
+        action: 'Ciência formal realizada',
+        newValue: 'EM_ANDAMENTO'
+      },
+      {
+        id: 'h-dev03-3',
+        timestamp: '06/11/2026 09:45',
+        author: 'Carlos Eduardo Ramos',
+        action: 'Solicitada validação de resultado ao gestor',
+        previousValue: 'EM_ANDAMENTO',
+        newValue: 'AGUARDANDO_VALIDACAO',
+        justification: 'Todos os 5 chamados com evidências anexadas e testadas com sucesso.'
+      }
+    ]
+  }
+];
+
+// ==========================================
+// PARTE B: GESTÃO COMPLETA DE PROJETOS (TPL-04)
+// ==========================================
+
+export const MOCK_MANAGED_PROJECTS: ManagedProject[] = [
+  {
+    id: 'prj-pacs-01',
+    code: 'PRJ-PACS-01',
+    name: 'Expansão do Storage PACS & Laudos CDI',
+    sponsor: 'Diretoria de Tecnologia & Diretoria Médica',
+    manager: 'Henrique Vasconcelos',
+    targetDate: '25/11/2026',
+    generalValidatedProgress: 68,
+    completedMilestonesCount: 5,
+    totalMilestonesCount: 8,
+    pendingDeliverablesCount: 3,
+    overdueTasksCount: 1,
+    criticalBlocksCount: 1,
+    nextMilestone: {
+      title: 'Homologação do Cache SSD Tomografia',
+      date: '12/11/2026',
+      daysRemaining: 6
+    },
+    phases: [
+      {
+        id: 'ph-01',
+        order: 1,
+        code: 'FASE_1',
+        title: 'Fase 1: Diagnóstico de Volumetria & Dimensionamento',
+        objective: 'Mapear taxa de crescimento de laudos DICOM e volumetria dos exames de ressonância e tomografia.',
+        startDate: '01/09/2026',
+        endDate: '20/09/2026',
+        status: 'CONCLUIDA',
+        progressPercentage: 100,
+        deliverables: [
+          {
+            id: 'ent-01-1',
+            code: 'ENT-01',
+            phaseId: 'ph-01',
+            title: 'Relatório de Volumetria Histórica DICOM (36 meses)',
+            description: 'Levantamento estatístico de exames armazenados e projeção para 5 anos.',
+            targetDate: '10/09/2026',
+            completedDate: '09/09/2026',
+            status: 'HOMOLOGADA',
+            progressPercentage: 100,
+            validatedBy: 'Henrique Vasconcelos',
+            validatedAt: '10/09/2026 15:00',
+            evidenceRefs: ['DOC-VOL-PACS-v1.2.pdf']
+          },
+          {
+            id: 'ent-01-2',
+            code: 'ENT-02',
+            phaseId: 'ph-01',
+            title: 'Dimensionamento de IOPS e Storage Primário/Secundário',
+            description: 'Especificação técnica para armazenamento tiered com ZFS NVMe + SAS.',
+            targetDate: '20/09/2026',
+            completedDate: '18/09/2026',
+            status: 'HOMOLOGADA',
+            progressPercentage: 100,
+            validatedBy: 'Henrique Vasconcelos',
+            validatedAt: '20/09/2026 11:00'
+          }
+        ],
+        milestones: [
+          {
+            id: 'm-01',
+            phaseId: 'ph-01',
+            title: 'M1: Aprovação da Arquitetura Técnica no Comitê',
+            targetDate: '20/09/2026',
+            actualDate: '19/09/2026',
+            isCriticalPath: true,
+            status: 'CONCLUIDO',
+            description: 'Arquitetura validada sem ressalvas pelo corpo clínico de radiologia.'
+          }
+        ]
+      },
+      {
+        id: 'ph-02',
+        order: 2,
+        code: 'FASE_2',
+        title: 'Fase 2: Aquisição & Provisionamento Físico no Data Center',
+        objective: 'Instalar racks, fontes redundantes, switches SAN Fibre Channel e novos nós de storage.',
+        startDate: '21/09/2026',
+        endDate: '15/10/2026',
+        status: 'CONCLUIDA',
+        progressPercentage: 100,
+        deliverables: [
+          {
+            id: 'ent-02-1',
+            code: 'ENT-03',
+            phaseId: 'ph-02',
+            title: 'Instalação Física e Cabeamento Estruturado no Rack R04',
+            description: 'Instalação física com alimentação no-break A+B e cabeamento OM4.',
+            targetDate: '05/10/2026',
+            completedDate: '04/10/2026',
+            status: 'HOMOLOGADA',
+            progressPercentage: 100,
+            validatedBy: 'Carlos Eduardo Ramos',
+            validatedAt: '05/10/2026 17:00'
+          },
+          {
+            id: 'ent-02-2',
+            code: 'ENT-04',
+            phaseId: 'ph-02',
+            title: 'Configuração dos Switches SAN Fibre Channel 32Gbps',
+            description: 'Zonemanager configurado com isolamento de nós e multi-pathing.',
+            targetDate: '15/10/2026',
+            completedDate: '14/10/2026',
+            status: 'HOMOLOGADA',
+            progressPercentage: 100,
+            validatedBy: 'Henrique Vasconcelos',
+            validatedAt: '15/10/2026 16:30'
+          }
+        ],
+        milestones: [
+          {
+            id: 'm-02',
+            phaseId: 'ph-02',
+            title: 'M2: Energização e Certificação Térmica do Rack',
+            targetDate: '08/10/2026',
+            actualDate: '07/10/2026',
+            isCriticalPath: false,
+            status: 'CONCLUIDO',
+            description: 'Testes de carga elétrica e dissipação térmica aprovados.'
+          },
+          {
+            id: 'm-03',
+            phaseId: 'ph-02',
+            title: 'M3: Enlace SAN 32Gbps Estabelecido',
+            targetDate: '15/10/2026',
+            actualDate: '14/10/2026',
+            isCriticalPath: true,
+            status: 'CONCLUIDO',
+            description: 'Enlace primário e secundário de fibra ativos sem descartes de frames.'
+          }
+        ]
+      },
+      {
+        id: 'ph-03',
+        order: 3,
+        code: 'FASE_3',
+        title: 'Fase 3: Migração de Volumes & Pool ZFS',
+        objective: 'Criar volumes zpool com proteção RAID-Z2 e transferir acervo histórico de 18TB.',
+        startDate: '16/10/2026',
+        endDate: '08/11/2026',
+        status: 'EM_ANDAMENTO',
+        progressPercentage: 75,
+        deliverables: [
+          {
+            id: 'ent-03-1',
+            code: 'ENT-05',
+            phaseId: 'ph-03',
+            title: 'Criação do Zpool com Tiering NVMe L2ARC',
+            description: 'Pool de 120TB bruto com cache de leitura e escrita síncrona SLOG.',
+            targetDate: '25/10/2026',
+            completedDate: '24/10/2026',
+            status: 'HOMOLOGADA',
+            progressPercentage: 100,
+            validatedBy: 'Fernanda Lima',
+            validatedAt: '25/10/2026 11:00'
+          },
+          {
+            id: 'ent-03-2',
+            code: 'ENT-06',
+            phaseId: 'ph-03',
+            title: 'Migração do Acervo Histórico (18TB)',
+            description: 'Transferência de imagens anteriores a 2025 para novo pool secundário.',
+            targetDate: '05/11/2026',
+            status: 'EM_ANDAMENTO',
+            progressPercentage: 88,
+            evidenceRefs: ['Job ZFS Send/Receive ativo - 15.8TB / 18.0TB transferidos']
+          }
+        ],
+        milestones: [
+          {
+            id: 'm-04',
+            phaseId: 'ph-03',
+            title: 'M4: Migração de Volumes Históricos Concluída',
+            targetDate: '05/11/2026',
+            actualDate: '06/11/2026',
+            isCriticalPath: true,
+            status: 'CONCLUIDO',
+            description: 'Finalização do sincronismo diferencial com checksum SHA-256 verificado.'
+          },
+          {
+            id: 'm-05',
+            phaseId: 'ph-03',
+            title: 'M5: Homologação do Cache SSD Tomografia',
+            targetDate: '12/11/2026',
+            isCriticalPath: true,
+            status: 'EM_ANDAMENTO',
+            description: 'Validação de abertura de tomografia computadorizada multislice em <1.5s.'
+          }
+        ]
+      },
+      {
+        id: 'ph-04',
+        order: 4,
+        code: 'FASE_4',
+        title: 'Fase 4: Teste de Carga & Homologação com Corpo Clínico',
+        objective: 'Submeter o cluster a 50 laudos radiológicos simultâneos no CDI com validação dos radiologistas.',
+        startDate: '09/11/2026',
+        endDate: '18/11/2026',
+        status: 'EM_ANDAMENTO',
+        progressPercentage: 20,
+        deliverables: [
+          {
+            id: 'ent-04-1',
+            code: 'ENT-07',
+            phaseId: 'ph-04',
+            title: 'Teste de Estresse com 50 Estações Médicas Simultâneas',
+            description: 'Simulação automatizada de busca e streaming DICOM na rede hospitalar.',
+            targetDate: '14/11/2026',
+            status: 'PLANEJADA',
+            progressPercentage: 0
+          },
+          {
+            id: 'ent-04-2',
+            code: 'ENT-08',
+            phaseId: 'ph-04',
+            title: 'Ata de Homologação Assinada pelo Coordenador do CDI',
+            description: 'Termo de aceite do corpo médico atestando ausência de latência.',
+            targetDate: '18/11/2026',
+            status: 'PLANEJADA',
+            progressPercentage: 0
+          }
+        ],
+        milestones: [
+          {
+            id: 'm-06',
+            phaseId: 'ph-04',
+            title: 'M6: Teste de Carga Aprovado com Latência < 1.5s',
+            targetDate: '15/11/2026',
+            isCriticalPath: true,
+            status: 'PENDENTE',
+            description: 'Critério eliminatório de desempenho assistencial.'
+          }
+        ]
+      },
+      {
+        id: 'ph-05',
+        order: 5,
+        code: 'FASE_5',
+        title: 'Fase 5: Go-Live Definitivo & Operação Assistida',
+        objective: 'Virada final do tráfego do CDI para o novo storage e suporte assistido por 7 dias.',
+        startDate: '19/11/2026',
+        endDate: '25/11/2026',
+        status: 'NAO_INICIADA',
+        progressPercentage: 0,
+        deliverables: [
+          {
+            id: 'ent-05-1',
+            code: 'ENT-09',
+            phaseId: 'ph-05',
+            title: 'Virada de Produção (Cutover Noturno)',
+            description: 'Janela de manutenção homologada para chaveamento de DNS e montagens NFS.',
+            targetDate: '22/11/2026',
+            status: 'PLANEJADA',
+            progressPercentage: 0
+          },
+          {
+            id: 'ent-05-2',
+            code: 'ENT-10',
+            phaseId: 'ph-05',
+            title: 'Dossiê As-Built e Encerramento do Projeto',
+            description: 'Documentação final entregue ao Grupo 48 e DTI.',
+            targetDate: '25/11/2026',
+            status: 'PLANEJADA',
+            progressPercentage: 0
+          }
+        ],
+        milestones: [
+          {
+            id: 'm-07',
+            phaseId: 'ph-05',
+            title: 'M7: Go-Live sem Interrupção Assistencial',
+            targetDate: '22/11/2026',
+            isCriticalPath: true,
+            status: 'PENDENTE',
+            description: 'Operação 100% no novo ambiente.'
+          },
+          {
+            id: 'm-08',
+            phaseId: 'ph-05',
+            title: 'M8: Aceite Final da Diretoria Médica',
+            targetDate: '25/11/2026',
+            isCriticalPath: false,
+            status: 'PENDENTE',
+            description: 'Encerramento formal do projeto com termo de garantia.'
+          }
+        ]
+      }
+    ],
+    tasks: [
+      {
+        id: 'tsk-01',
+        code: 'TSK-01',
+        phaseId: 'ph-03',
+        deliverableId: 'ent-03-2',
+        title: 'Verificação do Checksum do Bloco 14 do Acervo DICOM',
+        description: 'Auditoria de integridade dos hashes MD5/SHA-256 das imagens migradas.',
+        responsibleId: 104,
+        responsibleName: 'Fernanda Lima',
+        role: 'DBA & Especialista em PACS',
+        startDate: '04/11/2026',
+        dueDate: '06/11/2026',
+        priority: 'ALTA',
+        status: 'CONCLUIDO',
+        progressPercentage: 100,
+        subtasks: [
+          { id: 'sub-01-1', title: 'Script de hash executado no pool antigo', completed: true, completedAt: '05/11/2026' },
+          { id: 'sub-01-2', title: 'Script de hash executado no novo storage', completed: true, completedAt: '06/11/2026' },
+          { id: 'sub-01-3', title: 'Comparação de integridade (zero divergências)', completed: true, completedAt: '06/11/2026' }
+        ],
+        evidenceNote: 'Relatório de integridade 100% aderente sem perda de quadros radiológicos.',
+        lastUpdated: '06/11/2026 09:30'
+      },
+      {
+        id: 'tsk-02',
+        code: 'TSK-02',
+        phaseId: 'ph-03',
+        deliverableId: 'ent-03-2',
+        title: 'Configurar Cache SSD L2ARC para Séries de Ressonância Magnética',
+        description: 'Ajustar parâmetros vfs.zfs.arc_max e vfs.zfs.l2arc_write_max para priorizar exames de alto contraste.',
+        responsibleId: 102,
+        responsibleName: 'Carlos Eduardo Ramos',
+        role: 'Infraestrutura',
+        startDate: '05/11/2026',
+        dueDate: '07/11/2026',
+        priority: 'CRITICA',
+        status: 'EM_ANDAMENTO',
+        progressPercentage: 70,
+        subtasks: [
+          { id: 'sub-02-1', title: 'Dimensionar memória para L2ARC', completed: true, completedAt: '05/11/2026' },
+          { id: 'sub-02-2', title: 'Aplicar parâmetros no sysctl.conf', completed: true, completedAt: '06/11/2026' },
+          { id: 'sub-02-3', title: 'Validar warm-up com 500GB de imagens', completed: false }
+        ],
+        lastUpdated: '06/11/2026 10:00'
+      },
+      {
+        id: 'tsk-03',
+        code: 'TSK-03',
+        phaseId: 'ph-03',
+        deliverableId: 'ent-03-2',
+        title: 'Liberação de Janela Noturna de Parada no Comitê Cirúrgico',
+        description: 'Obter autorização formal do comitê de bloco cirúrgico para a janela técnica de domingo das 01h às 05h.',
+        responsibleId: 4801,
+        responsibleName: 'Dr. Roberto Silveira (Grupo 48)',
+        role: 'Coordenação Executiva',
+        startDate: '02/11/2026',
+        dueDate: '05/11/2026',
+        priority: 'CRITICA',
+        status: 'BLOQUEADO',
+        progressPercentage: 40,
+        blockReason: 'Comitê solicitou plano de contingência caso ocorra transplante hepático de emergência durante a janela.',
+        unblockAction: 'Apresentar documento de failover imediato para storage antigo em menos de 3 minutos.',
+        subtasks: [
+          { id: 'sub-03-1', title: 'Enviar solicitação com impacto previsto', completed: true, completedAt: '02/11/2026' },
+          { id: 'sub-03-2', title: 'Anexar plano de failover imediato', completed: false },
+          { id: 'sub-03-3', title: 'Assinatura formal da Diretoria Médica', completed: false }
+        ],
+        lastUpdated: '06/11/2026 08:30'
+      },
+      {
+        id: 'tsk-04',
+        code: 'TSK-04',
+        phaseId: 'ph-04',
+        deliverableId: 'ent-04-1',
+        title: 'Preparar Roteiro de Teste de Estresse do Visualizador PACS',
+        description: 'Script para abrir simultaneamente 50 exames de tomografia nos visualizadores das salas de laudo.',
+        responsibleId: 101,
+        responsibleName: 'Mariana Costa',
+        role: 'Sistemas Clínicos',
+        startDate: '04/11/2026',
+        dueDate: '05/11/2026',
+        priority: 'ALTA',
+        status: 'EM_ANDAMENTO',
+        progressPercentage: 60,
+        subtasks: [
+          { id: 'sub-04-1', title: 'Mapear as 12 salas de laudo do CDI', completed: true, completedAt: '04/11/2026' },
+          { id: 'sub-04-2', title: 'Elaborar matriz de casos de teste', completed: true, completedAt: '05/11/2026' },
+          { id: 'sub-04-3', title: 'Validar permissões de acesso com radiologistas', completed: false }
+        ],
+        lastUpdated: '06/11/2026 09:15'
+      },
+      {
+        id: 'tsk-05',
+        code: 'TSK-05',
+        phaseId: 'ph-04',
+        deliverableId: 'ent-04-1',
+        title: 'Substituição das Placas de Rede 10GbE nas Workstations de Laudo',
+        description: 'Instalar adaptadores PCIe 10G SFP+ em 4 estações de diagnóstico do CDI para eliminar gargalo local.',
+        responsibleId: 103,
+        responsibleName: 'Rafael Albuquerque',
+        role: 'Suporte Presencial',
+        startDate: '01/11/2026',
+        dueDate: '04/11/2026',
+        priority: 'MEDIA',
+        status: 'EM_ANDAMENTO',
+        progressPercentage: 50,
+        subtasks: [
+          { id: 'sub-05-1', title: 'Substituição nas estações 01 e 02', completed: true, completedAt: '03/11/2026' },
+          { id: 'sub-05-2', title: 'Substituição nas estações 03 e 04', completed: false }
+        ],
+        lastUpdated: '05/11/2026 17:00'
+      }
+    ],
+    risks: [
+      {
+        id: 'rsk-01',
+        title: 'Sobrecarga de banda na VLAN assistencial durante a sincronização inicial',
+        category: 'TECNICO',
+        probability: 'MEDIA',
+        impact: 'ALTO',
+        mitigationAction: 'Limitar tráfego de replicação via QoS a no máximo 2.5 Gbps entre 07h e 20h.',
+        owner: 'Carlos Eduardo Ramos',
+        status: 'ATIVO'
+      },
+      {
+        id: 'rsk-02',
+        title: 'Atraso na liberação da janela de manutenção pelo Comitê Cirúrgico',
+        category: 'OPERACIONAL',
+        probability: 'ALTA',
+        impact: 'CRITICO',
+        mitigationAction: 'Apresentação presencial do protocolo de reversão em 3 minutos para a coordenação do Centro Cirúrgico.',
+        owner: 'Dr. Roberto Silveira',
+        status: 'ATIVO'
+      },
+      {
+        id: 'rsk-03',
+        title: 'Incompatibilidade de driver Fibre Channel no kernel antigo do servidor de contingência',
+        category: 'INFRAESTRUTURA',
+        probability: 'BAIXA',
+        impact: 'MEDIO',
+        mitigationAction: 'Atualização do HBA firmware realizada em laboratório com sucesso.',
+        owner: 'Fernanda Lima',
+        status: 'MITIGADO'
+      }
+    ],
+    decisions: [
+      {
+        id: 'dec-pacs-01',
+        title: 'Adoção de RAID-Z2 em vez de espelhamento tradicional RAID-10',
+        committee: 'Comitê de Arquitetura de TI',
+        date: '18/09/2026',
+        decision: 'Manter RAID-Z2 com 2 discos de paridade por vdev, priorizando tolerância a dupla falha e aproveitamento de 75% da capacidade útil.',
+        rationale: 'Análise de custo-benefício demonstrou ganho de 32TB úteis com segurança adequada para acervo DICOM.',
+        participants: ['Henrique Vasconcelos', 'Carlos Eduardo Ramos', 'Fernanda Lima']
+      },
+      {
+        id: 'dec-pacs-02',
+        title: 'Horário da janela de virada fixado exclusivamente para o domingo às 01h00',
+        committee: 'Comitê de Segurança do Paciente & DTI',
+        date: '28/10/2026',
+        decision: 'Apenas a madrugada de domingo apresenta o menor índice histórico de exames de politrauma e urgência.',
+        rationale: 'Reduz em 90% a probabilidade de impacto em laudos vitais.',
+        participants: ['Henrique Vasconcelos', 'Dr. Roberto Silveira', 'Coordenação Médica CDI']
+      }
+    ],
+    changeLogs: [
+      {
+        id: 'chg-01',
+        date: '24/10/2026',
+        author: 'Henrique Vasconcelos',
+        type: 'CRONOGRAMA',
+        description: 'Extensão do prazo da migração de volumes em 3 dias',
+        baselineBefore: 'Término previsto: 05/11/2026',
+        baselineAfter: 'Término previsto: 08/11/2026',
+        justification: 'Necessidade de preservar 100% da banda durante a semana de auditoria externa do hospital.',
+        approvedBy: 'Dr. Roberto Silveira'
+      },
+      {
+        id: 'chg-02',
+        date: '30/10/2026',
+        author: 'Carlos Eduardo Ramos',
+        type: 'ESCOPO',
+        description: 'Inclusão de 4 placas de rede 10G adicionais para as estações de ressonância 3T',
+        baselineBefore: 'Apenas estações de tomografia contempladas com 10G',
+        baselineAfter: 'Estações de tomografia e ressonância contempladas',
+        justification: 'Exames de ressonância geram arquivos de 4GB que demoravam 35 segundos para renderizar no Gigabit comum.',
+        approvedBy: 'Henrique Vasconcelos'
+      }
+    ]
+  }
+];
+
+export const getDevelopmentPlanSummary = (commitments: DevelopmentCommitment[]): DevelopmentPlanSummary => {
+  const activePlans = new Set(commitments.filter(c => c.status !== 'CANCELADO' && c.status !== 'CUMPRIDO').map(c => c.collaboratorId)).size;
+  const completedCommitments = commitments.filter(c => c.status === 'CUMPRIDO').length;
+  const monitoringCommitments = commitments.filter(c => c.status === 'EM_ANDAMENTO').length;
+  const overdueCommitments = commitments.filter(c => c.status === 'NAO_CUMPRIDO' || (c.status === 'EM_ANDAMENTO' && c.isPreviousAlignment)).length;
+  const awaitingValidation = commitments.filter(c => c.status === 'AGUARDANDO_VALIDACAO').length;
+
+  return {
+    activePlans,
+    completedCommitments,
+    monitoringCommitments,
+    overdueCommitments,
+    awaitingValidation
+  };
+};

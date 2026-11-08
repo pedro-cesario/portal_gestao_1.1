@@ -871,6 +871,38 @@ export const AgenteGerencialView: React.FC<AgenteGerencialViewProps> = ({
         setIsProcessing(false);
       }, 500);
 
+    } else if (lower.includes('plano de evolução') || lower.includes('planos de evolução') || lower.includes('melhoria da equipe') || lower.includes('compromisso de melhoria') || lower.includes('compromissos de melhoria')) {
+      setProcessingStatus('Consultando planos de evolução individual e pactuações da equipe...');
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'assistant',
+          content: `Aqui está o panorama dos **Planos de Evolução Individual** pactuados no Alinhamento Semanal:\n\n1. 🎯 **Lucas Mendes — Comunicação e Atendimento Humanizado**\n   • **Situação**: Termos ásperos na triagem do PA (#48098).\n   • **Evolução**: Treinamento de Comunicação Não-Violenta concluído (04/11). Em curso roteiro de acolhimento presencial.\n   • **Status**: \`EM ANDAMENTO\` (Ciência formal confirmada em 28/10).\n\n2. ⏱️ **Mariana Costa — Gestão de Prazos e Follow-ups no Turno Vespertino**\n   • **Situação**: Chamados mantidos sem apontamento à tarde caindo no alerta das 04h.\n   • **Evolução**: Alarme diário das 16h45 configurado. Zero estagnações nos últimos 3 plantões.\n   • **Status**: \`EM ANDAMENTO\` (Próxima revisão em 10/11).\n\n3. 📋 **Carlos Eduardo Ramos — Qualidade Documental e Evidências Técnicas**\n   • **Situação**: Intervenções em switches sem print de console ou teste de ping anexado.\n   • **Evolução**: 5 chamados consecutivos concluídos com evidências de console anexadas.\n   • **Status**: \`AGUARDANDO VALIDAÇÃO\` ★ *(Pronto para homologação pelo gestor Henrique!)*\n\n🛡️ *Governança: Todos os planos são confidenciais, formatados com respeito ético e focados exclusivamente em capacitação técnica e operacional.*`,
+          timestamp: '10:10 (Brasília)',
+          pathType: 'FAST_PATH',
+          sources: ['Planos de Evolução HEAL Ops', 'Alinhamento Semanal 44/45', 'Dossiês TPL-02/TPL-03'],
+          analyticalDetail: 'Resumo dos Planos: 3 colaboradores com pactuações ativas, 1 item aguardando validação homologada, 0 não-cumprimentos disciplinares.'
+        };
+        appendMessageToActiveSession(botMsg, 'Planos de Evolução da Equipe');
+        setIsProcessing(false);
+      }, 600);
+
+    } else if (lower.includes('roadmap do projeto') || lower.includes('tarefas do projeto') || lower.includes('bloqueios do projeto') || lower.includes('projeto pacs') || lower.includes('entregas aguardando validação')) {
+      setProcessingStatus('Consultando ambiente completo de gestão do projeto PRJ-PACS-01...');
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'assistant',
+          content: `Panorama executivo do projeto **PRJ-PACS-01 (Expansão do Storage PACS & Laudos CDI)**:\n\n📊 **Progresso Geral Validado**: **68%** | **Marcos**: 5 de 8 concluídos | **Previsão**: 25/11/2026\n\n**Estrutura de Fases & Entregas**:\n• **Fase 1 (Diagnóstico)**: 100% Concluída (ENT-01 e ENT-02 homologadas).\n• **Fase 2 (Provisionamento DC)**: 100% Concluída (Racks e fibra 32G OM4 ativados).\n• **Fase 3 (Migração ZFS)**: 75% em execução (15.8TB / 18TB transferidos).\n• **Fase 4 (Carga & CDI)**: 20% em execução (Próximo marco: Teste com 50 laudos simultâneos).\n• **Fase 5 (Cutover)**: Não iniciada (Janela dominical 22/11 às 01h00).\n\n⚠️ **Atenção aos Bloqueios & Tarefas Críticas**:\n• **TSK-03 [BLOQUEADO]**: Liberação de janela pelo Comitê Cirúrgico (Dr. Roberto Silveira - aguarda apresentação do failover em 3min).\n• **TSK-02 [EM ANDAMENTO - 70%]**: Cache SSD L2ARC para ressonância (Carlos Eduardo).\n• **TSK-01 [CONCLUÍDO - 100%]**: Checksum SHA-256 do acervo migrado validado por Fernanda Lima.\n\n*Para interagir com o cronograma Gantt executivo, distribuição de tarefas por técnico e matriz de riscos, acesse o painel TPL-04 e clique em "Abrir Gestão Completa do Projeto".*`,
+          timestamp: '10:10 (Brasília)',
+          pathType: 'AGY',
+          sources: ['Gestão de Projetos PRJ-PACS-01', 'Matriz de Riscos & Fases', 'Cronograma Gantt Q4'],
+          analyticalDetail: 'Próximo marco crítico: M5 Homologação do Cache SSD Tomografia em 12/11/2026 (restam 6 dias).'
+        };
+        appendMessageToActiveSession(botMsg, 'Status do Projeto PACS');
+        setIsProcessing(false);
+      }, 700);
+
     // 6. RESPOSTA PADRÃO OPERACIONAL (CONSULTA GERAL GLPI)
     } else {
       setProcessingStatus('Processando consulta com réplica GLPI e regras POP-TIN-017...');

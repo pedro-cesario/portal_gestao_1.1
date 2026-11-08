@@ -49,40 +49,41 @@ export const TemplatesGuideView: React.FC<TemplatesGuideViewProps> = ({
       code: 'TPL-02 — Alinhamento Semanal',
       status: 'HOMOLOGADO',
       statusColor: 'text-emerald-500 bg-emerald-500/10',
-      description: 'Consolidação periódica de entregas, indicadores de vazão, pendências persistentes, decisões estratégicas e compromissos firmados para a semana.',
+      description: 'Consolidação periódica com acordos executivos e Planos de Evolução Individual da Equipe. Rastreamento longitudinal de compromissos pactuados, critérios objetivos de sucesso e validação formal pelo gestor.',
       sections: [
         '1. Indicadores Chave da Semana',
         '2. Riscos & Dependências Externas',
-        '3. Balanço de Abertura vs Solução',
-        '4. Compromissos e Cronograma'
+        '3. Acordos da Reunião Anterior & Atuais',
+        '4. Planos de Evolução Individual da Equipe'
       ],
-      rules: 'Sintético na capa; detalhamento sob demanda de cada indicador e compromisso.'
+      rules: 'Sintético na capa; detalhamento sob demanda de acordos e compromissos com ciência formal do colaborador.'
     },
     {
       id: 'TPL-03',
       code: 'TPL-03 — Feedback Individual',
       status: 'HOMOLOGADO',
       statusColor: 'text-emerald-500 bg-emerald-500/10',
-      description: 'Dossiê contextual e revisável pelo gestor, baseado estritamente em evidências factuais do GLPI, com pontos positivos, desenvolvimento e combinados.',
+      description: 'Dossiê contextual e revisável pelo gestor, baseado estritamente em evidências factuais do GLPI, com pontos positivos, desenvolvimento e combinados pactuados.',
       sections: [
         '1. Evidências Factuais e Métricas Observadas',
         '2. Pontos Positivos Comprovados',
         '3. Plano de Desenvolvimento & Combinados'
       ],
-      rules: 'Sem conclusões disciplinares automáticas; contextualização assistencial mandatória.'
+      rules: 'Sem conclusões disciplinares automáticas; contextualização assistencial mandatória e sigilo ético.'
     },
     {
       id: 'TPL-04',
-      code: 'TPL-04 — Gestão de Projetos',
+      code: 'TPL-04 — Gestão Completa de Projetos',
       status: 'HOMOLOGADO',
       statusColor: 'text-emerald-500 bg-emerald-500/10',
-      description: 'Painel estruturado de iniciativas de TI (PACS, Tasy, Infraestrutura) com marcos, responsáveis, riscos, dependências e entregas.',
+      description: 'Ambiente gerencial completo para iniciativas estruturantes (Storage PACS, Wi-Fi, Tasy): 5 Fases sequenciais, Cronograma Gantt executivo, Responsabilidades por técnico com workflow de execução, homologação de entregas e Matriz de Riscos.',
       sections: [
-        '1. Cronograma e Marcos do Projeto',
-        '2. Matriz de Riscos & Mitigações',
-        '3. Dependências e Aquisições'
+        '1. Roadmap por Fases & Checklist de Entregas',
+        '2. Cronograma Visual Gantt Executivo',
+        '3. Responsabilidades e Tarefas por Pessoa',
+        '4. Matriz de Riscos, Decisões e Change Log'
       ],
-      rules: 'Marcos vinculados a evidências de entrega e homologação assistencial.'
+      rules: '6 KPIs sintéticos no painel; marcos críticos com homologação formal antes da liberação de fases subsequentes.'
     },
     {
       id: 'TPL-05',

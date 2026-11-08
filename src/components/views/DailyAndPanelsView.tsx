@@ -28,19 +28,41 @@ import {
   Eye,
   SlidersHorizontal
 } from 'lucide-react';
-import { ArtifactPanel, MeetingAgreement, AgreementStatus, CurrentUser } from '../../types';
+import { 
+  ArtifactPanel, 
+  MeetingAgreement, 
+  AgreementStatus, 
+  CurrentUser,
+  DevelopmentCommitment,
+  DevelopmentCommitmentStatus,
+  ManagedProject,
+  ProjectTaskStatus
+} from '../../types';
 import { TemplateSyntheticDashboard } from '../panels/TemplateSyntheticDashboard';
 import { TemplateDetailDrawer } from '../panels/TemplateDetailDrawer';
 import { PresentationModeModal } from '../panels/PresentationModeModal';
 import { HumanReviewModal } from '../panels/HumanReviewModal';
 import { RegisterAgreementModal } from '../panels/RegisterAgreementModal';
 import { AgreementsTrackingDrawer } from '../panels/AgreementsTrackingDrawer';
+import { RegisterImprovementCommitmentModal } from '../panels/RegisterImprovementCommitmentModal';
+import { DevelopmentPlansDrawer } from '../panels/DevelopmentPlansDrawer';
+import { ProjectManagementDrawer } from '../panels/ProjectManagementDrawer';
 
 interface DailyAndPanelsViewProps {
   savedPanels: ArtifactPanel[];
   agreements?: MeetingAgreement[];
   onSaveAgreement?: (newAgreement: MeetingAgreement) => void;
   onUpdateAgreementStatus?: (agreementId: string, newStatus: AgreementStatus, note?: string) => void;
+  developmentCommitments?: DevelopmentCommitment[];
+  onSaveCommitment?: (newCommitment: DevelopmentCommitment) => void;
+  onUpdateCommitmentStatus?: (commitmentId: string, newStatus: DevelopmentCommitmentStatus, note?: string, validationFeedback?: string) => void;
+  onToggleActionCompleted?: (commitmentId: string, actionId: string) => void;
+  onAddEvolutionNote?: (commitmentId: string, note: string) => void;
+  managedProjects?: ManagedProject[];
+  onUpdateTaskStatus?: (taskId: string, newStatus: ProjectTaskStatus, note?: string) => void;
+  onUpdateTaskProgress?: (taskId: string, progress: number) => void;
+  onToggleSubtask?: (taskId: string, subtaskId: string) => void;
+  onReportBlock?: (taskId: string, reason: string, action: string) => void;
   currentUser?: CurrentUser | null;
   onNavigateToAgente: (prefillPrompt?: string) => void;
   onOpenTicketById: (ticketId: number) => void;
@@ -52,6 +74,16 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   agreements = [],
   onSaveAgreement = () => {},
   onUpdateAgreementStatus = () => {},
+  developmentCommitments = [],
+  onSaveCommitment = () => {},
+  onUpdateCommitmentStatus = () => {},
+  onToggleActionCompleted = () => {},
+  onAddEvolutionNote = () => {},
+  managedProjects = [],
+  onUpdateTaskStatus = () => {},
+  onUpdateTaskProgress = () => {},
+  onToggleSubtask = () => {},
+  onReportBlock = () => {},
   currentUser,
   onNavigateToAgente,
   onOpenTicketById,
@@ -67,6 +99,9 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
   const [isRegisterAgreementOpen, setIsRegisterAgreementOpen] = useState<boolean>(false);
   const [isAgreementsTrackingOpen, setIsAgreementsTrackingOpen] = useState<boolean>(false);
+  const [isRegisterCommitmentOpen, setIsRegisterCommitmentOpen] = useState<boolean>(false);
+  const [isDevelopmentPlansOpen, setIsDevelopmentPlansOpen] = useState<boolean>(false);
+  const [isProjectManagementOpen, setIsProjectManagementOpen] = useState<boolean>(false);
   const [activePanelForModal, setActivePanelForModal] = useState<ArtifactPanel | null>(null);
 
   const filteredPanels = savedPanels.filter(p => {
@@ -324,6 +359,8 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
           <TemplateSyntheticDashboard
             panel={selectedPanel}
             agreements={agreements}
+            developmentCommitments={developmentCommitments}
+            managedProjects={managedProjects}
             onOpenPresentation={() => {
               setActivePanelForModal(selectedPanel);
               setIsPresentationOpen(true);
@@ -344,6 +381,18 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
               setActivePanelForModal(selectedPanel);
               setIsAgreementsTrackingOpen(true);
             }}
+            onOpenRegisterCommitment={() => {
+              setActivePanelForModal(selectedPanel);
+              setIsRegisterCommitmentOpen(true);
+            }}
+            onOpenDevelopmentPlans={() => {
+              setActivePanelForModal(selectedPanel);
+              setIsDevelopmentPlansOpen(true);
+            }}
+            onOpenProjectManagement={() => {
+              setActivePanelForModal(selectedPanel);
+              setIsProjectManagementOpen(true);
+            }}
             onBackToCatalog={() => setSelectedPanel(null)}
             onOpenTicketById={onOpenTicketById}
           />
@@ -360,6 +409,8 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
           onOpenTicketById={onOpenTicketById}
           onOpenRegisterAgreement={() => setIsRegisterAgreementOpen(true)}
           onOpenAgreementsTracking={() => setIsAgreementsTrackingOpen(true)}
+          onOpenRegisterCommitment={() => setIsRegisterCommitmentOpen(true)}
+          onOpenDevelopmentPlans={() => setIsDevelopmentPlansOpen(true)}
           onUpdateAgreementStatus={onUpdateAgreementStatus}
         />
       )}
@@ -421,6 +472,50 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
           onUpdateAgreementStatus={onUpdateAgreementStatus}
           onOpenTicketById={onOpenTicketById}
           currentUser={currentUser}
+        />
+      )}
+
+      {/* MODAL DE REGISTRO DE COMPROMISSO DE MELHORIA (+ Registrar compromisso de melhoria) */}
+      {isRegisterCommitmentOpen && activePanelForModal && (
+        <RegisterImprovementCommitmentModal
+          isOpen={isRegisterCommitmentOpen}
+          onClose={() => setIsRegisterCommitmentOpen(false)}
+          currentUser={currentUser}
+          sourceMeetingReferenceDate={activePanelForModal.referenceDate}
+          onSaveCommitment={onSaveCommitment}
+        />
+      )}
+
+      {/* DRAWER ANALÍTICO DE PLANOS DE EVOLUÇÃO INDIVIDUAL */}
+      {isDevelopmentPlansOpen && (
+        <DevelopmentPlansDrawer
+          isOpen={isDevelopmentPlansOpen}
+          onClose={() => setIsDevelopmentPlansOpen(false)}
+          commitments={developmentCommitments}
+          onUpdateCommitmentStatus={onUpdateCommitmentStatus}
+          onToggleActionCompleted={onToggleActionCompleted}
+          onAddEvolutionNote={onAddEvolutionNote}
+          onOpenRegisterModal={() => {
+            setIsDevelopmentPlansOpen(false);
+            setIsRegisterCommitmentOpen(true);
+          }}
+          currentUser={currentUser}
+          onOpenTicketById={onOpenTicketById}
+        />
+      )}
+
+      {/* DRAWER ANALÍTICO DE GESTÃO COMPLETA DE PROJETOS */}
+      {isProjectManagementOpen && managedProjects[0] && (
+        <ProjectManagementDrawer
+          isOpen={isProjectManagementOpen}
+          onClose={() => setIsProjectManagementOpen(false)}
+          project={managedProjects[0]}
+          currentUser={currentUser}
+          onUpdateTaskStatus={onUpdateTaskStatus}
+          onUpdateTaskProgress={onUpdateTaskProgress}
+          onToggleSubtask={onToggleSubtask}
+          onReportBlock={onReportBlock}
+          onOpenTicketById={onOpenTicketById}
         />
       )}
     </div>

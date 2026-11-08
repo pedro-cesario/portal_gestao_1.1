@@ -18,7 +18,11 @@ import {
   OperationalCalculationSettings,
   NavMenuItemConfig,
   MeetingAgreement,
-  AgreementStatus
+  AgreementStatus,
+  DevelopmentCommitment,
+  DevelopmentCommitmentStatus,
+  ManagedProject,
+  ProjectTaskStatus
 } from './types';
 import { 
   MOCK_USERS, 
@@ -27,7 +31,9 @@ import {
   MOCK_PENDINGS, 
   MOCK_AUDITS, 
   MOCK_SAVED_PANELS,
-  MOCK_MEETING_AGREEMENTS
+  MOCK_MEETING_AGREEMENTS,
+  MOCK_DEVELOPMENT_COMMITMENTS,
+  MOCK_MANAGED_PROJECTS
 } from './data/mockData';
 import {
   DEFAULT_POP_SPEC,
@@ -80,6 +86,8 @@ export default function App() {
   const [audits, setAudits] = useState<AuditSnapshot[]>(MOCK_AUDITS);
   const [savedPanels, setSavedPanels] = useState<ArtifactPanel[]>(MOCK_SAVED_PANELS);
   const [agreements, setAgreements] = useState<MeetingAgreement[]>(MOCK_MEETING_AGREEMENTS);
+  const [developmentCommitments, setDevelopmentCommitments] = useState<DevelopmentCommitment[]>(MOCK_DEVELOPMENT_COMMITMENTS);
+  const [managedProjects, setManagedProjects] = useState<ManagedProject[]>(MOCK_MANAGED_PROJECTS);
 
   // Parâmetros de Governança, Regras POP-TIN-017 e Fórmulas de Cálculo
   const [popSpec, setPopSpec] = useState<PopSpecification>(DEFAULT_POP_SPEC);
@@ -231,6 +239,147 @@ export default function App() {
     }));
   };
 
+  // Gerenciamento de Planos de Evolução Individual (TPL-02 e TPL-03)
+  const handleSaveCommitment = (newCommitment: DevelopmentCommitment) => {
+    setDevelopmentCommitments(prev => [newCommitment, ...prev]);
+  };
+
+  const handleUpdateCommitmentStatus = (
+    commitmentId: string, 
+    newStatus: DevelopmentCommitmentStatus, 
+    actionNote?: string,
+    validationFeedback?: string
+  ) => {
+    const author = currentUser?.name || 'Henrique Vasconcelos';
+    const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    setDevelopmentCommitments(prev => prev.map(c => {
+      if (c.id !== commitmentId) return c;
+      const historyItem = {
+        id: `h-${Date.now()}`,
+        timestamp: nowTimestamp,
+        author,
+        action: actionNote || `Status alterado para ${newStatus}`,
+        previousValue: c.status,
+        newValue: newStatus,
+        justification: validationFeedback
+      };
+
+      return {
+        ...c,
+        status: newStatus,
+        validationFeedback: validationFeedback !== undefined ? validationFeedback : c.validationFeedback,
+        validatedBy: (newStatus === 'CUMPRIDO' || newStatus === 'PARCIALMENTE_CUMPRIDO') ? author : c.validatedBy,
+        validatedAt: (newStatus === 'CUMPRIDO' || newStatus === 'PARCIALMENTE_CUMPRIDO') ? nowTimestamp : c.validatedAt,
+        collaboratorSignedScience: (newStatus === 'EM_ANDAMENTO' && c.status === 'AGUARDANDO_CIENCIA') ? true : c.collaboratorSignedScience,
+        collaboratorSignedScienceAt: (newStatus === 'EM_ANDAMENTO' && c.status === 'AGUARDANDO_CIENCIA') ? nowTimestamp : c.collaboratorSignedScienceAt,
+        history: [historyItem, ...c.history]
+      };
+    }));
+  };
+
+  const handleToggleActionCompleted = (commitmentId: string, actionId: string) => {
+    const nowTimestamp = new Date().toLocaleDateString('pt-BR');
+    setDevelopmentCommitments(prev => prev.map(c => {
+      if (c.id !== commitmentId) return c;
+      return {
+        ...c,
+        practicalActions: c.practicalActions.map(a => {
+          if (a.id !== actionId) return a;
+          return {
+            ...a,
+            completed: !a.completed,
+            completedAt: !a.completed ? nowTimestamp : undefined
+          };
+        })
+      };
+    }));
+  };
+
+  const handleAddEvolutionNote = (commitmentId: string, note: string) => {
+    const author = currentUser?.name || 'Henrique Vasconcelos';
+    const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    setDevelopmentCommitments(prev => prev.map(c => {
+      if (c.id !== commitmentId) return c;
+      const historyItem = {
+        id: `h-${Date.now()}`,
+        timestamp: nowTimestamp,
+        author,
+        action: `Evolução: ${note}`
+      };
+      return {
+        ...c,
+        history: [historyItem, ...c.history]
+      };
+    }));
+  };
+
+  // Gerenciamento Completo de Projetos (TPL-04)
+  const handleUpdateTaskStatus = (taskId: string, newStatus: ProjectTaskStatus, note?: string) => {
+    setManagedProjects(prev => prev.map(prj => {
+      const task = prj.tasks.find(t => t.id === taskId);
+      if (!task) return prj;
+
+      const updatedTasks = prj.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        return {
+          ...t,
+          status: newStatus,
+          progressPercentage: newStatus === 'CONCLUIDO' ? 100 : t.progressPercentage,
+          evidenceNote: note || t.evidenceNote
+        };
+      });
+
+      const completedCount = updatedTasks.filter(t => t.status === 'CONCLUIDO').length;
+      const criticalBlocks = updatedTasks.filter(t => t.status === 'BLOQUEADO').length;
+
+      return {
+        ...prj,
+        tasks: updatedTasks,
+        criticalBlocksCount: criticalBlocks
+      };
+    }));
+  };
+
+  const handleUpdateTaskProgress = (taskId: string, progress: number) => {
+    setManagedProjects(prev => prev.map(prj => ({
+      ...prj,
+      tasks: prj.tasks.map(t => t.id === taskId ? { ...t, progressPercentage: progress } : t)
+    })));
+  };
+
+  const handleToggleSubtask = (taskId: string, subtaskId: string) => {
+    setManagedProjects(prev => prev.map(prj => ({
+      ...prj,
+      tasks: prj.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        const updatedSubtasks = t.subtasks.map(s => s.id === subtaskId ? { ...s, completed: !s.completed } : s);
+        const completedCount = updatedSubtasks.filter(s => s.completed).length;
+        const newProgress = Math.round((completedCount / updatedSubtasks.length) * 100);
+        return {
+          ...t,
+          subtasks: updatedSubtasks,
+          progressPercentage: newProgress,
+          status: newProgress === 100 ? 'AGUARDANDO_VALIDACAO' : t.status
+        };
+      })
+    })));
+  };
+
+  const handleReportBlock = (taskId: string, reason: string, action: string) => {
+    setManagedProjects(prev => prev.map(prj => ({
+      ...prj,
+      criticalBlocksCount: prj.criticalBlocksCount + 1,
+      tasks: prj.tasks.map(t => t.id === taskId ? {
+        ...t,
+        status: 'BLOQUEADO',
+        blockReason: reason,
+        unblockAction: action
+      } : t)
+    })));
+  };
+
   // Disparo de Auditoria Manual
   const handleTriggerManualAudit = () => {
     setIsAuditing(true);
@@ -379,6 +528,16 @@ export default function App() {
               agreements={agreements}
               onSaveAgreement={handleSaveAgreement}
               onUpdateAgreementStatus={handleUpdateAgreementStatus}
+              developmentCommitments={developmentCommitments}
+              onSaveCommitment={handleSaveCommitment}
+              onUpdateCommitmentStatus={handleUpdateCommitmentStatus}
+              onToggleActionCompleted={handleToggleActionCompleted}
+              onAddEvolutionNote={handleAddEvolutionNote}
+              managedProjects={managedProjects}
+              onUpdateTaskStatus={handleUpdateTaskStatus}
+              onUpdateTaskProgress={handleUpdateTaskProgress}
+              onToggleSubtask={handleToggleSubtask}
+              onReportBlock={handleReportBlock}
               currentUser={currentUser}
               onNavigateToAgente={(prompt) => prompt ? handleOpenAgenteWithPrompt(prompt) : handleRouteChange('agente-gerencial')}
               onOpenTicketById={handleNavigateToTicket}

@@ -43,6 +43,8 @@ interface PresentationModeModalProps {
   agreements?: MeetingAgreement[];
   onOpenRegisterAgreement?: () => void;
   onOpenAgreementsTracking?: () => void;
+  onOpenRegisterCommitment?: () => void;
+  onOpenDevelopmentPlans?: () => void;
   onUpdateAgreementStatus?: (agreementId: string, newStatus: AgreementStatus, note?: string) => void;
 }
 
@@ -55,6 +57,8 @@ export const PresentationModeModal: React.FC<PresentationModeModalProps> = ({
   agreements = [],
   onOpenRegisterAgreement,
   onOpenAgreementsTracking,
+  onOpenRegisterCommitment,
+  onOpenDevelopmentPlans,
   onUpdateAgreementStatus
 }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -160,6 +164,19 @@ export const PresentationModeModal: React.FC<PresentationModeModalProps> = ({
             >
               <Plus className="w-3.5 h-3.5" />
               <span>+ Registrar acordo</span>
+            </button>
+          )}
+
+          {/* AÇÃO DISCRETA: + Registrar compromisso de melhoria (TPL-02) */}
+          {panel.templateType === 'TPL-02' && onOpenRegisterCommitment && (
+            <button
+              type="button"
+              onClick={onOpenRegisterCommitment}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors cursor-pointer shrink-0"
+              title="Registrar compromisso individual de melhoria sem sair da Apresentação"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Compromisso de melhoria</span>
             </button>
           )}
 

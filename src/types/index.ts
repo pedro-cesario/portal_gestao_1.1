@@ -367,3 +367,218 @@ export interface SettingsAuditLog {
   changeDescription: string;
 }
 
+// ==========================================
+// PARTE A: PLANOS DE EVOLUÇÃO INDIVIDUAL
+// ==========================================
+
+export type DevelopmentCommitmentStatus = 
+  | 'PROPOSTO'
+  | 'AGUARDANDO_CIENCIA'
+  | 'EM_ANDAMENTO'
+  | 'AGUARDANDO_VALIDACAO'
+  | 'CUMPRIDO'
+  | 'PARCIALMENTE_CUMPRIDO'
+  | 'NAO_CUMPRIDO'
+  | 'REPLANEJADO'
+  | 'CANCELADO';
+
+export interface DevelopmentAction {
+  id: string;
+  description: string;
+  deadline: string;
+  completed: boolean;
+  completedAt?: string;
+  evidenceRef?: string;
+}
+
+export interface DevelopmentHistoryItem {
+  id: string;
+  timestamp: string;
+  author: string;
+  action: string;
+  fieldChanged?: string;
+  previousValue?: string;
+  newValue?: string;
+  justification?: string;
+}
+
+export interface DevelopmentCommitment {
+  id: string;
+  sourceMeetingType: SourceMeetingType;
+  meetingReferenceDate: string; // ex: 'Semana 44/2026' ou '06/11/2026'
+  isPreviousAlignment?: boolean;
+  collaboratorId: number;
+  collaboratorName: string;
+  collaboratorRole?: string;
+  registeredAt: string;
+  developmentArea: string; // Atendimento ao usuário, Comunicação técnica, Cumprimento de prazos, POP-TIN-017, Homologação e testes, etc.
+  observedSituation: string; // Descrição demonstrativa, factual e respeitosa
+  evidencesObserved: string[]; // Chamados GLPI, logs, relatos com data
+  operationalImpact: string; // Impacto na operação/equipe
+  agreedGoal: string; // Resultado esperado mensurável
+  collaboratorProposedCommitment: string; // O que o colaborador combinou que fará
+  practicalActions: DevelopmentAction[];
+  mentorOrManagerId?: number;
+  mentorOrManagerName: string;
+  startDate: string;
+  deadlineOrNextReview: string;
+  successCriteria: string; // Critérios objetivos mensuráveis
+  collaboratorNotes?: string;
+  collaboratorSignedScience?: boolean; // Ciência formal do colaborador
+  collaboratorSignedScienceAt?: string;
+  managerNotes?: string;
+  status: DevelopmentCommitmentStatus;
+  validationFeedback?: string;
+  validatedBy?: string;
+  validatedAt?: string;
+  history: DevelopmentHistoryItem[];
+}
+
+export interface DevelopmentPlanSummary {
+  activePlans: number;
+  completedCommitments: number;
+  monitoringCommitments: number;
+  overdueCommitments: number;
+  awaitingValidation: number;
+}
+
+// ==========================================
+// PARTE B: GESTÃO COMPLETA DE PROJETOS (TPL-04)
+// ==========================================
+
+export type ProjectTaskStatus = 
+  | 'NAO_INICIADO'
+  | 'PLANEJADO'
+  | 'EM_ANDAMENTO'
+  | 'BLOQUEADO'
+  | 'AGUARDANDO_VALIDACAO'
+  | 'AJUSTES_SOLICITADOS'
+  | 'CONCLUIDO'
+  | 'CANCELADO';
+
+export interface ProjectSubtask {
+  id: string;
+  title: string;
+  completed: boolean;
+  completedAt?: string;
+}
+
+export interface ProjectDeliverable {
+  id: string;
+  code: string; // 'ENT-01'
+  phaseId: string;
+  title: string;
+  description: string;
+  targetDate: string;
+  completedDate?: string;
+  status: 'PLANEJADA' | 'EM_ANDAMENTO' | 'AGUARDANDO_VALIDACAO' | 'HOMOLOGADA' | 'ATRASADA';
+  progressPercentage: number;
+  validatedBy?: string;
+  validatedAt?: string;
+  evidenceRefs?: string[];
+}
+
+export interface ProjectTask {
+  id: string;
+  code: string; // 'TSK-01'
+  phaseId: string;
+  deliverableId?: string;
+  title: string;
+  description: string;
+  responsibleId?: number;
+  responsibleName: string;
+  role: string;
+  startDate: string;
+  dueDate: string;
+  priority: 'CRITICA' | 'ALTA' | 'MEDIA' | 'BAIXA';
+  status: ProjectTaskStatus;
+  progressPercentage: number; // 0 - 100
+  blockReason?: string;
+  unblockAction?: string;
+  evidenceNote?: string;
+  evidenceUrls?: string[];
+  subtasks: ProjectSubtask[];
+  dependencies?: string[]; // Códigos de tarefas pré-requisito
+  lastUpdated: string;
+  history?: { timestamp: string; author: string; action: string; note?: string }[];
+}
+
+export interface ProjectMilestone {
+  id: string;
+  phaseId: string;
+  title: string;
+  targetDate: string;
+  actualDate?: string;
+  isCriticalPath: boolean;
+  status: 'CONCLUIDO' | 'EM_ANDAMENTO' | 'PENDENTE' | 'ATRASADO';
+  description: string;
+}
+
+export interface ProjectPhase {
+  id: string;
+  order: number;
+  code: string; // 'FASE_1'
+  title: string;
+  objective: string;
+  startDate: string;
+  endDate: string;
+  status: 'CONCLUIDA' | 'EM_ANDAMENTO' | 'NAO_INICIADA' | 'ATRASADA';
+  progressPercentage: number;
+  deliverables: ProjectDeliverable[];
+  milestones: ProjectMilestone[];
+}
+
+export interface ProjectRisk {
+  id: string;
+  title: string;
+  category: 'TECNICO' | 'OPERACIONAL' | 'FORNECEDOR' | 'CLINICO' | 'INFRAESTRUTURA';
+  probability: 'BAIXA' | 'MEDIA' | 'ALTA';
+  impact: 'BAIXO' | 'MEDIO' | 'ALTO' | 'CRITICO';
+  mitigationAction: string;
+  owner: string;
+  status: 'ATIVO' | 'MITIGADO' | 'OCORRIDO';
+}
+
+export interface ProjectDecision {
+  id: string;
+  title: string;
+  committee: string;
+  date: string;
+  decision: string;
+  rationale: string;
+  participants: string[];
+}
+
+export interface ProjectChangeLog {
+  id: string;
+  date: string;
+  author: string;
+  type: 'ESCOPO' | 'CRONOGRAMA' | 'RECURSO' | 'ARQUITETURA';
+  description: string;
+  baselineBefore: string;
+  baselineAfter: string;
+  justification: string;
+  approvedBy: string;
+}
+
+export interface ManagedProject {
+  id: string;
+  code: string; // 'PRJ-PACS-01'
+  name: string;
+  sponsor: string;
+  manager: string;
+  targetDate: string;
+  generalValidatedProgress: number; // % ponderado
+  completedMilestonesCount: number;
+  totalMilestonesCount: number;
+  pendingDeliverablesCount: number;
+  overdueTasksCount: number;
+  criticalBlocksCount: number;
+  nextMilestone: { title: string; date: string; daysRemaining: number };
+  phases: ProjectPhase[];
+  tasks: ProjectTask[];
+  risks: ProjectRisk[];
+  decisions: ProjectDecision[];
+  changeLogs: ProjectChangeLog[];
+}
+
