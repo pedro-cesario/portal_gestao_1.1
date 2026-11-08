@@ -23,8 +23,8 @@ test('GET tickets uses explicit query params and credentials without adding auth
       return new Response('{"items":[]}', { status: 200, headers: { 'content-type': 'application/json' } });
     }) as typeof fetch,
   });
-  assert.deepEqual(await api.listTickets({ page: 2, page_size: 6, status: 'novo' }), { items: [] });
-  assert.equal(calls[0].url, '/api/v1/tickets?page=2&page_size=6&status=novo');
+  assert.deepEqual(await api.listTickets({ page: 2, page_size: 6, status: 'novo', categoria_id: 701 }), { items: [] });
+  assert.equal(calls[0].url, '/api/v1/tickets?page=2&page_size=6&status=novo&categoria_id=701');
   assert.equal(calls[0].init?.method, 'GET');
   assert.equal(calls[0].init?.credentials, 'include');
   assert.equal((calls[0].init?.headers as Record<string, string>)?.Authorization, undefined);
