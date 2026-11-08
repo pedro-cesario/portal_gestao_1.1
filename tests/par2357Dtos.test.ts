@@ -5,6 +5,7 @@ import {
   parsePar2357Overview,
   toVerifiedTicketIdentity,
   InvalidPar2357Payload,
+  parsePar2357Session,
 } from '../src/integrations/par2357Dtos.ts';
 
 const fixture = () => ({
@@ -91,4 +92,19 @@ test('overview unavailable must not advertise indicators as reliable', () => {
     () => parsePar2357Overview({ ...unavailable, indicadores_gerais: { abertos: 8 } }),
     InvalidPar2357Payload,
   );
+});
+
+test('auth/me requires real authenticated cookie identity with read permission', () => {
+  const session = {
+    status: 'authenticated', user_id: 'synthetic-user',
+    username: 'gestor', full_name: 'Operador Sintético',
+    roles: ['MANAGER_OPERATIONS'], permissions: ['READ_OPERATIONAL'],
+    csrf_token: null, must_change_password: false, auth_transport: 'cookie',
+  };
+  assert.equal(parsePar2357Session(session).user_id, 'synthetic-user');
+  assert.throws(() => parsePar2357Session({ ...session, status: 'anonymous' }), InvalidPar2357Payload);
+  assert.throws(() => parsePar2357Session({ ...session, permissions: [] }), InvalidPar2357Payload);
+  assert.throws(() => parsePar2357Session({ ...session, must_change_password: true }), InvalidPar2357Payload);
+  assert.throws(() => parsePar2357Session({ ...session, auth_transport: 'development-preview' }), InvalidPar2357Payload);
+  assert.throws(() => parsePar2357Session({ username: 'gestor', permissions: ['READ_OPERATIONAL'] }), InvalidPar2357Payload);
 });
