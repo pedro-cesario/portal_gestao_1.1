@@ -38,6 +38,7 @@ import { Header } from './components/layout/Header';
 
 // Visualizações dos Módulos
 import { OverviewView } from './components/views/OverviewView';
+import { Par2357OverviewPreviewView } from './components/views/Par2357OverviewPreviewView';
 import { TicketsView } from './components/views/TicketsView';
 import { Par2357TicketsPreviewView } from './components/views/Par2357TicketsPreviewView';
 import { TeamView } from './components/views/TeamView';
@@ -270,13 +271,17 @@ export default function App() {
         {/* Viewport dos Módulos — Zero-Scroll com Utilização Dinâmica do Espaço */}
         <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
           {currentRoute === 'visao-geral' && (
-            <OverviewView
-              tickets={tickets}
-              latestAudit={audits[0]}
-              onNavigateToTicket={handleNavigateToTicket}
-              onNavigateToRoute={handleRouteChange}
-              dataSource={dataSource}
-            />
+            import.meta.env.VITE_PAR2357_OVERVIEW_PREVIEW === 'true' ? (
+              <Par2357OverviewPreviewView baseUrl={import.meta.env.VITE_PAR2357_API_BASE_URL || ''} />
+            ) : (
+              <OverviewView
+                tickets={tickets}
+                latestAudit={audits[0]}
+                onNavigateToTicket={handleNavigateToTicket}
+                onNavigateToRoute={handleRouteChange}
+                dataSource={dataSource}
+              />
+            )
           )}
 
           {currentRoute === 'chamados' && (
