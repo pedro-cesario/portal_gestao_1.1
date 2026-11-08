@@ -171,3 +171,49 @@ export function parsePar2357Overview(payload: unknown): Par2357Overview {
   }
   return data as unknown as Par2357Overview;
 }
+
+/** Wire response of GET /v1/auth/me (backend/api/main.py). */
+export interface Par2357Session {
+  status: 'authenticated';
+  user_id: string;
+  username: string;
+  full_name: string;
+  roles: string[];
+  permissions: string[];
+  csrf_token: string | null;
+  must_change_password: false;
+  auth_transport: 'cookie';
+}
+
+/**
+ * Preview pages only accept an authenticated server cookie session with
+ * READ_OPERATIONAL (or ADMIN), never the client's MOCK_USERS identity.
+ */
+export function parsePar2357Session(payload: unknown): Par2357Session {
+  const data = record(payload, 'auth/me');
+  if (data.status !== 'authenticated') throw new InvalidPar2357Payload('Session not authenticated');
+  nonempty(data.user_id, 'auth.user_id');
+  nonempty(data.username, 'auth.username');
+  nonempty(data.full_name, 'auth.full_name');
+  if (!Array.isArray(data.roles) || !data.roles.every(v => typeof v === 'string')) {
+    throw new InvalidPar2357Payload('Invalid auth.roles');
+  }
+  if (!Array.isArray(data.permissions) || !data.permissions.every(v => typeof v === 'string')) {
+    throw new InvalidPar2357Payload('Invalid auth.permissions');
+  }
+  if (!data.permissions.includes('READ_OPERATIONAL') && !data.permissions.includes('ADMIN')) {
+    throw new InvalidPar2357Payload('Session lacks operational read permission');
+  }
+  if (data.must_change_password !== false) {
+    throw new InvalidPar2357Payload('Password change required');
+  }
+  // This is explicitly a browser cookie-auth preview, not bearer auth or
+  // unsigned development-preview identity.
+  if (data.auth_transport !== 'cookie') {
+    throw new InvalidPar2357Payload('Cookie session required for browser preview');
+  }
+  if (data.csrf_token !== null && typeof data.csrf_token !== 'string') {
+    throw new InvalidPar2357Payload('Invalid auth.csrf_token');
+  }
+  return data as unknown as Par2357Session;
+}
