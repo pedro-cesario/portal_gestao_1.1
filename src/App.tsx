@@ -44,6 +44,7 @@ import { TeamView } from './components/views/TeamView';
 import { PendingsView } from './components/views/PendingsView';
 import { AuditsView } from './components/views/AuditsView';
 import { IndicatorsView } from './components/views/IndicatorsView';
+import { Par2357IndicatorsPreviewView } from './components/views/Par2357IndicatorsPreviewView';
 import { AgenteGerencialView } from './components/views/AgenteGerencialView';
 import { DailyAndPanelsView } from './components/views/DailyAndPanelsView';
 import { TemplatesGuideView } from './components/views/TemplatesGuideView';
@@ -319,7 +320,11 @@ export default function App() {
           )}
 
           {currentRoute === 'indicadores' && (
-            <IndicatorsView />
+            import.meta.env.VITE_PAR2357_INDICATORS_PREVIEW === 'true' ? (
+              <Par2357IndicatorsPreviewView baseUrl={import.meta.env.VITE_PAR2357_API_BASE_URL || ''} />
+            ) : (
+              <IndicatorsView />
+            )
           )}
 
           {currentRoute === 'agente-gerencial' && (
