@@ -56,7 +56,7 @@ export function Par2357TicketsPreviewView({
     try {
       const api = createPortalApiClient({ enabled: true, baseUrl });
       // Always verify the actual server session. MOCK_USERS are NOT authentication.
-      await api.getCurrentUser();
+      await api.getValidatedCurrentUser();
       if (signal.aborted) return;
       const result = await api.getValidatedTicketPage({ page, page_size: PAGE_SIZE });
       if (signal.aborted) return;
