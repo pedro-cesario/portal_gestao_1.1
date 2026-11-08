@@ -40,3 +40,25 @@ jobs:
           VITE_PAR2357_INDICATORS_PREVIEW: 'true'
           VITE_PAR2357_API_BASE_URL: ''
         run: npm run build
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies (no lifecycle scripts)
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Install isolated Chromium
+        run: npx playwright install chromium --with-deps
+      - name: Run synthetic browser regression
+        run: npm run test:e2e:synthetic
+      - name: Upload failed browser traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: par2357-playwright-traces
+          path: test-results/
+          if-no-files-found: ignore
