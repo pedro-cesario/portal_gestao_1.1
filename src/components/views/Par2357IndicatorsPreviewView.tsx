@@ -39,7 +39,7 @@ export function Par2357IndicatorsPreviewView({ baseUrl = '' }: { baseUrl?: strin
     setError(null);
     try {
       const api = createPortalApiClient({ enabled: true, baseUrl });
-      await api.getCurrentUser();
+      await api.getValidatedCurrentUser();
       if (signal.aborted) return;
       const overview = await api.getValidatedOverview({ mode });
       if (signal.aborted) return;
