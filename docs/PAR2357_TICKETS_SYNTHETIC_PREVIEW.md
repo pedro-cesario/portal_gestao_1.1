@@ -53,3 +53,16 @@ VITE_PAR2357_INDICATORS_PREVIEW=true
 O componente consulta sessão real do backend, então `GET /v1/indicators/overview` com seleção de modo snapshot/realtime, e rejeita qualquer resposta cuja origem não seja `SYNTHETIC_DEMO`. Mostra apenas dois contadores cujo nome foi confirmado no envelope (`total_concluidos_hoje`, `total_concluidos_periodo_30d`), quando `availability_status=AVAILABLE`; caso contrário mostra indisponibilidade explícita. Os demais KPIs do mock original não são apresentados como verdadeiros, nem calculados com base em campos não verificados.
 
 A tela atual de `IndicatorsView` permanece padrão e inalterada. Não existe aprovação para consumo de métricas reais nem publicação. Falta validar o conteúdo efetivo de resposta sintética de `/v1/indicators/overview` e homologar o navegador antes de ativar a flag.
+
+## Validação HTTP sintética em Matrix (8/11/2026)
+
+A etapa de testes HTTP foi destravada **apenas no harness de contrato**. Uma prova isolada confirmou que, na sandbox do worker, rotas assíncronas de um FastAPI mínimo respondem, mas rotas síncronas travam no executor AnyIO `to_thread.run_sync`. Não há evidência de falha do adaptador sintético ou da API produtiva.
+
+Um monkeypatch de execução inline, restrito ao teste `backend/contracts/test_http_synthetic_integration.py` na cópia isolada do Matrix, permite exercitar a rota FastAPI real `GET /v1/tickets?page=1&page_size=2` com `SyntheticDemoAdapter` e identidade sintética, sem lifespan nem SQLite persistente. Ele **não substitui homologação da execução real de threads ou navegador**.
+
+Validação independente MCP 2.0, tarefa `heal20-a403ed2534354a058361e633fa89ae0f`:
+- `15 passed in 0.58s`, sem skips, exit 0 (contratos Python + HTTP sintético);
+- `AST_OK`, exit 0;
+- nenhuma modificação realizada pela tarefa de auditoria.
+
+Pendências: verificar threadpool do worker em ambiente autorizado sem contornar a sandbox; homologar login/sessão e navegador em infraestrutura sintética própria; não confundir teste de contrato in-process com E2E real.
