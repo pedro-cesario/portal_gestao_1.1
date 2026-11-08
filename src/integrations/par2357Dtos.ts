@@ -63,10 +63,10 @@ function record(v: unknown, field: string): Record<string, unknown> {
 }
 
 function integer(v: unknown, field: string, min: number, max = Number.MAX_SAFE_INTEGER): number {
-  if (!Number.isSafeInteger(v) || (v as number) < min || (v as number) > max) {
+  if (typeof v !== 'number' || !Number.isSafeInteger(v) || v < min || v > max) {
     throw new InvalidPar2357Payload(`Invalid ${field}`);
   }
-  return v as number;
+  return v;
 }
 
 function nonempty(v: unknown, field: string): string {
