@@ -5,7 +5,7 @@
  * claim DTO compatibility, or enable any hospital connection.
  * Runtime payloads remain unknown until a backend DTO contract is validated.
  */
-import { parsePar2357Overview, parsePar2357TicketPage } from './par2357Dtos';
+import { parsePar2357Overview, parsePar2357TicketPage, parsePar2357Session } from './par2357Dtos';
 
 export type PortalReadEndpoint =
   | '/health'
@@ -107,6 +107,7 @@ export function createPortalApiClient(options: PortalApiOptions = {}) {
   return {
     getHealth: () => get('/health'),
     getCurrentUser: () => get('/v1/auth/me'),
+    getValidatedCurrentUser: async () => parsePar2357Session(await get('/v1/auth/me')),
     getOverview: (query: OverviewQuery = {}) => {
       const p = new URLSearchParams();
       if (query.mode) p.set('mode', query.mode);
