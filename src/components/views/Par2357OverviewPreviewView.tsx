@@ -40,7 +40,7 @@ export function Par2357OverviewPreviewView({ baseUrl = '' }: { baseUrl?: string 
     try {
       const api = createPortalApiClient({ enabled: true, baseUrl });
       // The account shown in the prototype sidebar is not an API session.
-      await api.getCurrentUser();
+      await api.getValidatedCurrentUser();
       if (signal.aborted) return;
       const tickets = await api.getValidatedTicketPage({ page: 1, page_size: 6 });
       if (tickets.source !== 'SYNTHETIC_DEMO' ||
