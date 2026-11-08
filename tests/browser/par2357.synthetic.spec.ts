@@ -30,7 +30,12 @@ async function syntheticApi(page: Page, options: { unauthorized?: boolean; sourc
         status = 401;
         body = { detail: 'Unauthorized' };
       } else {
-        body = { username: 'synthetic-test', permissions: ['READ_OPERATIONAL'] };
+        body = {
+          status: 'authenticated', user_id: 'synthetic-browser-operator',
+          username: 'synthetic-test', full_name: 'Operador Sintético',
+          roles: ['MANAGER_OPERATIONS'], permissions: ['READ_OPERATIONAL'],
+          csrf_token: null, must_change_password: false, auth_transport: 'cookie',
+        };
       }
     } else if (url.pathname === '/v1/tickets') {
       const pageIndex = Number(url.searchParams.get('page') || 1);
@@ -100,4 +105,14 @@ test('non-synthetic API records are refused by the preview', async ({ page }) =>
   await page.goto('/');
   await expect(page.getByRole('alert')).toContainText('Não foi possível validar');
   await expect(page.getByText('[SINTÉTICO] Wi-Fi indisponível')).toHaveCount(0);
+});
+
+test('malformed auth/me success never unlocks previews', async ({ page }) => {
+  await page.route('**/v1/auth/me', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ username: 'synthetic-test', permissions: ['READ_OPERATIONAL'] }),
+  }));
+  await page.goto('/');
+  await expect(page.getByRole('alert')).toContainText('Não foi possível validar');
+  await expect(page.getByText('Chamados na fonte sintética')).toHaveCount(0);
 });
