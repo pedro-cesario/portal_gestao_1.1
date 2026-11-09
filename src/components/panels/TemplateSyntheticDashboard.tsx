@@ -153,20 +153,24 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
                 {panel.templateType}
               </span>
               <span className="text-[10px] text-slate-400">·</span>
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20" title="Especificação do Template Homologada formalmente pelo HEAL Ops">
+                TEMPLATE HOMOLOGADO
+              </span>
+              <span className="text-[10px] text-slate-400">·</span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 Ref: <strong className="text-slate-800 dark:text-slate-200">{panel.referenceDate}</strong>
               </span>
               <span className="text-[10px] text-slate-400">·</span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                Fonte: <strong className="text-slate-800 dark:text-slate-200">{panel.source}</strong>
+                Origem: <strong className="text-slate-800 dark:text-slate-200">{panel.source}</strong>
               </span>
               <span className="text-[10px] text-slate-400">·</span>
               <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
                 panel.status === 'APROVADO'
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                  ? 'bg-blue-500/10 text-[#134F9F] dark:text-blue-400 border border-blue-500/20'
                   : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-              }`}>
-                {panel.status === 'APROVADO' ? '✓ HOMOLOGADO' : '✎ RASCUNHO / EM REVISÃO'}
+              }`} title="Estado do registro específico deste artefato">
+                REGISTRO: {panel.status === 'APROVADO' ? 'HOMOLOGADO' : 'EM REVISÃO'}
               </span>
             </div>
             <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5">
@@ -564,86 +568,13 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
           </span>
         </div>
       ) : panel.templateType === 'TPL-03' ? (
-        // FEEDBACK E ALINHAMENTOS (TPL-03): Cards Sintéticos + Launcher IA
+        // FEEDBACK E ALINHAMENTOS (TPL-03): 4 Fluxos de Ação Gerencial
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2 shrink-0">
-          <div 
-            onClick={onOpenFeedbackAndAlignments}
-            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-emerald-500/50 cursor-pointer transition-all group"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                <Award className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 transition-colors truncate">
-                    Feedbacks & Metas
-                  </span>
-                  <span className="text-[10px] font-mono font-bold px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                    2 homologados
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
-                  <span className="text-emerald-600 font-semibold">Mariana & Lucas</span> · 92% metas
-                </div>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 shrink-0" />
-          </div>
-
-          <div 
-            onClick={onOpenFeedbackAndAlignments}
-            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-blue-500/50 cursor-pointer transition-all group"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="p-1.5 rounded-lg bg-blue-500/10 text-[#134F9F] dark:text-blue-400 shrink-0">
-                <Users className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#134F9F] transition-colors truncate">
-                    Alinhamentos Coletivos
-                  </span>
-                  <span className="text-[10px] font-mono font-bold px-1 py-0.2 rounded bg-blue-500/10 text-[#134F9F] dark:text-blue-400">
-                    3 registros
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
-                  <span className="text-[#134F9F] dark:text-blue-400 font-semibold">Plantão (3 part.)</span> · Conduta
-                </div>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
-          </div>
-
-          <div 
-            onClick={onOpenFeedbackAndAlignments}
-            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-slate-400 cursor-pointer transition-all group"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="p-1.5 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 shrink-0">
-                <FileText className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-slate-700 transition-colors truncate">
-                    Termos A4 & Assinaturas
-                  </span>
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    Físico
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
-                  <span className="text-emerald-600 font-semibold">4 assinados</span> · Coleta em folha
-                </div>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 shrink-0" />
-          </div>
-
+          {/* FLUXO 1: Preparar Alinhamento com IA */}
           <div 
             onClick={onOpenAiPreparation || onOpenFeedbackAndAlignments}
             className="md:col-span-3 bg-white dark:bg-slate-900 border border-purple-500/40 hover:border-purple-600 rounded-lg p-2.5 flex items-center justify-between shadow-2xs cursor-pointer transition-all group bg-gradient-to-r from-purple-500/5 to-transparent"
+            title="Preparação humanizada com assistente gerencial de redação em 5 etapas"
           >
             <div className="flex items-center gap-2 min-w-0">
               <div className="p-1.5 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 shrink-0">
@@ -652,7 +583,7 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 transition-colors truncate">
-                    Preparar com IA
+                    1. Preparar com IA
                   </span>
                   <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
                     5 Etapas
@@ -664,6 +595,87 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
               </div>
             </div>
             <ArrowRight className="w-3.5 h-3.5 text-purple-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </div>
+
+          {/* FLUXO 2: Registrar Feedback Individual */}
+          <div 
+            onClick={onOpenRegisterFeedback || onOpenFeedbackAndAlignments}
+            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-emerald-500/50 cursor-pointer transition-all group"
+            title="Registrar novo feedback individual de desenvolvimento técnico e comportamental"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Award className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 transition-colors truncate">
+                    2. Feedback Individual
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    + Registrar
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
+                  <span className="text-emerald-600 font-semibold">Técnico Nominal</span> · Metas & Critérios
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 shrink-0" />
+          </div>
+
+          {/* FLUXO 3: Registrar Alinhamento Coletivo */}
+          <div 
+            onClick={onOpenRegisterAlignment || onOpenFeedbackAndAlignments}
+            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-blue-500/50 cursor-pointer transition-all group"
+            title="Registrar alinhamento coletivo ou de passagem de plantão com múltiplos participantes"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-blue-500/10 text-[#134F9F] dark:text-blue-400 shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#134F9F] transition-colors truncate">
+                    3. Alinhamento Coletivo
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1 py-0.2 rounded bg-blue-500/10 text-[#134F9F] dark:text-blue-400">
+                    + Registrar
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
+                  <span className="text-[#134F9F] dark:text-blue-400 font-semibold">Equipe & Escala</span> · Atas A4
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
+          </div>
+
+          {/* FLUXO 4: Consultar Histórico e Documentos */}
+          <div 
+            onClick={onOpenFeedbackAndAlignments}
+            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-slate-400 cursor-pointer transition-all group"
+            title="Consultar repositório documental, atas emitidas, status de assinaturas e livro físico"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 shrink-0">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-slate-700 transition-colors truncate">
+                    4. Histórico & Documentos
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    Livro Físico
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
+                  <span className="text-emerald-600 font-semibold">Dossiês & Atas</span> · Coleta Manuscrita
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 shrink-0" />
           </div>
         </div>
       ) : null}

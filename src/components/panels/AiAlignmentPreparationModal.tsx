@@ -87,8 +87,8 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
   const [liveParticipantStatements, setLiveParticipantStatements] = useState<Record<number, string>>({});
   const [meetingStartTime] = useState<Date>(new Date());
 
-  // ETAPA 4: Registro Pós-Reunião
-  const [finalDecisions, setFinalDecisions] = useState<string>('Diretrizes operacionais apresentadas e aceitas pelos participantes.');
+  // ETAPA 4: Registro Pós-Reunião (Inicialmente limpo para preenchimento honesto após a conversa)
+  const [finalDecisions, setFinalDecisions] = useState<string>('');
   const [finalObservations, setFinalObservations] = useState<string>('');
 
   // ETAPA 5: Documento Formal Concluído
@@ -107,36 +107,34 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
     }
   };
 
-  // Gerar ou regerar com IA (Etapa 1 -> Etapa 2)
+  // Gerar ou regerar com IA (Etapa 1 -> Etapa 2) — Execução direta sem delay artificial
   const handleGeneratePreparation = (toneToUse: AlignmentTone = selectedTone) => {
     setIsGeneratingAi(true);
-    setTimeout(() => {
-      const result = generateAiAlignmentPreparation(
-        {
-          participantIds: selectedTechIds,
-          category,
-          spontaneousStrengths,
-          spontaneousDevPoints,
-          spontaneousContext,
-          primaryObjective,
-          previousCommitmentsToRescue: previousCommitments,
-          includeGlpiMetrics,
-          tone: toneToUse
-        },
-        currentUser.name
-      );
+    const result = generateAiAlignmentPreparation(
+      {
+        participantIds: selectedTechIds,
+        category,
+        spontaneousStrengths,
+        spontaneousDevPoints,
+        spontaneousContext,
+        primaryObjective,
+        previousCommitmentsToRescue: previousCommitments,
+        includeGlpiMetrics,
+        tone: toneToUse
+      },
+      currentUser.name
+    );
 
-      setAiResult(result);
-      setSelectedTone(toneToUse);
-      setEditedSubject(result.preliminaryDraft.subject);
-      setEditedObjective(result.preliminaryDraft.objective);
-      setEditedContext(result.preliminaryDraft.context);
-      setEditedFacts(result.preliminaryDraft.observedFactsOrSituations);
-      setEditedOrientations(result.preliminaryDraft.transmittedOrientations);
-      setEditableGoals(result.proposedGoals);
-      setIsGeneratingAi(false);
-      setCurrentStep(2);
-    }, 350);
+    setAiResult(result);
+    setSelectedTone(toneToUse);
+    setEditedSubject(result.preliminaryDraft.subject);
+    setEditedObjective(result.preliminaryDraft.objective);
+    setEditedContext(result.preliminaryDraft.context);
+    setEditedFacts(result.preliminaryDraft.observedFactsOrSituations);
+    setEditedOrientations(result.preliminaryDraft.transmittedOrientations);
+    setEditableGoals(result.proposedGoals);
+    setIsGeneratingAi(false);
+    setCurrentStep(2);
   };
 
   // Checkbox de checklist do roteiro ao vivo
@@ -202,7 +200,7 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
       generalCommitments,
       individualCommitments: [],
       decisions: [
-        finalDecisions,
+        finalDecisions.trim() || 'Diretrizes operacionais e compromissos acordados entre as partes durante a reunião.',
         'Emissão de via em folha A4 para coleta de assinaturas manuscritas e arquivamento em livro físico.'
       ],
       nextReviewDate: 'Em 30 dias (Acompanhamento Periódico)',
@@ -556,7 +554,7 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
               <div className="p-3 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50 rounded-lg text-2xs text-purple-900 dark:text-purple-300 flex items-start gap-2">
                 <Sparkles className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">Assistente Gerencial de Redação:</span> Conteúdo gerado localmente em simulação aguardando integração FastAPI via Luna CLI. Os 3 blocos abaixo são 100% editáveis pelo gestor antes e depois da reunião.
+                  <span className="font-bold">Origem: Preparação Demonstrativa no Frontend (Aguardando conciliação com FastAPI e Luna CLI AGY):</span> Roteiro humanizado e minuta preliminar estruturados localmente. Todos os 3 blocos abaixo são 100% editáveis pelo gestor antes, durante e após a realização da reunião.
                 </div>
               </div>
 
@@ -847,13 +845,14 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
               <div className="space-y-3 text-xs">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Decisões Finais Pactuadas
+                    Decisões Finais Pactuadas (Preenchimento pós-reunião)
                   </label>
                   <textarea
                     rows={2}
                     value={finalDecisions}
                     onChange={(e) => setFinalDecisions(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    placeholder="Descreva as decisões operacionais e compromissos efetivamente pactuados na conversa com os participantes..."
+                    className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400"
                   />
                 </div>
 
