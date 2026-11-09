@@ -85,7 +85,7 @@ export interface Technician {
   role: string;
   groupId: number;
   groupName: string;
-  isManagementGroup: boolean; // Grupo 48 Gestão: excluído dos rankings de produtividade
+  isManagementGroup: boolean; // Identificador de vinculação ao Grupo 48 Gestão (mantém distinção de grupo sem excluir do ranking)
   activeTicketsCount: number;
   ticketsWithoutEvolution24hCount: number;
   resolvedInPeriodCount: number;
@@ -167,6 +167,10 @@ export interface ArtifactHumanReview {
   status: 'RASCUNHO' | 'EM_REVISAO' | 'APROVADO' | 'ARQUIVADO';
 }
 
+export type TemplateSpecificationStatus = 'RASCUNHO' | 'EM_HOMOLOGACAO' | 'HOMOLOGADO';
+export type DataOriginStatus = 'DEMONSTRATIVO' | 'SNAPSHOT' | 'REALTIME' | 'INDISPONIVEL';
+export type DocumentRecordStatus = 'RASCUNHO' | 'EM_REVISAO' | 'FORMALIZADO' | 'ARQUIVADO' | 'APROVADO' | 'AGUARDANDO_REALIZACAO';
+
 export interface ArtifactPanel {
   id: string;
   templateType: PanelTemplateType;
@@ -175,9 +179,11 @@ export interface ArtifactPanel {
   ownerName: string;
   referenceDate: string; // Data de referência (America/Sao_Paulo)
   generationDate: string;
-  source: 'REALTIME' | 'SNAPSHOT_04H';
+  source: 'REALTIME' | 'SNAPSHOT_04H' | 'DEMONSTRATIVO' | 'INDISPONIVEL';
+  specificationStatus?: TemplateSpecificationStatus;
+  dataOrigin?: DataOriginStatus;
   version: string;
-  status: 'APROVADO' | 'RASCUNHO' | 'EM_REVISAO' | 'ARQUIVADO';
+  status: 'APROVADO' | 'RASCUNHO' | 'EM_REVISAO' | 'ARQUIVADO' | 'AGUARDANDO_REALIZACAO';
   parameters?: {
     period?: string;
     targetCollaboratorId?: number;
@@ -605,7 +611,7 @@ export type AlignmentCategory =
   | 'REGISTRO_LIVRE_OUTROS';
 
 export type AlignmentParticipantRole = 'CONDUTOR' | 'PARTICIPANTE' | 'RELATOR' | 'OUVINTE';
-export type AlignmentPresence = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO';
+export type AlignmentPresence = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO' | 'PRESENCA_NAO_CONFIRMADA';
 
 export type AlignmentScienceStatus = 
   | 'PENDENTE'
@@ -626,8 +632,10 @@ export type AlignmentSignatureStatus =
 export type FormalDocumentStatus = 
   | 'RASCUNHO'
   | 'RASCUNHO_PREPARACAO'
+  | 'AGUARDANDO_REALIZACAO'
   | 'EM_REVISAO'
   | 'APROVADO'
+  | 'FORMALIZADO'
   | 'PDF_EMITIDO'
   | 'AGUARDANDO_ASSINATURAS'
   | 'PARCIALMENTE_ASSINADO'

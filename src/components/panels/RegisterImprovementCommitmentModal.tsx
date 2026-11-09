@@ -49,8 +49,8 @@ export const RegisterImprovementCommitmentModal: React.FC<RegisterImprovementCom
 }) => {
   if (!isOpen) return null;
 
-  // Lista de colaboradores técnicos aptos a plano de desenvolvimento
-  const eligibleTechs = MOCK_TECHNICIANS.filter(t => !t.isManagementGroup);
+  // Lista de colaboradores técnicos aptos a plano de desenvolvimento (todos os técnicos nominais, incluindo Grupo 48)
+  const eligibleTechs = MOCK_TECHNICIANS;
 
   const [collaboratorId, setCollaboratorId] = useState<number>(eligibleTechs[3]?.id || 105); // Lucas Mendes por padrão
   const selectedCollaborator = eligibleTechs.find(t => t.id === collaboratorId) || eligibleTechs[0];

@@ -122,7 +122,7 @@ export const MOCK_TECHNICIANS: Technician[] = [
     avatarInitials: 'LM',
     email: 'l.mendes@heal.org.br',
   },
-  // Grupo 48 - Gestão: incluído para transparência de governança, mas EXCLUÍDO dos rankings operacionais
+  // Grupo 48 TI > Gestão: todos os técnicos nominais entram no ranking e indicadores operacionais nominais
   {
     id: 4801,
     name: 'Dr. Roberto Silveira',
@@ -543,7 +543,7 @@ export const MOCK_SAVED_PANELS: ArtifactPanel[] = [
         },
         {
           title: '3. Carga e Distribuição da Equipe',
-          description: 'Distribuição nominal dos 33 chamados ativos (excluindo Grupo 48 dos rankings de produtividade).',
+          description: 'Distribuição nominal dos chamados ativos por técnico (incluindo Grupo 48 TI > Gestão no ranking, preservando a identificação do grupo).',
           items: [
             { title: 'Suporte Presencial (Rafael / Lucas)', description: '13 chamados ativos. Rafael alocado na UTI Geral; Lucas focado nos periféricos do PA.' },
             { title: 'Sistemas & Dados (Mariana / Fernanda)', description: '11 chamados ativos. Foco em interfaces de farmácia e storage PACS.' },

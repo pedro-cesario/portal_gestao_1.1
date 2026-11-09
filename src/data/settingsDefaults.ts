@@ -135,10 +135,10 @@ export const DEFAULT_CALCULATION_SETTINGS: OperationalCalculationSettings = {
     calculationWindowDays: 30
   },
   teamGovernance: {
-    excludeManagementGroup48: true,
+    excludeManagementGroup48: false, // Regra institucional: todos os técnicos entram no ranking
     maxActiveTicketsPerTechThreshold: 6,
     stalledTicketsAlertThreshold: 2,
-    excludedGroupIds: [48]
+    excludedGroupIds: []
   },
   snapshotSchedules: {
     nightlyAuditTime: '04:00',

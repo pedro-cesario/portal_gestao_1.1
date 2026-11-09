@@ -380,10 +380,9 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
             })}
           </div>
 
-          {/* RODAPÉ DE PAGINAÇÃO DA BIBLIOTECA */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 flex items-center justify-between text-xs text-slate-500 shadow-2xs shrink-0">
             <div>
-              Mostrando <strong className="font-mono text-slate-900 dark:text-slate-100">{paginatedPanels.length}</strong> de <strong className="font-mono">{filteredPanels.length}</strong> artefatos homologados
+              Mostrando <strong className="font-mono text-slate-900 dark:text-slate-100">{paginatedPanels.length}</strong> de <strong className="font-mono">{filteredPanels.length}</strong> artefatos gerenciais registrados
             </div>
 
             <div className="flex items-center gap-2">

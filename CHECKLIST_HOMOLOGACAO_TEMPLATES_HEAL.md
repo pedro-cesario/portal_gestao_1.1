@@ -2,78 +2,109 @@
 ## Roteiro de Verificação Pré-Go-Live dos Quatro Templates Gerenciais
 **Instituto HEAL — Diretoria de Tecnologia da Informação (DTI)**  
 **Versão:** 1.1.0  
-**Data:** 09/11/2026
+**Revisão:** Etapa 9.1.6.2 (ChatGPT Arquiteto / AI Studio)  
+**Data da Revisão:** 09/11/2026
 
 ---
 
-## 1. INSTRUÇÕES DE HOMOLOGAÇÃO
+## 1. INSTRUÇÕES PARA HOMOLOGAÇÃO HUMANA
 
-Este checklist deve ser executado pelo Gestor Operacional de TI e pelo Coordenador de Infraestrutura antes da liberação formal para uso rotineiro da equipe.
+Este documento constitui o instrumento formal de conferência a ser preenchido por responsável técnico e gestor autorizado da DTI antes de qualquer liberação para ambiente de produção.
 
-Cada item deve ser avaliado com:
-- `[X] APROVADO`: Em conformidade estrita com o procedimento operacional padrão.
-- `[!] RESSALVA`: Operacional, mas com ação corretiva planejada.
-- `[ ] REPROVADO`: Bloqueio impeditivo.
+**Regras de Preenchimento:**
+- A verificação técnica do frontend atesta apenas a conformidade do código-fonte e dos componentes de interface.
+- A homologação operacional e institucional exige teste assistido com operadores reais e validação formal.
+- **Nenhum item pode ser marcado como aprovado sem execução e evidência verificável correspondente.**
 
----
-
-## 2. ITENS DE VERIFICAÇÃO POR TEMPLATE
-
-### 2.1. TPL-01 — Daily Operacional de TI
-| Item | Descrição do Teste | Status | Responsável |
-|:---:|:---|:---:|:---:|
-| 1.1 | **Contenção no Viewport:** O painel sintético carrega 100% contido sem rolagem vertical no monitor padrão desktop (1080p). | `[X] APROVADO` | DTI |
-| 1.2 | **Filtro de Governança:** O Grupo 48 está expressamente excluído de todas as contagens operacionais. | `[X] APROVADO` | DTI |
-| 1.3 | **Snapshots das 04h:** O cabeçalho declara honestamente a data de referência e a origem do snapshot matinal. | `[X] APROVADO` | DTI |
-| 1.4 | **Auditoria POP-TIN-017:** Chamados com pendência > 24h sem atualização humana são destacados com badge de advertência. | `[X] APROVADO` | DTI |
-| 1.5 | **Sem Auto-confirmação:** As sugestões de encaminhamento exigem clique humano para confirmação no banco de acordos. | `[X] APROVADO` | DTI |
-| 1.6 | **Modo Apresentação:** Abertura limpa em modal de slides executivos, permitindo transição e detalhamento sob demanda. | `[X] APROVADO` | DTI |
+Legenda de Preenchimento:
+- `[ ] PENDENTE`: Item ainda não verificado pelo avaliador humano.
+- `[APROVADO]`: Verificado e aprovado sem ressalvas pelo avaliador.
+- `[RESSALVA]`: Aprovado para teste controlado com pendência não-bloqueante.
+- `[REPROVADO]`: Inconformidade identificada que bloqueia o go-live.
 
 ---
 
-### 2.2. TPL-02 — Alinhamento Semanal & Planos Individuais
-| Item | Descrição do Teste | Status | Responsável |
-|:---:|:---|:---:|:---:|
-| 2.1 | **Resgate da Reunião Anterior:** Acordos e compromissos firmados na semana passada são apresentados com status atualizado. | `[X] APROVADO` | DTI |
-| 2.2 | **Planos Individuais Longitudinais:** O drawer analítico lista compromissos categorizados por área (técnica, postura, SLA, etc.). | `[X] APROVADO` | DTI |
-| 2.3 | **Execução vs Validação:** Técnicos podem marcar ações intermediárias, mas apenas o gestor pode validar o cumprimento da meta. | `[X] APROVADO` | DTI |
-| 2.4 | **Auditoria de Decisões:** Cada transição de status de compromisso grava o nome do operador e a data/hora. | `[X] APROVADO` | DTI |
-| 2.5 | **Zero Auto-conclusão por Prazo:** Metas vencidas permanecem em acompanhamento ou atrasadas, nunca são dadas como cumpridas sozinhas. | `[X] APROVADO` | DTI |
+## 2. SEPARAÇÃO DOS NÍVEIS DE HOMOLOGAÇÃO
+
+1. **Nível 1 — Verificação Técnica do Frontend:** Componentes renderizam no viewport sem erros de console, TypeScript compila (`tsc --noEmit`), e layout é responsivo e contido.
+2. **Nível 2 — Teste Funcional Demonstrativo:** Modais, transições de estado, filtros e PDFs operam conforme esperado com dados locais.
+3. **Nível 3 — Homologação Operacional:** Equipe de plantão e coordenadores validam se os fluxos atendem à rotina hospitalar.
+4. **Nível 4 — Homologação Institucional:** Diretoria de TI e Comitê de Governança chancelam o modelo normativo.
+5. **Nível 5 — Aprovação de Produção:** Gate final de implantação pela equipe Matrix via Luna CLI.
 
 ---
 
-### 2.3. TPL-03 — Feedback e Alinhamentos
-| Item | Descrição do Teste | Status | Responsável |
-|:---:|:---|:---:|:---:|
-| 3.1 | **4 Ações Independentes:** Os 4 cartões de ação (Preparar com IA, Feedback Individual, Alinhamento Coletivo, Histórico) abrem seus respectivos fluxos. | `[X] APROVADO` | DTI |
-| 3.2 | **Preparação com IA Sem Delay Artificial:** A geração textual ocorre de forma síncrona com exibição transparente de simulação frontend. | `[X] APROVADO` | DTI |
-| 3.3 | **Seletor de Tom:** As 4 abordagens (*Equilibrado*, *Acolhedor*, *Direto*, *Desenvolvimento*) alteram sensivelmente o roteiro e a minuta. | `[X] APROVADO` | DTI |
-| 3.4 | **Registro Pós-Reunião Honestamente Limpo:** O campo de decisões pactuadas inicia vazio, sem afirmar falsamente que houve concordância antes da conversa. | `[X] APROVADO` | DTI |
-| 3.5 | **Identificação de Minuta:** Documentos não salvos no backend recebem identificador provisório `MINUTA-LOC-XXXX`. | `[X] APROVADO` | DTI |
-| 3.6 | **Diagramação A4 para Impressão:** Geração vetorial do documento em folha A4 com cabeçalho institucional, dados e linhas de assinatura. | `[X] APROVADO` | DTI |
-| 3.7 | **Múltiplos Participantes:** Folha suporta 1, 2, 5, 10 ou mais colaboradores com quebra de página progressiva e linhas individuais de assinatura a caneta. | `[X] APROVADO` | DTI |
-| 3.8 | **Fluxo de Assinatura Física Real:** O sistema atesta a coleta manuscrita com nome do operador e data, sem tentar simular assinatura eletrônica digital fake. | `[X] APROVADO` | DTI |
-| 3.9 | **Rastreabilidade de Arquivamento:** Registro físico contendo número do livro de plantão, tomo e armário da DTI. | `[X] APROVADO` | DTI |
+## 3. ITENS DE VERIFICAÇÃO POR TEMPLATE
+
+### 3.1. TPL-01 — Daily Operacional de TI
+| Item | Descrição do Teste | Verificação Frontend | Homologação Operacional | Assinatura Avaliador |
+|:---:|:---|:---:|:---:|:---:|
+| 1.1 | **Contenção no Viewport:** O painel sintético carrega contido sem rolagem vertical no desktop (1440x900 e 1080p). | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 1.2 | **Regra do Grupo 48:** Todos os técnicos entram no ranking e nas contagens nominais, inclusive os vinculados ao Grupo 48 TI > Gestão. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 1.3 | **Origem dos Indicadores:** Cabeçalho identifica dados como demonstrativos no frontend e vinculados ao snapshot das 04h no backend. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 1.4 | **Auditoria POP-TIN-017:** Chamados com pendência > 24h sem atualização humana são destacados com advertência visual. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 1.5 | **Sem Auto-confirmação:** Encaminhamentos sugeridos exigem clique humano para confirmação no banco de acordos. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 1.6 | **Modo Apresentação:** Modal executivo em slides opera sem quebrar navegação nem layout. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
 
 ---
 
-### 2.4. TPL-04 — Gestão Completa de Projetos
-| Item | Descrição do Teste | Status | Responsável |
-|:---:|:---|:---:|:---:|
-| 4.1 | **5 Fases Sequenciais:** Visualização de fases encadeadas (Planejamento, Aquisição, Pré-implantação, Homologação, Go-Live). | `[X] APROVADO` | DTI |
-| 4.2 | **Cronograma Gantt Executivo:** Barras de tempo com progresso real em porcentagem e marcos em losango. | `[X] APROVADO` | DTI |
-| 4.3 | **Distribuição de Tarefas:** Filtragem ágil por técnico responsável com subtarefas e percentuais de conclusão. | `[X] APROVADO` | DTI |
-| 4.4 | **Submissão e Homologação:** Técnico submete evidência documental (`AGUARDANDO_VALIDACAO`) e gestor homologa formalmente (`CONCLUIDO`). | `[X] APROVADO` | DTI |
-| 4.5 | **Matriz de Riscos & Bloqueios:** Tarefas bloqueadas possuem obrigatoriamente motivo registrado e plano de desbloqueio. | `[X] APROVADO` | DTI |
-| 4.6 | **Vínculo com GMUD:** Registro de número de GMUD associado às atividades de risco, sem gravação indevida direta no GLPI. | `[X] APROVADO` | DTI |
+### 3.2. TPL-02 — Alinhamento Semanal & Planos Individuais
+| Item | Descrição do Teste | Verificação Frontend | Homologação Operacional | Assinatura Avaliador |
+|:---:|:---|:---:|:---:|:---:|
+| 2.1 | **Resgate da Reunião Anterior:** Acordos e compromissos firmados na semana anterior são apresentados com status atualizado. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 2.2 | **Planos Individuais Longitudinais:** Gaveta analítica lista compromissos categorizados por área, elegíveis para toda a equipe. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 2.3 | **Execução vs Validação:** Técnicos marcam execução de ações práticas; validação final do cumprimento da meta exige parecer do gestor. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 2.4 | **Auditoria de Decisões:** Cada transição de status de compromisso grava operador, timestamp e parecer formal. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 2.5 | **Zero Auto-conclusão por Prazo:** Metas vencidas nunca são dadas como cumpridas por decurso de prazo. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
 
 ---
 
-## 3. DECLARAÇÃO DE HOMOLOGAÇÃO INSTITUCIONAL
+### 3.3. TPL-03 — Feedback e Alinhamentos
+| Item | Descrição do Teste | Verificação Frontend | Homologação Operacional | Assinatura Avaliador |
+|:---:|:---|:---:|:---:|:---:|
+| 3.1 | **4 Ações Independentes:** Os 4 cartões de ação (Preparar com IA, Feedback Individual, Alinhamento Coletivo, Histórico) abrem seus respectivos fluxos. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.2 | **Sem Delays Artificiais:** Geração da minuta opera de forma direta, com aviso transparente de preparação demonstrativa. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.3 | **Seletor de Tom:** As 4 abordagens (*Equilibrado*, *Acolhedor*, *Direto*, *Desenvolvimento*) ajustam o tom do roteiro sem travar a interface. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.4 | **Decisões Não Inventadas:** Quando decisões estão vazias, o documento registra estritamente: *"Não foram registradas decisões pactuadas nesta reunião."* | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.5 | **Presença Não Presumida:** Participantes iniciam com presença não confirmada, exigindo preenchimento explícito pelo gestor. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.6 | **Pactuação Explícita de Metas:** Sugestões da IA não se tornam compromissos sem seleção e confirmação do gestor. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.7 | **Reunião Não Presumida:** Sem confirmação humana de ocorrência, documento é classificado como `AGUARDANDO_REALIZACAO` sem data inventada. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.8 | **Diagramação A4 para Impressão:** Geração vetorial do documento em folha A4 com cabeçalho institucional, dados e linhas de assinatura. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.9 | **Múltiplos Participantes:** Folha suporta 1, 2, 5, 10 ou mais colaboradores com quebra de página progressiva e linhas individuais de assinatura a caneta. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.10 | **Fluxo de Assinatura Física Real:** O sistema atesta a coleta manuscrita com operador e data, sem simular assinatura eletrônica digital fake. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 3.11 | **Rastreabilidade de Arquivamento:** Registro físico contendo número do livro de plantão, tomo e armário da DTI. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
 
-Declaramos que a interface do Portal HEAL Ops 1.1 atende plenamente aos requisitos de ergonomia operacional, governança hospitalar e integridade documental estabelecidos pela Diretoria de Tecnologia da Informação do Instituto HEAL.
+---
 
-**Homologado por:**  
-*Henrique Vasconcelos — Gestor Operacional de TI (Hospital HEAL)*  
-*Assinatura Manuscrita:* ___________________________________________  
-*Data:* _____ / _____ / 2026
+### 3.4. TPL-04 — Gestão Completa de Projetos
+| Item | Descrição do Teste | Verificação Frontend | Homologação Operacional | Assinatura Avaliador |
+|:---:|:---|:---:|:---:|:---:|
+| 4.1 | **5 Fases Sequenciais:** Visualização de fases encadeadas sem sobreposição gráfica. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 4.2 | **Cronograma Gantt Executivo:** Barras temporais com percentuais reais e marcos em losango. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 4.3 | **Distribuição de Tarefas:** Filtragem ágil por técnico responsável com subtarefas e percentuais de conclusão. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 4.4 | **Submissão e Homologação:** Técnico submete evidência (`AGUARDANDO_VALIDACAO`); gestor homologa formalmente (`CONCLUIDO`). | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 4.5 | **Matriz de Riscos & Bloqueios:** Tarefas bloqueadas exigem motivo registrado e plano de desbloqueio. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+| 4.6 | **Vínculo com GMUD:** Registro de número de GMUD associado às atividades críticas, sem escrita não autorizada no GLPI. | `CONCLUÍDO (PASS)` | `[ ] PENDENTE` | ____________________ |
+
+---
+
+## 4. TERMO DE HOMOLOGAÇÃO INSTITUCIONAL (EM ABERTO)
+
+*Os campos abaixo destinam-se exclusivamente ao preenchimento manual por autoridades da DTI durante a sessão formal de homologação.*
+
+- **Data da Avaliação:** _____ / _____ / 2026
+- **Ambiente Testado:** [ ] Staging (SQLite V004) &nbsp;&nbsp;&nbsp;&nbsp; [ ] Pré-produção Matrix
+- **Parecer da DTI:** [ ] Aprovado para Produção &nbsp;&nbsp;&nbsp;&nbsp; [ ] Aprovado com Ressalvas &nbsp;&nbsp;&nbsp;&nbsp; [ ] Reprovado
+
+### Responsáveis Autorizados:
+1. **Avaliador Técnico (Engenharia de Sistemas):**  
+   Nome: __________________________________________________  
+   Assinatura: ___________________________________________ Data: _____/_____/2026
+
+2. **Gestor Operacional de TI (Hospital HEAL):**  
+   Nome: __________________________________________________  
+   Assinatura: ___________________________________________ Data: _____/_____/2026
+
+3. **Diretor de Tecnologia da Informação (Chancela Institucional):**  
+   Nome: __________________________________________________  
+   Assinatura: ___________________________________________ Data: _____/_____/2026

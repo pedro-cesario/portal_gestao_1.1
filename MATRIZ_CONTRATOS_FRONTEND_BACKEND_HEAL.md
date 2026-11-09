@@ -1,17 +1,42 @@
 # MATRIZ DE CONTRATOS DE DADOS FRONTEND ↔ BACKEND — HEAL OPS 1.1
 ## Especificação de Endpoints REST, Modelos Pydantic e Tipos TypeScript
 **Instituto HEAL — Diretoria de Tecnologia da Informação (DTI)**  
-**Versão:** 1.1.0  
+**Versão:** 1.1.0 (Revisão Etapa 9.1.6.2)  
 **Data:** 09/11/2026
 
 ---
 
-## 1. ENUMS E CICLOS DE VIDA COMPARTILHADOS
+## 1. PREMISSAS ARQUITETURAIS DE INTEGRAÇÃO
 
-Os enums definidos no frontend em `src/types/index.ts` mapeiam-se de forma idêntica para enums Python (`StrEnum`) no FastAPI:
+1. **Autenticação:** Baseada em sessão/cookie HTTP-only existente com validação de token CSRF no cabeçalho `X-CSRF-Token`. Não requer Bearer JWT para a conciliação em staging.
+2. **Nomenclatura:** O frontend trafega dados em `camelCase`. Os modelos Pydantic no FastAPI devem utilizar `alias_generator = to_camel` e `populate_by_name = True`.
+3. **Persistência de Staging:** Referência mantida na base relacional **SQLite V004**.
+4. **Classificação dos Endpoints:**
+   - `[EC] Existente e confirmado`
+   - `[EA] Existente com ajuste necessário`
+   - `[CP] Contrato proposto`
+   - `[NI] Não implementado`
+   - `[DG] Dependente de gate institucional`
+   - `[NV] Não verificado no backend`
 
-### 1.1. Categorias e Tons de Alinhamento
+---
+
+## 2. ENUMS E CICLOS DE VIDA COMPARTILHADOS
+
 ```python
+from enum import Enum
+
+class TemplateSpecificationStatus(str, Enum):
+    RASCUNHO = "RASCUNHO"
+    EM_HOMOLOGACAO = "EM_HOMOLOGACAO"
+    HOMOLOGADO = "HOMOLOGADO"
+
+class DataOriginStatus(str, Enum):
+    DEMONSTRATIVO = "DEMONSTRATIVO"
+    SNAPSHOT = "SNAPSHOT"
+    REALTIME = "REALTIME"
+    INDISPONIVEL = "INDISPONIVEL"
+
 class AlignmentCategory(str, Enum):
     ORIENTACAO_CONDUTA = "ORIENTACAO_CONDUTA"
     RECONHECIMENTO = "RECONHECIMENTO"
@@ -29,10 +54,13 @@ class AlignmentTone(str, Enum):
     ACOLHEDOR = "ACOLHEDOR"
     DIRETO_ASSERTIVO = "DIRETO_ASSERTIVO"
     ORIENTADO_DESENVOLVIMENTO = "ORIENTADO_DESENVOLVIMENTO"
-```
 
-### 1.2. Status de Assinatura, Ciência e Ciclo de Vida Documental
-```python
+class AlignmentPresence(str, Enum):
+    PRESENTE = "PRESENTE"
+    AUSENTE = "AUSENTE"
+    JUSTIFICADO = "JUSTIFICADO"
+    PRESENCA_NAO_CONFIRMADA = "PRESENCA_NAO_CONFIRMADA"
+
 class AlignmentScienceStatus(str, Enum):
     PENDENTE = "PENDENTE"
     CIENTE_EM_SESSAO = "CIENTE_EM_SESSAO"
@@ -41,125 +69,65 @@ class AlignmentScienceStatus(str, Enum):
 class AlignmentSignatureStatus(str, Enum):
     ASSINATURA_FISICA_PENDENTE = "ASSINATURA_FISICA_PENDENTE"
     ASSINATURA_FISICA_COLETADA = "ASSINATURA_FISICA_COLETADA"
+    RECUSOU_ASSINATURA = "RECUSOU_ASSINATURA"
     DISPENSADA_JUSTIFICADA = "DISPENSADA_JUSTIFICADA"
 
 class FormalDocumentStatus(str, Enum):
     RASCUNHO = "RASCUNHO"
+    AGUARDANDO_REALIZACAO = "AGUARDANDO_REALIZACAO"
     EM_REVISAO = "EM_REVISAO"
     FORMALIZADO = "FORMALIZADO"
     AGUARDANDO_ASSINATURAS = "AGUARDANDO_ASSINATURAS"
     ARQUIVADO_FISICO = "ARQUIVADO_FISICO"
     CANCELADO = "CANCELADO"
-
-class DevelopmentCommitmentStatus(str, Enum):
-    PLANEJADO = "PLANEJADO"
-    EM_ANDAMENTO = "EM_ANDAMENTO"
-    CUMPRIDO = "CUMPRIDO"
-    PARCIAL = "PARCIAL"
-    NAO_CUMPRIDO = "NAO_CUMPRIDO"
-    CANCELADO = "CANCELADO"
-
-class ProjectTaskStatus(str, Enum):
-    NAO_INICIADO = "NAO_INICIADO"
-    PLANEJADO = "PLANEJADO"
-    EM_ANDAMENTO = "EM_ANDAMENTO"
-    BLOQUEADO = "BLOQUEADO"
-    AGUARDANDO_VALIDACAO = "AGUARDANDO_VALIDACAO"
-    AJUSTES_SOLICITADOS = "AJUSTES_SOLICITADOS"
-    CONCLUIDO = "CONCLUIDO"
-    CANCELADO = "CANCELADO"
 ```
 
 ---
 
-## 2. ESPECIFICAÇÃO DE ENDPOINTS E CONTRATOS
+## 3. ESPECIFICAÇÃO DETALHADA DE CONTRATOS REST
 
-### 2.1. Módulo TPL-01 & Acordos de Reunião
+### 3.1. TPL-01: Acordos e Encaminhamentos da Daily
 
-#### `POST /api/v1/agreements`
-* **Descrição:** Registra novo acordo ou encaminhamento formalizado em reunião (Daily ou Semanal).
+#### `POST /api/v1/agreements` — [CP] Contrato proposto
 * **Request Body (Pydantic):**
 ```python
 class CreateAgreementRequest(BaseModel):
-    title: str
+    title: str = Field(..., min_length=5, description="Título claro do acordo")
     type: Literal["decisao", "tarefa", "encaminhamento", "compromisso"]
-    responsible: str
+    responsible_name: str
+    responsible_id: Optional[int] = None
     deadline: str
-    notes: Optional[str] = None
+    priority: Literal["P1_CRITICA", "ALTA", "MEDIA", "BAIXA"] = "MEDIA"
     source_meeting_type: Literal["DAILY", "ALINHAMENTO_SEMANAL"]
     meeting_reference_date: str
-    is_previous_meeting: bool = False
-    linked_ticket_ids: List[int] = []
+    notes: Optional[str] = None
+    related_ticket_id: Optional[int] = None
 ```
-* **Response (201 Created):**
-```python
-class MeetingAgreementResponse(BaseModel):
-    agreement_id: str
-    title: str
-    type: str
-    responsible: str
-    deadline: str
-    status: Literal["RASCUNHO", "AGUARDANDO_CONFIRMACAO", "CONFIRMADO", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO"]
-    notes: Optional[str]
-    source_meeting_type: str
-    meeting_reference_date: str
-    is_previous_meeting: bool
-    created_at: str
-    created_by: str
-    linked_ticket_ids: List[int]
-    history: List[dict]
-```
-
-#### `PATCH /api/v1/agreements/{agreement_id}/status`
-* **Descrição:** Atualiza status de um acordo com auditoria obrigatória.
-* **Request Body:**
-```python
-class UpdateAgreementStatusRequest(BaseModel):
-    new_status: str
-    note: Optional[str] = None
-```
-* **Response (200 OK):** `MeetingAgreementResponse`
+* **Regra de Validação:** Nenhum acordo pode ser criado com status `CONCLUIDO` diretamente. Status inicial é `AGUARDANDO_CONFIRMACAO` ou `CONFIRMADO`.
 
 ---
 
-### 2.2. Módulo TPL-02 & Planos de Evolução Individual
+### 3.2. TPL-02: Planos de Evolução Individual
 
-#### `POST /api/v1/development-plans`
-* **Descrição:** Cria novo compromisso de desenvolvimento individual pactuado com o técnico.
-* **Request Body:**
-```python
-class CreateCommitmentRequest(BaseModel):
-    collaborator_id: int
-    collaborator_name: str
-    development_area: Literal["TECNICA_GLPI", "COMUNICACAO_POSTURA", "PONTUALIDADE_ASSIDUIDADE", "AGILIDADE_SLA", "PROCESSO_POP"]
-    context_or_trigger: str
-    agreed_goal: str
-    practical_actions: List[dict] # { action_text: str, deadline: str }
-    deadline: str
-    evidence_criteria: str
-    source_alignment_id: Optional[str] = None
-```
-
-#### `POST /api/v1/development-plans/{commitment_id}/validate`
-* **Descrição:** Gestor valida formalmente o cumprimento do compromisso com parecer escrito.
+#### `POST /api/v1/development-plans/{id}/validate` — [CP] Contrato proposto
 * **Request Body:**
 ```python
 class ValidateCommitmentRequest(BaseModel):
     validation_status: Literal["CUMPRIDO", "PARCIAL", "NAO_CUMPRIDO"]
-    validation_feedback: str
+    validation_feedback: str = Field(..., min_length=10, description="Parecer descritivo e fundamentado do gestor")
+    evidence_verified: bool = Field(True, description="Confirmação de que evidências foram verificadas")
 ```
-* **Response (200 OK):** `DevelopmentCommitmentResponse`
+* **Regra de Validação:** Requer permissão de perfil `Gestor`. Bloqueia validação sem parecer textual.
 
 ---
 
-### 2.3. Módulo TPL-03 — Feedback e Alinhamentos
+### 3.3. TPL-03: Feedback e Alinhamentos
 
-#### `POST /api/v1/ai/alignment-preparation`
-* **Descrição:** Invoca o Agente Gerencial de Redação com IA para estruturar o roteiro e minuta.
+#### `POST /api/v1/ai/alignment-preparation` — [CP] Contrato proposto
 * **Request Body:**
 ```python
 class AiAlignmentPreparationRequest(BaseModel):
-    participant_ids: List[int]
+    participant_ids: List[int] = Field(..., min_items=1)
     category: AlignmentCategory
     spontaneous_strengths: Optional[str] = None
     spontaneous_dev_points: Optional[str] = None
@@ -169,100 +137,84 @@ class AiAlignmentPreparationRequest(BaseModel):
     include_glpi_metrics: bool = True
     tone: AlignmentTone = AlignmentTone.EQUILIBRADO_PROFISSIONAL
 ```
-* **Response (200 OK):**
+* **Response Body:**
 ```python
 class AiAlignmentPreparationResponse(BaseModel):
     tone: AlignmentTone
     tone_label: str
     generated_at: str
-    conversation_script: List[ConversationScriptBlock]
-    proposed_goals: List[ProposedGoalDraft]
-    preliminary_draft: PreliminaryDraft
+    conversation_script: List[dict] # 7 blocos humanizados
+    proposed_goals: List[dict] # sugestões preliminares (NÃO são compromissos pactuados ainda)
+    preliminary_draft: dict # minuta preliminar com tópicos
     is_simulation: bool = False
 ```
+* **Regra Mandatória de Segurança:** O retorno deste endpoint NÃO preenche o campo de decisões pós-reunião. As decisões devem permanecer vazias para condução e registro humano posterior.
 
-#### `POST /api/v1/alignments`
-* **Descrição:** Salva ata formal gerando identificador sequencial `ALN-2026-XXXX`.
+#### `POST /api/v1/alignments` — [CP] Contrato proposto
 * **Request Body:**
 ```python
-class CreateFormalAlignmentRequest(BaseModel):
+class CreateAlignmentDocumentRequest(BaseModel):
     location: str
-    periodicity: Literal["ESPORADICO", "SEMANAL", "QUINZENAL", "MENSAL"]
     scope: Literal["INDIVIDUAL", "COLETIVO"]
     category: AlignmentCategory
     subject: str
     objective: str
     context: str
-    topics_discussed: List[str]
     observed_facts_or_situations: str
     transmitted_orientations: str
-    participants: List[AlignmentParticipantPayload]
-    general_commitments: List[GeneralCommitmentPayload]
-    decisions: List[str]
-    next_review_date: Optional[str] = None
+    is_meeting_conducted_confirmed: bool = Field(..., description="Confirmação se a reunião ocorreu")
+    conduction_date_time: Optional[str] = None
+    participants: List[dict] # lista com presença individual (não presumida)
+    confirmed_commitments: List[dict] # apenas metas validadas pelo gestor
+    decisions: List[str] # se vazio, backend deve gravar: 'Não foram registradas decisões pactuadas nesta reunião.'
 ```
 
-#### `POST /api/v1/alignments/{alignment_id}/signatures/collect`
-* **Descrição:** Atesta que o participante assinou fisicamente a folha impressa em papel.
+#### `POST /api/v1/alignments/{id}/signatures/collect` — [CP] Contrato proposto
 * **Request Body:**
 ```python
-class CollectPhysicalSignatureRequest(BaseModel):
+class CollectPhysicalSignaturePayload(BaseModel):
     participant_id: Union[str, int]
     operator_name: str
     date_collected: str
-    notes: Optional[str] = None
+    evidence_notes: Optional[str] = None
 ```
-* **Response (200 OK):** Retorna o documento com `signatureStatus: "ASSINATURA_FISICA_COLETADA"` para aquele participante específico.
-
-#### `POST /api/v1/alignments/{alignment_id}/archive-physical`
-* **Descrição:** Registra a guarda física do documento impresso no livro e armário da DTI.
-* **Request Body:**
-```python
-class ArchivePhysicalDocumentRequest(BaseModel):
-    book_number: str
-    physical_location: str
-    operator_name: Optional[str] = None
-    archive_date: Optional[str] = None
-    scanned_pdf_uploaded: Optional[bool] = False
-```
-* **Response (200 OK):** Retorna o documento com status atualizado para `ARQUIVADO_FISICO`.
+* **Regra de Governança:** O endpoint apenas atesta a coleta manuscrita em folha física. É vedada a simulação de assinatura eletrônica digital sem certificado ICP-Brasil ou SSO formal.
 
 ---
 
-### 2.4. Módulo TPL-04 — Gestão Completa de Projetos
+### 3.4. TPL-04: Gestão Completa de Projetos
 
-#### `PATCH /api/v1/projects/tasks/{task_id}/submit-validation`
-* **Descrição:** Técnico conclui suas atividades e submete a tarefa para validação gerencial.
+#### `POST /api/v1/projects/tasks/{task_id}/manager-validate` — [CP] Contrato proposto
 * **Request Body:**
 ```python
-class SubmitTaskValidationRequest(BaseModel):
-    evidence_note: str
-    subtasks_completed: bool
-```
-* **Transição de Status:** Altera de `EM_ANDAMENTO` para `AGUARDANDO_VALIDACAO`.
-
-#### `PATCH /api/v1/projects/tasks/{task_id}/manager-validate`
-* **Descrição:** Gestor homologa a entrega ou solicita ajustes adicionais.
-* **Request Body:**
-```python
-class ManagerValidateTaskRequest(BaseModel):
+class ManagerValidateProjectTaskRequest(BaseModel):
     decision: Literal["APROVAR", "SOLICITAR_AJUSTES"]
-    feedback_notes: str
+    feedback_notes: str = Field(..., min_length=5)
 ```
-* **Transição de Status:**
-  - Se `APROVAR`: transita para `CONCLUIDO` (100% de progresso).
-  - Se `SOLICITAR_AJUSTES`: transita para `AJUSTES_SOLICITADOS`.
+* **Regra de Transição:**
+  - `APROVAR`: Transita a tarefa para `CONCLUIDO`.
+  - `SOLICITAR_AJUSTES`: Transita para `AJUSTES_SOLICITADOS` e notifica o responsável.
 
 ---
 
-## 3. CÓDIGOS DE ERRO PADRONIZADOS
+## 4. MATRIZ CONSOLIDADA DE CONTRATOS
 
-| Código HTTP | Significado | Tratamento no Frontend |
-|:---:|:---|:---|
-| `400 Bad Request` | Payload malformado ou campos obrigatórios ausentes | Exibe mensagem explicativa no modal |
-| `401 Unauthorized` | Token de autenticação expirado ou ausente | Redireciona para login |
-| `403 Forbidden` | Operador sem permissão para ação (ex: técnico tentando validar meta) | Notificação visual de permissão negada |
-| `404 Not Found` | Documento, chamado ou colaborador inexistente | Exibe aviso de registro não localizado |
-| `409 Conflict` | Documento já arquivado ou ata formalizada com bloqueio de edição | Bloqueia salvamento e sugere criar revisão |
-| `422 Unprocessable` | Invalidação semântica de regras hospitalares (ex: meta sem responsável) | Destaca os campos em vermelho |
-| `500 Server Error` | Falha interna no serviço ou banco de dados | Notificação de erro sem travar a interface |
+| Módulo | Endpoint | Método | Classificação | Status de Homologação |
+|:---|:---|:---:|:---:|:---:|
+| **TPL-01** | `/api/v1/tickets/open` | `GET` | `[NV]` | `NÃO VERIFICADO NO BACKEND` |
+| **TPL-01** | `/api/v1/tickets/stalled-24h` | `GET` | `[NV]` | `NÃO VERIFICADO NO BACKEND` |
+| **TPL-01** | `/api/v1/templates/daily/latest` | `GET` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-01** | `/api/v1/agreements` | `POST` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-01** | `/api/v1/agreements/{id}/status` | `PATCH` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-02** | `/api/v1/templates/weekly/summary` | `GET` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-02** | `/api/v1/development-plans` | `GET`/`POST` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-02** | `/api/v1/development-plans/{id}/validate` | `POST` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-03** | `/api/v1/ai/alignment-preparation` | `POST` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-03** | `/api/v1/alignments` | `POST`/`GET` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-03** | `/api/v1/alignments/{id}/signatures/collect` | `POST` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-03** | `/api/v1/alignments/{id}/archive-physical` | `POST` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-04** | `/api/v1/projects/{id}` | `GET` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-04** | `/api/v1/projects/tasks/{id}/progress` | `PATCH` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-04** | `/api/v1/projects/tasks/{id}/submit-validation`| `POST` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-04** | `/api/v1/projects/tasks/{id}/manager-validate` | `POST` | `[CP]` | `ESPECIFICADO NO FRONTEND` |
+| **TPL-04** | `/api/v1/projects/gmud-link` | `POST` | `[DG]` | `DEPENDENTE DE GATE INSTITUCIONAL` |

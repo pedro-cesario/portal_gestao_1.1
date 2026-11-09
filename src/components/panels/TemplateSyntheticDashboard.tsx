@@ -153,24 +153,31 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
                 {panel.templateType}
               </span>
               <span className="text-[10px] text-slate-400">·</span>
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20" title="Especificação do Template Homologada formalmente pelo HEAL Ops">
-                TEMPLATE HOMOLOGADO
+              {/* Dimensão 1: Estado da Especificação (RASCUNHO | EM_HOMOLOGACAO | HOMOLOGADO) */}
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                panel.specificationStatus === 'HOMOLOGADO'
+                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
+              }`} title="Estado da Especificação: A ausência de evidência institucional resulta em 'Em Homologação'">
+                ESPECIFICAÇÃO: {panel.specificationStatus === 'HOMOLOGADO' ? 'HOMOLOGADO' : 'EM HOMOLOGAÇÃO'}
               </span>
               <span className="text-[10px] text-slate-400">·</span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 Ref: <strong className="text-slate-800 dark:text-slate-200">{panel.referenceDate}</strong>
               </span>
               <span className="text-[10px] text-slate-400">·</span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                Origem: <strong className="text-slate-800 dark:text-slate-200">{panel.source}</strong>
+              {/* Dimensão 2: Origem dos Dados (DEMONSTRATIVO | SNAPSHOT | REALTIME | INDISPONIVEL) */}
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20" title="Origem dos dados operacionais: nunca REALTIME para dados demonstrativos">
+                DADOS: {panel.dataOrigin || (panel.source === 'SNAPSHOT_04H' ? 'DEMONSTRATIVO (SNAPSHOT 04H)' : 'DEMONSTRATIVO')}
               </span>
               <span className="text-[10px] text-slate-400">·</span>
+              {/* Dimensão 3: Estado do Registro (RASCUNHO | EM_REVISAO | FORMALIZADO | ARQUIVADO) */}
               <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
                 panel.status === 'APROVADO'
                   ? 'bg-blue-500/10 text-[#134F9F] dark:text-blue-400 border border-blue-500/20'
-                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                  : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20'
               }`} title="Estado do registro específico deste artefato">
-                REGISTRO: {panel.status === 'APROVADO' ? 'HOMOLOGADO' : 'EM REVISÃO'}
+                REGISTRO: {panel.status === 'APROVADO' ? 'FORMALIZADO' : 'EM REVISÃO'}
               </span>
             </div>
             <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5">

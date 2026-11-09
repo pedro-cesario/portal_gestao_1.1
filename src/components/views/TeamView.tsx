@@ -37,7 +37,7 @@ export const TeamView: React.FC<TeamViewProps> = ({
   const [selectedTech, setSelectedTech] = useState<Technician | null>(null);
   const [quickPreviewTech, setQuickPreviewTech] = useState<Technician | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
-  const [groupFilter, setGroupFilter] = useState<'all' | 'operational' | 'management'>('operational');
+  const [groupFilter, setGroupFilter] = useState<'all' | 'operational' | 'management'>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 6; // 6 cards para garantia de zero scroll na tela 1440x900
 
@@ -48,13 +48,13 @@ export const TeamView: React.FC<TeamViewProps> = ({
   });
   const [savedFeedbackNotice, setSavedFeedbackNotice] = useState<string | null>(null);
 
-  // Separar técnicos operacionais do Grupo 48 Gestão
+  // Técnicos operacionais e Grupo 48 Gestão
   const operationalTechnicians = technicians.filter(t => !t.isManagementGroup);
   const managementTechnicians = technicians.filter(t => t.isManagementGroup);
 
-  // Totais consolidados operacionais
-  const totalActive = operationalTechnicians.reduce((acc, t) => acc + t.activeTicketsCount, 0);
-  const totalStalled = operationalTechnicians.reduce((acc, t) => acc + t.ticketsWithoutEvolution24hCount, 0);
+  // Totais consolidados de todos os técnicos (regra institucional: todos no ranking)
+  const totalActive = technicians.reduce((acc, t) => acc + t.activeTicketsCount, 0);
+  const totalStalled = technicians.reduce((acc, t) => acc + t.ticketsWithoutEvolution24hCount, 0);
 
   // Filtragem da lista
   const filteredTechnicians = useMemo(() => {
@@ -146,11 +146,11 @@ export const TeamView: React.FC<TeamViewProps> = ({
           </div>
         </div>
 
-        {/* Nota Explicativa Obrigatória sobre Grupo 48 Gestão */}
+        {/* Nota Explicativa Institucional sobre Grupo 48 Gestão */}
         <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-xs text-blue-950 dark:text-blue-300">
           <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
           <p className="truncate">
-            <strong>Regra Institucional:</strong> Membros do <strong>Grupo 48 Gestão</strong> constam para transparência, mas estão <em>estritamente excluídos dos rankings operacionais</em>.
+            <strong>Regra Institucional:</strong> Todos os técnicos nominais entram no ranking e nos indicadores operacionais, inclusive os vinculados ao <strong>Grupo 48 TI &gt; Gestão</strong>, preservando a identificação do grupo.
           </p>
         </div>
       </div>
@@ -209,42 +209,29 @@ export const TeamView: React.FC<TeamViewProps> = ({
                 </div>
               </div>
 
-              {/* Métricas do Técnico */}
-              {tech.isManagementGroup ? (
-                <div className="py-2.5 px-3 bg-slate-50 dark:bg-slate-950/60 rounded border border-slate-100 dark:border-slate-800 text-xs sm:text-sm space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Atribuição:</span>
-                    <strong className="text-slate-800 dark:text-slate-200">Supervisão & Processos</strong>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Status no ranking:</span>
-                    <span className="text-blue-500 font-semibold text-xs">Excluído de Produtividade</span>
-                  </div>
+              {/* Métricas do Técnico — Todos os técnicos no ranking */}
+              <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-slate-100 dark:border-slate-800 text-center text-xs">
+                <div className="p-1.5 bg-slate-50 dark:bg-slate-950 rounded">
+                  <span className="text-xs text-slate-400 block font-medium">Ativos</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
+                    {tech.activeTicketsCount}
+                  </span>
                 </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-slate-100 dark:border-slate-800 text-center text-xs">
-                  <div className="p-1.5 bg-slate-50 dark:bg-slate-950 rounded">
-                    <span className="text-xs text-slate-400 block font-medium">Ativos</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
-                      {tech.activeTicketsCount}
-                    </span>
-                  </div>
 
-                  <div className="p-1.5 bg-slate-50 dark:bg-slate-950 rounded">
-                    <span className="text-xs text-slate-400 block font-medium">&gt;24h s/ Ação</span>
-                    <span className={`font-mono font-bold text-sm sm:text-base ${tech.ticketsWithoutEvolution24hCount > 0 ? 'text-amber-500' : 'text-slate-400'}`}>
-                      {tech.ticketsWithoutEvolution24hCount}
-                    </span>
-                  </div>
-
-                  <div className="p-1.5 bg-slate-50 dark:bg-slate-950 rounded">
-                    <span className="text-xs text-slate-400 block font-medium" title="Média ponderada observada">Média</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
-                      {tech.avgObservedResolutionHours}h
-                    </span>
-                  </div>
+                <div className="p-1.5 bg-slate-50 dark:bg-slate-950 rounded">
+                  <span className="text-xs text-slate-400 block font-medium">&gt;24h s/ Ação</span>
+                  <span className={`font-mono font-bold text-sm sm:text-base ${tech.ticketsWithoutEvolution24hCount > 0 ? 'text-amber-500' : 'text-slate-400'}`}>
+                    {tech.ticketsWithoutEvolution24hCount}
+                  </span>
                 </div>
-              )}
+
+                <div className="p-1.5 bg-slate-50 dark:bg-slate-950 rounded">
+                  <span className="text-xs text-slate-400 block font-medium" title="Média ponderada observada">Média</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
+                    {tech.avgObservedResolutionHours}h
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Rodapé do Card com Ações */}

@@ -90,6 +90,12 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
   // ETAPA 4: Registro Pós-Reunião (Inicialmente limpo para preenchimento honesto após a conversa)
   const [finalDecisions, setFinalDecisions] = useState<string>('');
   const [finalObservations, setFinalObservations] = useState<string>('');
+  
+  // Governança estrita: Presença, pactuação e realização não presumidas
+  const [participantPresence, setParticipantPresence] = useState<Record<number, 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO' | 'PRESENCA_NAO_CONFIRMADA'>>({});
+  const [confirmedGoalIds, setConfirmedGoalIds] = useState<Record<string, boolean>>({});
+  const [isMeetingConductedConfirmed, setIsMeetingConductedConfirmed] = useState<boolean>(false);
+  const [conductionDateTime, setConductionDateTime] = useState<string>('');
 
   // ETAPA 5: Documento Formal Concluído
   const [finalAlignmentObject, setFinalAlignmentObject] = useState<FormalAlignment | null>(null);
@@ -145,14 +151,12 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
     }));
   };
 
-  // Concluir Etapa 4 e gerar objeto formal para Etapa 5
+  // Concluir Etapa 4 e gerar objeto formal para Etapa 5 — Governança estrita
   const handleConsolidateFormalDocument = () => {
-    const now = new Date();
-    const dateStr = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     const draftNumber = `MINUTA-LOC-${Math.floor(1000 + Math.random() * 9000)}`;
-
     const selectedTechs = MOCK_TECHNICIANS.filter(t => selectedTechIds.includes(t.id));
 
+    // Regra: Participante NÃO é considerado presente automaticamente
     const participants: AlignmentParticipant[] = selectedTechs.map((t, idx) => ({
       id: `part-${Date.now()}-${idx}`,
       collaboratorId: t.id,
@@ -160,26 +164,43 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
       role: t.role,
       department: t.groupName,
       alignmentRole: 'PARTICIPANTE',
-      presence: 'PRESENTE',
+      presence: participantPresence[t.id] || 'PRESENCA_NAO_CONFIRMADA',
       individualStatement: liveParticipantStatements[t.id] || '',
       scienceStatus: 'PENDENTE',
       signatureStatus: 'ASSINATURA_FISICA_PENDENTE'
     }));
 
-    const generalCommitments = editableGoals.map((g, idx) => ({
-      id: `gc-${Date.now()}-${idx}`,
-      description: `${g.objective} (Meta: ${g.target})`,
-      responsibleName: g.responsible,
-      isCollective: scope === 'COLETIVO',
-      deadline: g.deadline,
-      successCriteria: g.expectedEvidence,
-      status: 'EM_ANDAMENTO' as const
-    }));
+    // Regra: Não criar compromisso confirmado a partir de sugestão de IA automaticamente
+    // Apenas metas explicitamente confirmadas e pactuadas pelo gestor tornam-se compromissos ativos
+    const generalCommitments = editableGoals
+      .filter(g => !!confirmedGoalIds[g.id])
+      .map((g, idx) => ({
+        id: `gc-${Date.now()}-${idx}`,
+        description: `${g.objective} (Meta: ${g.target})`,
+        responsibleName: g.responsible,
+        isCollective: scope === 'COLETIVO',
+        deadline: g.deadline,
+        successCriteria: g.expectedEvidence,
+        status: 'EM_ANDAMENTO' as const
+      }));
+
+    // REGRA MANDATÓRIA: NÃO INVENTAR DECISÕES.
+    // Se vazio, apresentar estritamente frase informativa sem sugerir concordância
+    const cleanDecisions: string[] = finalDecisions.trim().length > 0
+      ? [finalDecisions.trim()]
+      : ['Não foram registradas decisões pactuadas nesta reunião.'];
+
+    // REGRA MANDATÓRIA: NÃO ATRIBUIR DATA DE REALIZAÇÃO COM BASE APENAS NO MOMENTO DA PREPARAÇÃO
+    const effectiveDateTime = isMeetingConductedConfirmed
+      ? (conductionDateTime.trim() || `${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`)
+      : 'Aguardando realização presencial da reunião';
+
+    const documentStatus = isMeetingConductedConfirmed ? 'EM_REVISAO' : 'AGUARDANDO_REALIZACAO';
 
     const alignmentDoc: FormalAlignment = {
       id: `aln-ai-${Date.now()}`,
       alignmentNumber: draftNumber,
-      dateTime: dateStr,
+      dateTime: effectiveDateTime,
       location: 'Sala de Operações DTI / Presencial',
       managerId: currentUser.id,
       managerName: currentUser.name,
@@ -191,20 +212,16 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
       objective: editedObjective,
       context: editedContext,
       topicsDiscussed: aiResult?.preliminaryDraft.topicsDiscussed || [
-        'Apresentação de orientações e alinhamento de rotinas operacionais',
-        'Pactuação de compromissos e prazos para coleta manuscrita'
+        'Apresentação de orientações e alinhamento de rotinas operacionais'
       ],
       observedFactsOrSituations: editedFacts,
       transmittedOrientations: editedOrientations,
       participants,
       generalCommitments,
       individualCommitments: [],
-      decisions: [
-        finalDecisions.trim() || 'Diretrizes operacionais e compromissos acordados entre as partes durante a reunião.',
-        'Emissão de via em folha A4 para coleta de assinaturas manuscritas e arquivamento em livro físico.'
-      ],
+      decisions: cleanDecisions,
       nextReviewDate: 'Em 30 dias (Acompanhamento Periódico)',
-      status: 'EM_REVISAO',
+      status: documentStatus,
       version: 'v1.0 (Minuta Formal)',
       elaboratedBy: currentUser.name,
       reviewedBy: currentUser.name,
@@ -217,9 +234,11 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
       },
       history: [
         {
-          timestamp: dateStr,
+          timestamp: new Date().toLocaleDateString('pt-BR'),
           author: currentUser.name,
-          action: 'Documento estruturado via Preparação Humanizada com IA (Assistente Gerencial)'
+          action: isMeetingConductedConfirmed
+            ? 'Minuta elaborada e reunião confirmada como realizada pelo gestor'
+            : 'Preparação preliminar gerada pelo gestor (Reunião presencial pendente)'
         }
       ]
     };
@@ -837,21 +856,169 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
           {/* ========================================================= */}
           {currentStep === 4 && (
             <div className="space-y-4">
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-300">
-                <span className="font-bold block mb-1">Reunião Realizada com Sucesso!</span>
-                Revise os dados consolidados antes de gerar a ata institucional final. O documento será formatado para impressão A4 e assinatura física manuscrita.
+              {/* Confirmação de Realização Presencial */}
+              <div className={`p-3.5 rounded-lg border text-xs transition-colors ${
+                isMeetingConductedConfirmed 
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' 
+                  : 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200'
+              }`}>
+                <div className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="meeting-conducted-chk"
+                    checked={isMeetingConductedConfirmed}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setIsMeetingConductedConfirmed(checked);
+                      if (checked && !conductionDateTime) {
+                        const now = new Date();
+                        setConductionDateTime(`${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`);
+                      }
+                    }}
+                    className="mt-0.5 rounded text-[#134F9F] focus:ring-[#134F9F] cursor-pointer shrink-0"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="meeting-conducted-chk" className="font-bold cursor-pointer block">
+                      Confirmar que a reunião presencial foi efetivamente realizada
+                    </label>
+                    <p className="text-2xs opacity-85 mt-0.5">
+                      {isMeetingConductedConfirmed 
+                        ? 'Reunião confirmada pelo gestor. Informe abaixo a data/hora real da condução e a presença individual de cada participante.' 
+                        : 'Atenção: Sem esta confirmação humana, o documento será registrado como "Aguardando Realização", sem presunção de ocorrência.'}
+                    </p>
+                    
+                    {isMeetingConductedConfirmed && (
+                      <div className="mt-2.5 flex items-center gap-2">
+                        <span className="text-2xs font-bold text-slate-700 dark:text-slate-300 shrink-0">Data/Hora Real da Sessão:</span>
+                        <input
+                          type="text"
+                          value={conductionDateTime}
+                          onChange={(e) => setConductionDateTime(e.target.value)}
+                          placeholder="dd/mm/aaaa hh:mm"
+                          className="text-xs px-2.5 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
+              {/* Registro de Presença Individual dos Participantes */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
+                <span className="font-bold text-slate-800 dark:text-slate-200 text-xs block">
+                  Confirmação de Presença dos Participantes:
+                </span>
+                <p className="text-2xs text-slate-500">
+                  Presença não presumida automaticamente. Marque a condição de cada participante na reunião.
+                </p>
+
+                <div className="space-y-1.5 pt-1">
+                  {MOCK_TECHNICIANS.filter(t => selectedTechIds.includes(t.id)).map((tech) => {
+                    const currentPresence = participantPresence[tech.id] || 'PRESENCA_NAO_CONFIRMADA';
+                    return (
+                      <div key={tech.id} className="flex flex-wrap items-center justify-between gap-2 p-2 bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 text-xs">
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-white">{tech.name}</span>
+                          <span className="text-slate-500 ml-1.5 text-2xs">({tech.role})</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {(['PRESENTE', 'AUSENTE', 'JUSTIFICADO', 'PRESENCA_NAO_CONFIRMADA'] as const).map((pStatus) => (
+                            <button
+                              key={pStatus}
+                              type="button"
+                              onClick={() => setParticipantPresence(prev => ({ ...prev, [tech.id]: pStatus }))}
+                              className={`px-2 py-0.5 rounded text-2xs font-semibold cursor-pointer transition-colors ${
+                                currentPresence === pStatus
+                                  ? pStatus === 'PRESENTE'
+                                    ? 'bg-emerald-600 text-white'
+                                    : pStatus === 'AUSENTE'
+                                    ? 'bg-rose-600 text-white'
+                                    : pStatus === 'JUSTIFICADO'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-amber-600 text-white'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                              }`}
+                            >
+                              {pStatus === 'PRESENTE' ? 'Presente' : pStatus === 'AUSENTE' ? 'Ausente' : pStatus === 'JUSTIFICADO' ? 'Justificado' : 'Não Confirmado'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Pactuação Explícita de Metas (Proposta IA vs Compromisso Confirmado) */}
+              {editableGoals.length > 0 && (
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                      Pactuação de Compromissos (Validação Humana Obrigatória):
+                    </span>
+                    <span className="text-2xs text-purple-600 dark:text-purple-400 font-semibold">
+                      Propostas da IA não são compromissos até validação explícita
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    {editableGoals.map((g) => {
+                      const isConfirmed = !!confirmedGoalIds[g.id];
+                      return (
+                        <div 
+                          key={g.id}
+                          className={`p-2.5 rounded border text-xs transition-colors ${
+                            isConfirmed 
+                              ? 'bg-blue-50/60 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800' 
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <input
+                              type="checkbox"
+                              id={`goal-confirm-${g.id}`}
+                              checked={isConfirmed}
+                              onChange={(e) => setConfirmedGoalIds(prev => ({ ...prev, [g.id]: e.target.checked }))}
+                              className="mt-0.5 rounded text-[#134F9F] focus:ring-[#134F9F] cursor-pointer shrink-0"
+                            />
+                            <div className="flex-1">
+                              <label htmlFor={`goal-confirm-${g.id}`} className="font-bold text-slate-900 dark:text-white cursor-pointer block">
+                                {g.objective}
+                              </label>
+                              <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                Meta: {g.target} · Resp: {g.responsible} · Prazo: {g.deadline}
+                              </p>
+                              <span className={`text-3xs font-semibold px-1.5 py-0.2 rounded mt-1 inline-block ${
+                                isConfirmed 
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' 
+                                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                              }`}>
+                                {isConfirmed ? '✓ Compromisso Pactuado Formalmente' : 'Proposta da IA (Não pactuado)'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Decisões Finais Pactuadas */}
               <div className="space-y-3 text-xs">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Decisões Finais Pactuadas (Preenchimento pós-reunião)
+                    Decisões Finais Pactuadas na Reunião
                   </label>
+                  <p className="text-2xs text-slate-500 mb-1.5">
+                    Preencha apenas o que foi efetivamente deliberado. Se deixado vazio, o documento registrará: <em>"Não foram registradas decisões pactuadas nesta reunião."</em>
+                  </p>
                   <textarea
                     rows={2}
                     value={finalDecisions}
                     onChange={(e) => setFinalDecisions(e.target.value)}
-                    placeholder="Descreva as decisões operacionais e compromissos efetivamente pactuados na conversa com os participantes..."
+                    placeholder="Descreva decisões deliberadas durante a reunião, ou deixe em branco caso nenhuma decisão tenha sido pactuada..."
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400"
                   />
                 </div>
@@ -864,29 +1031,9 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
                     rows={2}
                     value={finalObservations}
                     onChange={(e) => setFinalObservations(e.target.value)}
-                    placeholder="Observações complementares sobre a postura, clima da conversa ou acordos imediatos..."
+                    placeholder="Observações complementares da condução..."
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   />
-                </div>
-
-                {/* Resumo dos Participantes */}
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-2">
-                    Participantes que assinarão fisicamente:
-                  </span>
-                  <div className="space-y-1.5">
-                    {MOCK_TECHNICIANS.filter(t => selectedTechIds.includes(t.id)).map((tech) => (
-                      <div key={tech.id} className="flex items-center justify-between text-2xs bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-700">
-                        <div>
-                          <span className="font-bold text-slate-900 dark:text-white">{tech.name}</span>
-                          <span className="text-slate-500 ml-1.5">({tech.role})</span>
-                        </div>
-                        <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                          Assinatura manuscrita pendente
-                        </span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>

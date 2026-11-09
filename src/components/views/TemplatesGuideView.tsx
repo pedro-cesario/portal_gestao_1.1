@@ -31,13 +31,13 @@ export const TemplatesGuideView: React.FC<TemplatesGuideViewProps> = ({
     {
       id: 'TPL-01',
       code: 'TPL-01 — Daily Operacional',
-      status: 'HOMOLOGADO',
-      statusColor: 'text-emerald-500 bg-emerald-500/10',
+      status: 'EM HOMOLOGAÇÃO',
+      statusColor: 'text-amber-500 bg-amber-500/10',
       description: 'Modelo canônico com 6 seções obrigatórias: Resumo, Pendências, Equipe, Entregas, Prioridades e Decisões. Limiar de 24h sem atualização e até 3 prioridades.',
       sections: [
         '1. Resumo Executivo da Operação',
         '2. Pendências & Auditoria POP-TIN-017',
-        '3. Carga e Distribuição da Equipe (exclui Grupo 48)',
+        '3. Carga e Distribuição da Equipe (todos os técnicos, inclusive Grupo 48)',
         '4. Entregas Concluídas nas Últimas 24h',
         '5. As 3 Prioridades do Turno',
         '6. Decisões e Encaminhamentos GLPI'
@@ -47,8 +47,8 @@ export const TemplatesGuideView: React.FC<TemplatesGuideViewProps> = ({
     {
       id: 'TPL-02',
       code: 'TPL-02 — Alinhamento Semanal',
-      status: 'HOMOLOGADO',
-      statusColor: 'text-emerald-500 bg-emerald-500/10',
+      status: 'EM HOMOLOGAÇÃO',
+      statusColor: 'text-amber-500 bg-amber-500/10',
       description: 'Consolidação periódica com acordos executivos e Planos de Evolução Individual da Equipe. Rastreamento longitudinal de compromissos pactuados, critérios objetivos de sucesso e validação formal pelo gestor.',
       sections: [
         '1. Indicadores Chave da Semana',
@@ -61,8 +61,8 @@ export const TemplatesGuideView: React.FC<TemplatesGuideViewProps> = ({
     {
       id: 'TPL-03',
       code: 'TPL-03 — Feedback e Alinhamentos',
-      status: 'HOMOLOGADO',
-      statusColor: 'text-emerald-500 bg-emerald-500/10',
+      status: 'EM HOMOLOGAÇÃO',
+      statusColor: 'text-amber-500 bg-amber-500/10',
       description: 'Desenvolvimento profissional, orientações, reconhecimento e acompanhamento de compromissos. Registros individuais e coletivos (passagem de plantão, escala, conduta), metas longitudinais, emissão de termos formais para impressão A4 e arquivamento físico.',
       sections: [
         '1. Feedback Individual & Metas de Desenvolvimento',
@@ -75,8 +75,8 @@ export const TemplatesGuideView: React.FC<TemplatesGuideViewProps> = ({
     {
       id: 'TPL-04',
       code: 'TPL-04 — Gestão Completa de Projetos',
-      status: 'HOMOLOGADO',
-      statusColor: 'text-emerald-500 bg-emerald-500/10',
+      status: 'EM HOMOLOGAÇÃO',
+      statusColor: 'text-amber-500 bg-amber-500/10',
       description: 'Ambiente gerencial completo para iniciativas estruturantes (Storage PACS, Wi-Fi, Tasy): 5 Fases sequenciais, Cronograma Gantt executivo, Responsabilidades por técnico com workflow de execução, homologação de entregas e Matriz de Riscos.',
       sections: [
         '1. Roadmap por Fases & Checklist de Entregas',
