@@ -1916,7 +1916,7 @@ export const MOCK_FORMAL_ALIGNMENTS: FormalAlignment[] = [
         individualStatement: 'Confirmo o recebimento do rádio HT e farei as rondas preventivas nos horários acordados (14h, 18h e 22h).',
         scienceStatus: 'CIENTE',
         scienceDate: '06/11/2026 12:00',
-        signatureStatus: 'ASSINADO_DIGITAL',
+        signatureStatus: 'ASSINATURA_FISICA_COLETADA',
         signatureDate: '06/11/2026 12:05'
       },
       {
@@ -1930,7 +1930,7 @@ export const MOCK_FORMAL_ALIGNMENTS: FormalAlignment[] = [
         individualStatement: 'Vou monitorar os switches de borda da UTI e deixei cabos e transceivers sobressalentes identificados na gaveta A2 do datacenter.',
         scienceStatus: 'CIENTE',
         scienceDate: '06/11/2026 12:02',
-        signatureStatus: 'ASSINADO_DIGITAL',
+        signatureStatus: 'ASSINATURA_FISICA_COLETADA',
         signatureDate: '06/11/2026 12:08'
       },
       {
@@ -2149,7 +2149,7 @@ export const MOCK_FORMAL_ALIGNMENTS: FormalAlignment[] = [
         individualStatement: 'Agradeço imensamente o reconhecimento da gestão. Foi um trabalho árduo, mas a colaboração da equipe foi fundamental para o sucesso.',
         scienceStatus: 'CIENTE',
         scienceDate: '03/11/2026 16:15',
-        signatureStatus: 'ASSINADO_DIGITAL',
+        signatureStatus: 'ASSINATURA_FISICA_COLETADA',
         signatureDate: '03/11/2026 16:20'
       }
     ],

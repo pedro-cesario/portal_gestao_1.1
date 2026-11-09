@@ -400,40 +400,127 @@ export default function App() {
 
   const handleConfirmScience = (docId: string, participantId: string | number) => {
     const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    handleCollectPhysicalSignature(docId, participantId, currentUser?.name || 'Henrique Vasconcelos', nowTimestamp);
+  };
+
+  const handleCollectPhysicalSignature = (
+    docId: string, 
+    participantId: string | number, 
+    operatorName: string, 
+    date: string, 
+    notes?: string
+  ) => {
     setFormalAlignments(prev => prev.map(a => {
       if (a.id === docId || a.alignmentNumber === docId) {
+        const updatedParticipants = a.participants.map(p => {
+          if (p.id === participantId) {
+            return {
+              ...p,
+              scienceStatus: 'CIENTE' as const,
+              scienceDate: date,
+              signatureStatus: 'ASSINATURA_FISICA_COLETADA' as const,
+              signatureDate: date,
+              physicalSignatureRecord: {
+                participantId: p.id,
+                participantName: p.name,
+                collectedBy: operatorName,
+                collectedAt: date,
+                evidenceNote: notes,
+                isSimulation: true
+              }
+            };
+          }
+          return p;
+        });
+
+        const allParticipantsSigned = updatedParticipants.every(
+          p => p.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || p.signatureStatus === 'ASSINADO_FISICO'
+        );
+        const managerSigned = a.managerSignatureStatus === 'ASSINATURA_FISICA_COLETADA' || a.managerSignatureStatus === 'ASSINADO_FISICO';
+
+        const newDocStatus = (allParticipantsSigned && managerSigned) 
+          ? 'ASSINATURAS_COLETADAS' 
+          : 'PARCIALMENTE_ASSINADO';
+
         return {
           ...a,
-          participants: a.participants.map(p => {
-            if (p.id === participantId) {
-              return {
-                ...p,
-                scienceStatus: 'CIENTE',
-                scienceDate: nowTimestamp,
-                signatureStatus: 'ASSINADO_DIGITAL',
-                signatureDate: nowTimestamp
-              };
+          participants: updatedParticipants,
+          status: a.status === 'ARQUIVADO_FISICO' ? a.status : newDocStatus,
+          history: [
+            ...a.history,
+            {
+              timestamp: date,
+              author: operatorName,
+              action: `Assinatura física coletada para participante ${participantId}`,
+              note: notes
             }
-            return p;
-          })
+          ]
         };
       }
       return a;
     }));
   };
 
-  const handleArchivePhysical = (docId: string, bookNumber: string, physicalLocation: string) => {
+  const handleCollectManagerSignature = (docId: string, operatorName: string, date: string) => {
+    setFormalAlignments(prev => prev.map(a => {
+      if (a.id === docId || a.alignmentNumber === docId) {
+        const allParticipantsSigned = a.participants.every(
+          p => p.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || p.signatureStatus === 'ASSINADO_FISICO'
+        );
+
+        const newDocStatus = allParticipantsSigned ? 'ASSINATURAS_COLETADAS' : 'PARCIALMENTE_ASSINADO';
+
+        return {
+          ...a,
+          managerSignatureStatus: 'ASSINATURA_FISICA_COLETADA',
+          managerSignatureDate: date,
+          status: a.status === 'ARQUIVADO_FISICO' ? a.status : newDocStatus,
+          history: [
+            ...a.history,
+            {
+              timestamp: date,
+              author: operatorName,
+              action: 'Assinatura física do gestor/condutor registrada'
+            }
+          ]
+        };
+      }
+      return a;
+    }));
+  };
+
+  const handleArchivePhysical = (
+    docId: string, 
+    bookNumber: string, 
+    physicalLocation: string,
+    operatorName?: string,
+    archiveDate?: string
+  ) => {
     const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const operator = operatorName || currentUser?.name || 'Henrique Vasconcelos';
+    const dateUsed = archiveDate || nowTimestamp;
+
     setFormalAlignments(prev => prev.map(a => {
       if (a.id === docId || a.alignmentNumber === docId) {
         return {
           ...a,
+          status: 'ARQUIVADO_FISICO',
           archivingInfo: {
             isArchivedPhysical: true,
             bookNumber,
             physicalLocation,
-            uploadedAt: nowTimestamp
-          }
+            registeredBy: operator,
+            archivedAt: dateUsed,
+            isSimulation: true
+          },
+          history: [
+            ...a.history,
+            {
+              timestamp: dateUsed,
+              author: operator,
+              action: `Arquivamento físico registrado no livro ${bookNumber} (${physicalLocation})`
+            }
+          ]
         };
       }
       return a;
@@ -443,6 +530,7 @@ export default function App() {
       if (f.id === docId || f.feedbackNumber === docId) {
         return {
           ...f,
+          status: 'ARQUIVADO',
           archivingInfo: {
             isArchivedPhysical: true,
             bookNumber,
@@ -618,6 +706,8 @@ export default function App() {
               managerialFeedbacks={managerialFeedbacks}
               onSaveFeedback={handleSaveFeedback}
               onConfirmScience={handleConfirmScience}
+              onCollectPhysicalSignature={handleCollectPhysicalSignature}
+              onCollectManagerSignature={handleCollectManagerSignature}
               onArchivePhysical={handleArchivePhysical}
               onNavigateToAgente={(prompt) => prompt ? handleOpenAgenteWithPrompt(prompt) : handleRouteChange('agente-gerencial')}
               onOpenTicketById={handleNavigateToTicket}

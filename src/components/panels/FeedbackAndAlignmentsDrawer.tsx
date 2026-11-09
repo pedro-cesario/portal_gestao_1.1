@@ -17,7 +17,8 @@ import {
   Filter, 
   UserCheck,
   ChevronRight,
-  Target
+  Target,
+  Sparkles
 } from 'lucide-react';
 import { FormalAlignment, ManagerialFeedback } from '../../types';
 import { generateAlignmentPDF, generateFeedbackPDF, getAlignmentDocumentTitle } from '../../utils/pdfGenerator';
@@ -29,6 +30,7 @@ interface FeedbackAndAlignmentsDrawerProps {
   feedbacks: ManagerialFeedback[];
   onOpenNewFeedback: () => void;
   onOpenNewAlignment: () => void;
+  onOpenAiPreparation?: () => void;
   onPreviewAlignment: (alignment: FormalAlignment) => void;
   onPreviewFeedback: (feedback: ManagerialFeedback) => void;
   onConfirmParticipantScience?: (alignmentId: string, participantId: string | number) => void;
@@ -41,6 +43,7 @@ export const FeedbackAndAlignmentsDrawer: React.FC<FeedbackAndAlignmentsDrawerPr
   feedbacks,
   onOpenNewFeedback,
   onOpenNewAlignment,
+  onOpenAiPreparation,
   onPreviewAlignment,
   onPreviewFeedback,
   onConfirmParticipantScience
@@ -54,11 +57,16 @@ export const FeedbackAndAlignmentsDrawer: React.FC<FeedbackAndAlignmentsDrawerPr
   const totalFeedbacks = feedbacks.length;
   const collectiveAlignments = alignments.filter(a => a.scope === 'COLETIVO').length;
   
-  // Assinaturas pendentes em todos os alinhamentos
+  // Assinaturas físicas pendentes em todos os alinhamentos
   let pendingSignaturesCount = 0;
   alignments.forEach(a => {
+    if (a.managerSignatureStatus === 'PENDENTE' || a.managerSignatureStatus === 'ASSINATURA_FISICA_PENDENTE') {
+      pendingSignaturesCount++;
+    }
     a.participants.forEach(p => {
-      if (p.signatureStatus === 'PENDENTE') pendingSignaturesCount++;
+      if (p.signatureStatus === 'PENDENTE' || p.signatureStatus === 'ASSINATURA_FISICA_PENDENTE') {
+        pendingSignaturesCount++;
+      }
     });
   });
 
@@ -72,7 +80,7 @@ export const FeedbackAndAlignmentsDrawer: React.FC<FeedbackAndAlignmentsDrawerPr
       <div className="w-full max-w-4xl bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800">
         
         {/* Drawer Header */}
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 flex items-center justify-between shrink-0">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-2xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-[#134F9F] dark:bg-blue-950 dark:text-blue-300">
@@ -90,7 +98,19 @@ export const FeedbackAndAlignmentsDrawer: React.FC<FeedbackAndAlignmentsDrawerPr
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {onOpenAiPreparation && (
+              <button
+                onClick={onOpenAiPreparation}
+                type="button"
+                className="px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                title="Preparar alinhamento humanizado em 5 etapas com IA"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Preparar com IA (5 Etapas)</span>
+              </button>
+            )}
+
             <button
               onClick={onOpenNewFeedback}
               type="button"

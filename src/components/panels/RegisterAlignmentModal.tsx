@@ -28,69 +28,39 @@ interface RegisterAlignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveAlignment: (alignment: FormalAlignment) => void;
+  currentUser?: { name: string; role: string; id: string | number };
 }
 
 export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
   isOpen,
   onClose,
-  onSaveAlignment
+  onSaveAlignment,
+  currentUser = { name: 'Henrique Vasconcelos', role: 'Gestor Operacional de TI', id: 1 }
 }) => {
   const [periodicity, setPeriodicity] = useState<'PERIODICO_MENSAL' | 'ESPORADICO'>('ESPORADICO');
-  const [scope, setScope] = useState<'INDIVIDUAL' | 'COLETIVO'>('COLETIVO');
-  const [category, setCategory] = useState<AlignmentCategory>('PASSAGEM_PLATAOR_ESCALA');
-  const [subject, setSubject] = useState('Passagem de Plantão e Escala de Cobertura de TI no Fim de Semana');
-  const [dateTime, setDateTime] = useState('06/11/2026 14:00');
+  const [scope, setScope] = useState<'INDIVIDUAL' | 'COLETIVO'>('INDIVIDUAL');
+  const [category, setCategory] = useState<AlignmentCategory>('ALINHAMENTO_OPERACIONAL');
+  const [subject, setSubject] = useState('');
+  const [dateTime, setDateTime] = useState(() => {
+    const now = new Date();
+    return `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  });
   const [location, setLocation] = useState('Sala de Operações DTI / Presencial');
-  const [objective, setObjective] = useState('Alinhar coberturas de plantão presencial e de sobreaviso para a janela crítica do ERP Tasy.');
-  const [context, setContext] = useState('Reunião operacional prévia à manutenção preventiva de domingo.');
-  const [observedFacts, setObservedFacts] = useState('No plantão anterior foram detectadas instabilidades de cabeamento óptico na UTI Adulto.');
-  const [transmittedOrientations, setTransmittedOrientations] = useState('Ronda preventiva de 4 em 4 horas nas enfermarias críticas com teste das impressoras de pulseiras.');
+  const [objective, setObjective] = useState('');
+  const [context, setContext] = useState('');
+  const [observedFacts, setObservedFacts] = useState('');
+  const [transmittedOrientations, setTransmittedOrientations] = useState('');
   
-  // Participants (Multi-participant collective alignment requirement)
-  const [participants, setParticipants] = useState<AlignmentParticipant[]>([
-    {
-      id: 'p-init-1',
-      collaboratorId: 105,
-      name: 'Lucas Mendes',
-      role: 'Analista de Suporte Presencial N1/N2',
-      department: 'Suporte Assistencial & Periféricos',
-      alignmentRole: 'PARTICIPANTE',
-      presence: 'PRESENTE',
-      individualStatement: 'Confirmo recebimento do rádio HT e farei as rondas nos horários pactuados.',
-      scienceStatus: 'PENDENTE_CIENCIA',
-      signatureStatus: 'PENDENTE'
-    },
-    {
-      id: 'p-init-2',
-      collaboratorId: 104,
-      name: 'Rafael Albuquerque',
-      role: 'Analista de Redes e Infraestrutura N2',
-      department: 'Infraestrutura & Redes Críticas',
-      alignmentRole: 'RELATOR',
-      presence: 'PRESENTE',
-      individualStatement: 'Deixei transceivers de reserva identificados na gaveta A2 do datacenter.',
-      scienceStatus: 'PENDENTE_CIENCIA',
-      signatureStatus: 'PENDENTE'
-    }
-  ]);
+  // Participants starts clean
+  const [participants, setParticipants] = useState<AlignmentParticipant[]>([]);
 
-  // General commitments
-  const [generalCommitments, setGeneralCommitments] = useState<AlignmentCommitment[]>([
-    {
-      id: 'gc-init-1',
-      description: 'Checklist de passagem assinado conjuntamente entre o plantonista que entra e o que sai',
-      responsibleName: 'Equipe de Plantão',
-      isCollective: true,
-      deadline: '06/11/2026 19:00',
-      successCriteria: 'Checklist anexado ao chamado de passagem de plantão.',
-      status: 'EM_ANDAMENTO'
-    }
-  ]);
+  // General commitments starts clean
+  const [generalCommitments, setGeneralCommitments] = useState<AlignmentCommitment[]>([]);
 
   const [newGcDesc, setNewGcDesc] = useState('');
-  const [newGcResp, setNewGcResp] = useState('Equipe de Plantão');
-  const [newGcDeadline, setNewGcDeadline] = useState('08/11/2026 18:00');
-  const [newGcCriteria, setNewGcCriteria] = useState('Zero pendências documentais.');
+  const [newGcResp, setNewGcResp] = useState('');
+  const [newGcDeadline, setNewGcDeadline] = useState('');
+  const [newGcCriteria, setNewGcCriteria] = useState('');
 
   // Quick participant adding
   const [selectedTechToAdd, setSelectedTechToAdd] = useState<number>(101); // Mariana Costa default
@@ -117,8 +87,8 @@ export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
         alignmentRole: selectedRoleForNew,
         presence: 'PRESENTE',
         individualStatement: '',
-        scienceStatus: 'PENDENTE_CIENCIA',
-        signatureStatus: 'PENDENTE'
+        scienceStatus: 'PENDENTE',
+        signatureStatus: 'ASSINATURA_FISICA_PENDENTE'
       }
     ]);
   };
@@ -139,38 +109,41 @@ export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
         id: `gc-${Date.now()}`,
         description: newGcDesc,
         responsibleName: newGcResp || 'Todos os participantes',
-        isCollective: true,
+        isCollective: scope === 'COLETIVO',
         deadline: newGcDeadline || 'A combinar',
-        successCriteria: newGcCriteria || 'Aprovado pelo gestor',
+        successCriteria: newGcCriteria || 'Aderência ao procedimento',
         status: 'EM_ANDAMENTO'
       }
     ]);
     setNewGcDesc('');
+    setNewGcResp('');
+    setNewGcDeadline('');
+    setNewGcCriteria('');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const alignmentNum = `ALN-2026-0${Math.floor(Math.random() * 50) + 50}`;
+    const alignmentNum = `MINUTA-LOC-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newAlignment: FormalAlignment = {
       id: `aln-${Date.now()}`,
       alignmentNumber: alignmentNum,
       dateTime,
       location,
-      managerId: 1,
-      managerName: 'Henrique Vasconcelos',
-      managerRole: 'Gestor Operacional de TI',
+      managerId: currentUser.id,
+      managerName: currentUser.name,
+      managerRole: currentUser.role,
       periodicity,
       scope,
       category,
-      subject,
+      subject: subject || `Alinhamento Operacional — ${participants.map(p => p.name).join(', ') || 'Equipe DTI'}`,
       objective,
       context,
       topicsDiscussed: [
-        'Diretrizes operacionais e responsabilidades pactuadas',
-        'Contingências e escalonamento em caso de indisponibilidade',
-        'Registro tempestivo no GLPI e prazos de atendimento'
+        'Apresentação de orientações e rotinas pactuadas',
+        'Alinhamento de prazos e responsabilidades operacionais',
+        'Pactuação de compromissos para assinatura física e arquivamento'
       ],
       observedFactsOrSituations: observedFacts,
       transmittedOrientations,
@@ -178,24 +151,26 @@ export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
       generalCommitments,
       individualCommitments: [],
       decisions: [
-        'Aprovadas as diretrizes operacionais por todos os participantes.',
-        'Emissão de via formal em PDF para coleta de assinaturas e arquivamento.'
+        'Aprovadas as diretrizes operacionais pactuadas entre as partes.',
+        'Emissão de folha formal em A4 para coleta de assinaturas manuscritas e arquivamento no livro físico.'
       ],
-      nextReviewDate: 'Próxima Reunião Daily',
-      status: 'EM_REVISAO',
-      version: 'v1.0 (Minuta)',
-      elaboratedBy: 'Henrique Vasconcelos',
-      reviewedBy: 'Henrique Vasconcelos',
+      nextReviewDate: 'Acompanhamento em 30 dias',
+      status: 'RASCUNHO_PREPARACAO',
+      version: 'v1.0 (Minuta Provisória)',
+      elaboratedBy: currentUser.name,
+      reviewedBy: currentUser.name,
+      managerSignatureStatus: 'ASSINATURA_FISICA_PENDENTE',
       archivingInfo: {
         isArchivedPhysical: false,
         bookNumber: 'Livro de Plantão e Alinhamentos — Tomo 03/2026',
-        physicalLocation: 'Arquivo DTI / Pasta 12-B'
+        physicalLocation: 'Arquivo Ativo DTI / Armário 102',
+        isSimulation: true
       },
       history: [
         {
-          timestamp: `${dateTime}`,
-          author: 'Henrique Vasconcelos',
-          action: 'Alinhamento formal registrado no Portal'
+          timestamp: dateTime,
+          author: currentUser.name,
+          action: 'Minuta provisória criada no Portal de Gestão Operacional'
         }
       ]
     };

@@ -53,6 +53,7 @@ interface TemplateSyntheticDashboardProps {
   onOpenRegisterFeedback?: () => void;
   onOpenRegisterAlignment?: () => void;
   onOpenFeedbackAndAlignments?: () => void;
+  onOpenAiPreparation?: () => void;
   onBackToCatalog?: () => void;
   onOpenTicketById?: (ticketId: number) => void;
   isCompactChatMode?: boolean;
@@ -74,6 +75,7 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
   onOpenRegisterFeedback,
   onOpenRegisterAlignment,
   onOpenFeedbackAndAlignments,
+  onOpenAiPreparation,
   onBackToCatalog,
   onOpenTicketById,
   isCompactChatMode = false
@@ -562,11 +564,11 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
           </span>
         </div>
       ) : panel.templateType === 'TPL-03' ? (
-        // FEEDBACK E ALINHAMENTOS (TPL-03): 3 Cards Sintéticos
+        // FEEDBACK E ALINHAMENTOS (TPL-03): Cards Sintéticos + Launcher IA
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2 shrink-0">
           <div 
             onClick={onOpenFeedbackAndAlignments}
-            className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-emerald-500/50 cursor-pointer transition-all group"
+            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-emerald-500/50 cursor-pointer transition-all group"
           >
             <div className="flex items-center gap-2 min-w-0">
               <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -591,7 +593,7 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
 
           <div 
             onClick={onOpenFeedbackAndAlignments}
-            className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-blue-500/50 cursor-pointer transition-all group"
+            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-blue-500/50 cursor-pointer transition-all group"
           >
             <div className="flex items-center gap-2 min-w-0">
               <div className="p-1.5 rounded-lg bg-blue-500/10 text-[#134F9F] dark:text-blue-400 shrink-0">
@@ -607,7 +609,7 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
-                  <span className="text-[#134F9F] dark:text-blue-400 font-semibold">Passagem Plantão (3 part.)</span> · Conduta
+                  <span className="text-[#134F9F] dark:text-blue-400 font-semibold">Plantão (3 part.)</span> · Conduta
                 </div>
               </div>
             </div>
@@ -616,27 +618,52 @@ export const TemplateSyntheticDashboard: React.FC<TemplateSyntheticDashboardProp
 
           <div 
             onClick={onOpenFeedbackAndAlignments}
-            className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-purple-500/50 cursor-pointer transition-all group"
+            className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 flex items-center justify-between shadow-2xs hover:border-slate-400 cursor-pointer transition-all group"
           >
             <div className="flex items-center gap-2 min-w-0">
-              <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+              <div className="p-1.5 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 shrink-0">
                 <FileText className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 transition-colors truncate">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-slate-700 transition-colors truncate">
                     Termos A4 & Assinaturas
                   </span>
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                    PDF & Físico
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    Físico
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
-                  <span className="text-emerald-600 font-semibold">4 assinados</span> · 1 pendente ciência
+                  <span className="text-emerald-600 font-semibold">4 assinados</span> · Coleta em folha
                 </div>
               </div>
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600 shrink-0" />
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 shrink-0" />
+          </div>
+
+          <div 
+            onClick={onOpenAiPreparation || onOpenFeedbackAndAlignments}
+            className="md:col-span-3 bg-white dark:bg-slate-900 border border-purple-500/40 hover:border-purple-600 rounded-lg p-2.5 flex items-center justify-between shadow-2xs cursor-pointer transition-all group bg-gradient-to-r from-purple-500/5 to-transparent"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 shrink-0">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 transition-colors truncate">
+                    Preparar com IA
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                    5 Etapas
+                  </span>
+                </div>
+                <div className="text-[10px] text-purple-700 dark:text-purple-300 font-medium truncate mt-0.5">
+                  Roteiro humanizado e minuta A4
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-purple-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
         </div>
       ) : null}

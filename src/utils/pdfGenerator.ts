@@ -70,9 +70,9 @@ function drawInstitutionalHeader(doc: jsPDF, documentNumber: string, pageNum: nu
 }
 
 /**
- * Desenha o rodapé institucional com carimbo de autenticidade
+ * Desenha o rodapé institucional com rastreabilidade de emissão e numeração progressiva de páginas
  */
-function drawInstitutionalFooter(doc: jsPDF, documentNumber: string) {
+function drawInstitutionalFooter(doc: jsPDF, documentNumber: string, pageNum: number = 1, totalPages: number = 1) {
   const pageHeight = 297;
   doc.setDrawColor(226, 232, 240);
   doc.setLineWidth(0.3);
@@ -81,9 +81,10 @@ function drawInstitutionalFooter(doc: jsPDF, documentNumber: string) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(148, 163, 184);
-  const authHash = `HEAL-SEC-${documentNumber}-${new Date().getFullYear()}-AUTHENTIC-RECORD`;
-  doc.text(`Documento emitido pelo Portal de Gestão Operacional HEAL Ops | Hash: ${authHash}`, 14, pageHeight - 10);
-  doc.text(`Via de arquivo e registro formal — Assinatura das partes obrigatória`, 196, pageHeight - 10, { align: 'right' });
+  const now = new Date();
+  const nowStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  doc.text(`Documento Institucional HEAL Ops · Ref: ${documentNumber} · Emitido em: ${nowStr}`, 14, pageHeight - 10);
+  doc.text(`Página ${pageNum} de ${totalPages} — Via física para arquivo e registro formal`, 196, pageHeight - 10, { align: 'right' });
 }
 
 /**
@@ -346,33 +347,9 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
     currentY += 2;
   }
 
-  interface PDFSigner {
-    name: string;
-    role: string;
-    signed?: boolean;
-    signedDate?: string;
-  }
-
-  const allSigners: PDFSigner[] = [
-    { 
-      name: alignment.managerName, 
-      role: `${alignment.managerRole} (Condutor / Gestor)`,
-      signed: true,
-      signedDate: alignment.dateTime.split(' ')[0]
-    },
-    ...alignment.participants.map(p => ({
-      name: p.name,
-      role: `${p.role} — ${p.department}`,
-      signed: p.signatureStatus !== 'PENDENTE',
-      signedDate: p.signatureDate
-    }))
-  ];
-
-  const signaturesRowCount = Math.ceil(allSigners.length / 2);
-  const neededHeightForSignatures = 25 + (signaturesRowCount * 24);
-
-  if (currentY + neededHeightForSignatures > pageHeight - 20) {
-    drawInstitutionalFooter(doc, alignment.alignmentNumber);
+  // 6. Termo de Ciência e Relação de Assinaturas Manuscritas
+  const neededHeaderAndManagerHeight = 52;
+  if (currentY + neededHeaderAndManagerHeight > pageHeight - 20) {
     doc.addPage();
     drawInstitutionalHeader(doc, alignment.alignmentNumber, doc.getNumberOfPages());
     currentY = 32;
@@ -381,54 +358,156 @@ export function generateAlignmentPDF(alignment: FormalAlignment, download: boole
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(19, 79, 159);
-  doc.text('6. TERMO DE CIÊNCIA E ASSINATURAS', marginX, currentY);
+  doc.text('6. TERMO DE CIÊNCIA E ASSINATURAS MANUSCRITAS', marginX, currentY);
   currentY += 4;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(71, 85, 105);
-  const termDisclaimer = 'Declaramos para todos os fins que participamos da reunião de alinhamento acima referenciada, tomamos ciência integral do seu teor, diretrizes transmitidas e assumimos os compromissos nos termos e prazos estabelecidos neste documento formal.';
+  const termDisclaimer = 'Declaramos para todos os fins institucionais que participamos da reunião de alinhamento operacional do Hospital HEAL, tomamos ciência integral do seu teor, diretrizes transmitidas e assumimos os compromissos nos termos e prazos pactuados. A via física original com assinaturas manuscritas é arquivada no Livro de Tomos da DTI.';
   const discLines = doc.splitTextToSize(termDisclaimer, contentWidth);
   doc.text(discLines, marginX, currentY);
-  currentY += (discLines.length * 3.8) + 8;
+  currentY += (discLines.length * 3.8) + 6;
 
-  // Desenha os campos de assinatura em pares de 2 por linha
-  const colWidth = 85;
-  const colGap = 12;
+  // Bloco de Assinatura do Gestor / Condutor (não é auto-assinado digitalmente)
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(marginX, currentY, contentWidth, 24, 1.5, 1.5, 'FD');
 
-  allSigners.forEach((signer, index) => {
-    const isSecondCol = index % 2 === 1;
-    const colX = isSecondCol ? marginX + colWidth + colGap : marginX;
-    const rowY = currentY + (Math.floor(index / 2) * 22);
+  doc.setDrawColor(100, 116, 139);
+  doc.setLineWidth(0.4);
+  doc.line(marginX + 15, currentY + 13, marginX + 115, currentY + 13);
 
-    // Linha de assinatura
-    doc.setDrawColor(148, 163, 184);
-    doc.setLineWidth(0.4);
-    doc.line(colX, rowY + 10, colX + colWidth, rowY + 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(15, 23, 42);
+  doc.text(alignment.managerName, marginX + 65, currentY + 17, { align: 'center' });
 
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`${alignment.managerRole} — Gestor / Condutor da Reunião`, marginX + 65, currentY + 20.5, { align: 'center' });
+
+  // Data / Status do Gestor
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(71, 85, 105);
+  doc.text('Data: _____/_____/_________', marginX + 130, currentY + 13);
+  if (alignment.managerSignatureStatus === 'ASSINATURA_FISICA_COLETADA' || alignment.managerSignatureStatus === 'ASSINADO_FISICO') {
+    doc.setTextColor(16, 149, 73);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(15, 23, 42);
-    doc.text(signer.name, colX + (colWidth / 2), rowY + 14, { align: 'center' });
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
+    doc.text(`[ X ] Assinatura física manuscrita coletada`, marginX + 130, currentY + 18);
+  } else {
     doc.setTextColor(100, 116, 139);
-    doc.text(signer.role, colX + (colWidth / 2), rowY + 17.5, { align: 'center' });
+    doc.text(`[   ] Assinatura física manuscrita`, marginX + 130, currentY + 18);
+  }
 
-    if (signer.signed) {
-      doc.setTextColor(16, 149, 73);
+  currentY += 28;
+
+  // Relação de Participantes com Paginação Progressiva (1, 2, 5, 10, 20+ participantes)
+  const colWidth = 86;
+  const colGap = 10;
+  const participantsList = alignment.participants;
+
+  if (participantsList.length > 0) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(19, 79, 159);
+    doc.text(`ASSINATURAS DOS PARTICIPANTES (${participantsList.length} Integrantes)`, marginX, currentY);
+    currentY += 5;
+
+    for (let i = 0; i < participantsList.length; i += 2) {
+      // Checa se cabe o próximo par de participantes (altura necessária ~25mm)
+      if (currentY + 26 > pageHeight - 20) {
+        doc.addPage();
+        currentY = 32;
+        drawInstitutionalHeader(doc, alignment.alignmentNumber, doc.getNumberOfPages());
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(19, 79, 159);
+        doc.text('ASSINATURAS DOS PARTICIPANTES (CONTINUAÇÃO)', marginX, currentY);
+        currentY += 5;
+      }
+
+      // Primeiro participante da linha
+      const p1 = participantsList[i];
+      const p1X = marginX;
+      doc.setDrawColor(148, 163, 184);
+      doc.setLineWidth(0.35);
+      doc.line(p1X, currentY + 10, p1X + colWidth, currentY + 10);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(15, 23, 42);
+      const p1Name = p1.name.length > 32 ? p1.name.substring(0, 30) + '...' : p1.name;
+      doc.text(p1Name, p1X + (colWidth / 2), currentY + 13.5, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(6.5);
-      doc.text(`[Assinado digitalmente em ${signer.signedDate || 'Arquivo'}]`, colX + (colWidth / 2), rowY + 9, { align: 'center' });
-    }
-  });
+      doc.setTextColor(100, 116, 139);
+      const p1Role = `${p1.role} (${p1.department})`;
+      const p1RoleTrimmed = p1Role.length > 38 ? p1Role.substring(0, 36) + '...' : p1Role;
+      doc.text(p1RoleTrimmed, p1X + (colWidth / 2), currentY + 16.5, { align: 'center' });
 
-  // Desenha rodapés em todas as páginas criadas
+      if (p1.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || p1.signatureStatus === 'ASSINADO_FISICO') {
+        doc.setTextColor(16, 149, 73);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`[ X ] Assinatura física coletada em ${p1.signatureDate || 'livro tomo'}`, p1X + (colWidth / 2), currentY + 20, { align: 'center' });
+      } else if (p1.signatureStatus === 'RECUSOU_ASSINATURA') {
+        doc.setTextColor(220, 38, 38);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`[ ! ] Recusou assinatura manuscrita`, p1X + (colWidth / 2), currentY + 20, { align: 'center' });
+      } else {
+        doc.setTextColor(148, 163, 184);
+        doc.text(`[   ] Assinatura manuscrita a coletar em folha`, p1X + (colWidth / 2), currentY + 20, { align: 'center' });
+      }
+
+      // Segundo participante da linha (se houver)
+      if (i + 1 < participantsList.length) {
+        const p2 = participantsList[i + 1];
+        const p2X = marginX + colWidth + colGap;
+
+        doc.setDrawColor(148, 163, 184);
+        doc.setLineWidth(0.35);
+        doc.line(p2X, currentY + 10, p2X + colWidth, currentY + 10);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(15, 23, 42);
+        const p2Name = p2.name.length > 32 ? p2.name.substring(0, 30) + '...' : p2.name;
+        doc.text(p2Name, p2X + (colWidth / 2), currentY + 13.5, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.5);
+        doc.setTextColor(100, 116, 139);
+        const p2Role = `${p2.role} (${p2.department})`;
+        const p2RoleTrimmed = p2Role.length > 38 ? p2Role.substring(0, 36) + '...' : p2Role;
+        doc.text(p2RoleTrimmed, p2X + (colWidth / 2), currentY + 16.5, { align: 'center' });
+
+        if (p2.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || p2.signatureStatus === 'ASSINADO_FISICO') {
+          doc.setTextColor(16, 149, 73);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`[ X ] Assinatura física coletada em ${p2.signatureDate || 'livro tomo'}`, p2X + (colWidth / 2), currentY + 20, { align: 'center' });
+        } else if (p2.signatureStatus === 'RECUSOU_ASSINATURA') {
+          doc.setTextColor(220, 38, 38);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`[ ! ] Recusou assinatura manuscrita`, p2X + (colWidth / 2), currentY + 20, { align: 'center' });
+        } else {
+          doc.setTextColor(148, 163, 184);
+          doc.text(`[   ] Assinatura manuscrita a coletar em folha`, p2X + (colWidth / 2), currentY + 20, { align: 'center' });
+        }
+      }
+
+      currentY += 23;
+    }
+  }
+
+  // Desenha rodapés e cabeçalhos em todas as páginas criadas com contagem real
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     drawInstitutionalHeader(doc, alignment.alignmentNumber, i, totalPages);
-    drawInstitutionalFooter(doc, alignment.alignmentNumber);
+    drawInstitutionalFooter(doc, alignment.alignmentNumber, i, totalPages);
   }
 
   if (download) {
@@ -733,7 +812,7 @@ export function generateFeedbackPDF(feedback: ManagerialFeedback, download: bool
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     drawInstitutionalHeader(doc, feedback.feedbackNumber, i, totalPages);
-    drawInstitutionalFooter(doc, feedback.feedbackNumber);
+    drawInstitutionalFooter(doc, feedback.feedbackNumber, i, totalPages);
   }
 
   if (download) {

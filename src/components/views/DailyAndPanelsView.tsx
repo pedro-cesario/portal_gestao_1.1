@@ -52,6 +52,7 @@ import { RegisterFeedbackModal } from '../panels/RegisterFeedbackModal';
 import { RegisterAlignmentModal } from '../panels/RegisterAlignmentModal';
 import { FeedbackAndAlignmentsDrawer } from '../panels/FeedbackAndAlignmentsDrawer';
 import { DocumentPreviewModal } from '../panels/DocumentPreviewModal';
+import { AiAlignmentPreparationModal } from '../panels/AiAlignmentPreparationModal';
 
 interface DailyAndPanelsViewProps {
   savedPanels: ArtifactPanel[];
@@ -73,7 +74,21 @@ interface DailyAndPanelsViewProps {
   managerialFeedbacks?: ManagerialFeedback[];
   onSaveFeedback?: (feedback: ManagerialFeedback) => void;
   onConfirmScience?: (documentId: string, participantId: string | number) => void;
-  onArchivePhysical?: (documentId: string, bookNumber: string, physicalLocation: string) => void;
+  onCollectPhysicalSignature?: (
+    documentId: string, 
+    participantId: string | number, 
+    operatorName: string, 
+    date: string, 
+    notes?: string
+  ) => void;
+  onCollectManagerSignature?: (documentId: string, operatorName: string, date: string) => void;
+  onArchivePhysical?: (
+    documentId: string, 
+    bookNumber: string, 
+    physicalLocation: string,
+    operatorName?: string,
+    archiveDate?: string
+  ) => void;
   currentUser?: CurrentUser | null;
   onNavigateToAgente: (prefillPrompt?: string) => void;
   onOpenTicketById: (ticketId: number) => void;
@@ -100,6 +115,8 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   managerialFeedbacks = [],
   onSaveFeedback = () => {},
   onConfirmScience = () => {},
+  onCollectPhysicalSignature = () => {},
+  onCollectManagerSignature = () => {},
   onArchivePhysical = () => {},
   currentUser,
   onNavigateToAgente,
@@ -123,6 +140,7 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
   // TPL-03 Feedback e Alinhamentos
   const [isRegisterFeedbackOpen, setIsRegisterFeedbackOpen] = useState<boolean>(false);
   const [isRegisterAlignmentOpen, setIsRegisterAlignmentOpen] = useState<boolean>(false);
+  const [isAiPreparationOpen, setIsAiPreparationOpen] = useState<boolean>(false);
   const [isFeedbackAndAlignmentsOpen, setIsFeedbackAndAlignmentsOpen] = useState<boolean>(false);
   const [isPreviewDocModalOpen, setIsPreviewDocModalOpen] = useState<boolean>(false);
   const [previewDocType, setPreviewDocType] = useState<'ALIGNMENT' | 'FEEDBACK'>('ALIGNMENT');
@@ -437,6 +455,7 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
             onOpenRegisterFeedback={() => setIsRegisterFeedbackOpen(true)}
             onOpenRegisterAlignment={() => setIsRegisterAlignmentOpen(true)}
             onOpenFeedbackAndAlignments={() => setIsFeedbackAndAlignmentsOpen(true)}
+            onOpenAiPreparation={() => setIsAiPreparationOpen(true)}
             onBackToCatalog={() => setSelectedPanel(null)}
             onOpenTicketById={onOpenTicketById}
           />
@@ -573,6 +592,7 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
             handlePreviewFeedback(newFdb);
           }}
           existingFeedbacks={managerialFeedbacks}
+          currentUser={currentUser ? { name: currentUser.name, role: currentUser.role, id: currentUser.id } : undefined}
         />
       )}
 
@@ -585,6 +605,23 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
             onSaveAlignment(newAln);
             handlePreviewAlignment(newAln);
           }}
+          currentUser={currentUser ? { name: currentUser.name, role: currentUser.role, id: currentUser.id } : undefined}
+        />
+      )}
+
+      {/* PREPARAÇÃO HUMANIZADA DE ALINHAMENTOS COM IA (5 ETAPAS) */}
+      {isAiPreparationOpen && (
+        <AiAlignmentPreparationModal
+          isOpen={isAiPreparationOpen}
+          onClose={() => setIsAiPreparationOpen(false)}
+          onSaveAlignment={(newAln) => {
+            onSaveAlignment(newAln);
+            handlePreviewAlignment(newAln);
+          }}
+          onPreviewAlignment={(newAln) => {
+            handlePreviewAlignment(newAln);
+          }}
+          currentUser={currentUser ? { name: currentUser.name, role: currentUser.role, id: currentUser.id } : undefined}
         />
       )}
 
@@ -602,6 +639,10 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
           onOpenNewAlignment={() => {
             setIsFeedbackAndAlignmentsOpen(false);
             setIsRegisterAlignmentOpen(true);
+          }}
+          onOpenAiPreparation={() => {
+            setIsFeedbackAndAlignmentsOpen(false);
+            setIsAiPreparationOpen(true);
           }}
           onPreviewAlignment={(aln) => {
             handlePreviewAlignment(aln);
@@ -622,7 +663,10 @@ export const DailyAndPanelsView: React.FC<DailyAndPanelsViewProps> = ({
           alignment={selectedAlignmentForPreview}
           feedback={selectedFeedbackForPreview}
           onConfirmScience={onConfirmScience}
+          onCollectPhysicalSignature={onCollectPhysicalSignature}
+          onCollectManagerSignature={onCollectManagerSignature}
           onArchivePhysical={onArchivePhysical}
+          currentUser={currentUser ? { name: currentUser.name, role: currentUser.role, id: currentUser.id } : undefined}
         />
       )}
     </div>

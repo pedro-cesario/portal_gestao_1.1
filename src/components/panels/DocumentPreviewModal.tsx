@@ -24,7 +24,22 @@ interface DocumentPreviewModalProps {
   alignment?: FormalAlignment | null;
   feedback?: ManagerialFeedback | null;
   onConfirmScience?: (documentId: string, participantId: string | number) => void;
-  onArchivePhysical?: (documentId: string, bookNumber: string, physicalLocation: string) => void;
+  onCollectPhysicalSignature?: (
+    documentId: string, 
+    participantId: string | number, 
+    operatorName: string, 
+    date: string, 
+    notes?: string
+  ) => void;
+  onCollectManagerSignature?: (documentId: string, operatorName: string, date: string) => void;
+  onArchivePhysical?: (
+    documentId: string, 
+    bookNumber: string, 
+    physicalLocation: string,
+    operatorName?: string,
+    archiveDate?: string
+  ) => void;
+  currentUser?: { name: string; role: string; id: string | number };
 }
 
 export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
@@ -34,7 +49,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   alignment,
   feedback,
   onConfirmScience,
-  onArchivePhysical
+  onCollectPhysicalSignature,
+  onCollectManagerSignature,
+  onArchivePhysical,
+  currentUser = { name: 'Henrique Vasconcelos', role: 'Gestor Operacional de TI', id: 1 }
 }) => {
   const [activeTab, setActiveTab] = useState<'DOCUMENT' | 'ARCHIVING' | 'SIGNATURES'>('DOCUMENT');
   const [bookNumberInput, setBookNumberInput] = useState(
@@ -43,6 +61,15 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const [locationInput, setLocationInput] = useState(
     alignment?.archivingInfo?.physicalLocation || feedback?.archivingInfo?.physicalLocation || 'Arquivo Geral DTI / Pasta 14-C'
   );
+  const [operatorInput, setOperatorInput] = useState(currentUser.name);
+  const [archiveDateInput, setArchiveDateInput] = useState(() => new Date().toLocaleDateString('pt-BR'));
+  const [signatureDateInput, setSignatureDateInput] = useState(() => {
+    const now = new Date();
+    return `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  });
+  const [evidenceNoteInput, setEvidenceNoteInput] = useState('');
+  const [recordingParticipantId, setRecordingParticipantId] = useState<string | number | null>(null);
+  const [recordingManager, setRecordingManager] = useState<boolean>(false);
   const [archiveSuccess, setArchiveSuccess] = useState(false);
 
   if (!isOpen) return null;
@@ -67,7 +94,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const handleSaveArchive = (e: React.FormEvent) => {
     e.preventDefault();
     if (onArchivePhysical && docNumber) {
-      onArchivePhysical(docNumber, bookNumberInput, locationInput);
+      onArchivePhysical(docNumber, bookNumberInput, locationInput, operatorInput, archiveDateInput);
       setArchiveSuccess(true);
       setTimeout(() => setArchiveSuccess(false), 3000);
     }
@@ -596,69 +623,246 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           {activeTab === 'SIGNATURES' && (
             <div className="max-w-2xl mx-auto space-y-4">
               <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-                  <UserCheck className="w-4 h-4 text-[#134F9F] dark:text-blue-400" />
-                  Quadro de Assinaturas e Confirmação de Ciência
-                </h3>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-[#134F9F] dark:text-blue-400" />
+                    Quadro de Assinaturas e Confirmação de Ciência Física
+                  </h3>
+                  <span className="text-2xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#134F9F] dark:bg-blue-950 dark:text-blue-300">
+                    Ata Impressa A4
+                  </span>
+                </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                  Controle individual de assinaturas. A confirmação de um participante é estritamente pessoal e não substitui a dos demais.
+                  Controle individual de assinaturas manuscritas colhidas na folha física. Cada participante possui controle estritamente independente.
                 </p>
 
                 {documentType === 'ALIGNMENT' && alignment && (
                   <div className="space-y-3">
-                    {/* Gestor */}
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    {/* Gestor / Condutor */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#134F9F] text-white flex items-center justify-center font-bold text-xs">
-                          HV
+                          {alignment.managerName.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <p className="text-xs font-bold text-slate-900 dark:text-white">{alignment.managerName}</p>
                           <p className="text-2xs text-slate-500">{alignment.managerRole} (Condutor / Gestor)</p>
                         </div>
                       </div>
-                      <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                        <Check className="w-3 h-3" /> Assinado & Homologado
-                      </span>
+
+                      <div className="flex items-center gap-2">
+                        {alignment.managerSignatureStatus === 'ASSINATURA_FISICA_COLETADA' || alignment.managerSignatureStatus === 'ASSINADO_FISICO' ? (
+                          <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                            <Check className="w-3 h-3" /> Assinatura Física Coletada
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xs text-amber-600 dark:text-amber-400 font-semibold">
+                              Assinatura pendente
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRecordingManager(true);
+                                setRecordingParticipantId(null);
+                              }}
+                              className="px-2.5 py-1 text-2xs font-semibold bg-[#134F9F] text-white hover:bg-blue-700 rounded transition-colors cursor-pointer"
+                            >
+                              Registrar coleta física
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Participantes */}
-                    {alignment.participants.map((p) => (
-                      <div key={p.id} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
-                            {p.name.substring(0, 2).toUpperCase()}
+                    {/* Sub-painel para registrar coleta do Gestor */}
+                    {recordingManager && (
+                      <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-800 space-y-3 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-blue-900 dark:text-blue-200">
+                            Registrar Coleta de Assinatura do Gestor ({alignment.managerName})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setRecordingManager(false)}
+                            className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-2xs">
+                          <div>
+                            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">Operador Responsável</label>
+                            <input
+                              type="text"
+                              value={operatorInput}
+                              onChange={(e) => setOperatorInput(e.target.value)}
+                              className="w-full p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                            />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-slate-900 dark:text-white">{p.name}</p>
-                            <p className="text-2xs text-slate-500">{p.role} · {p.department} ({p.alignmentRole})</p>
+                            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">Data / Hora da Coleta</label>
+                            <input
+                              type="text"
+                              value={signatureDateInput}
+                              onChange={(e) => setSignatureDateInput(e.target.value)}
+                              className="w-full p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                            />
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          {p.signatureStatus !== 'PENDENTE' ? (
-                            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                              <Check className="w-3 h-3" /> {p.signatureStatus}
-                            </span>
-                          ) : (
+                        <div className="p-2 bg-white/70 dark:bg-slate-900/60 rounded border border-blue-200 dark:border-blue-900 text-3xs text-blue-800 dark:text-blue-300">
+                          ⚠️ <strong>Simulação de Registro Local:</strong> O registro confirma a aposição manual de assinatura na folha física. Aguardando conciliação com o backend FastAPI via Luna CLI.
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setRecordingManager(false)}
+                            className="px-2.5 py-1 text-2xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 rounded cursor-pointer"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onCollectManagerSignature && docNumber) {
+                                onCollectManagerSignature(docNumber, operatorInput, signatureDateInput);
+                              }
+                              setRecordingManager(false);
+                            }}
+                            className="px-3 py-1 text-2xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded cursor-pointer"
+                          >
+                            Confirmar Coleta Manuscrita
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Participantes */}
+                    {alignment.participants.map((p) => {
+                      const isRecordingThis = recordingParticipantId === p.id;
+                      const isSigned = p.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || p.signatureStatus === 'ASSINADO_FISICO';
+
+                      return (
+                        <div key={p.id} className="space-y-2">
+                          <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
+                                {p.name.substring(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-slate-900 dark:text-white">{p.name}</p>
+                                <p className="text-2xs text-slate-500">{p.role} · {p.department} ({p.alignmentRole})</p>
+                              </div>
+                            </div>
+
                             <div className="flex items-center gap-2">
-                              <span className="text-2xs text-amber-600 dark:text-amber-400 font-semibold">
-                                Pendente
-                              </span>
-                              {onConfirmScience && (
+                              {isSigned ? (
+                                <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                  <Check className="w-3 h-3" /> Assinatura Física Coletada
+                                </span>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-2xs text-amber-600 dark:text-amber-400 font-semibold">
+                                    Assinatura pendente
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setRecordingParticipantId(p.id);
+                                      setRecordingManager(false);
+                                    }}
+                                    className="px-2.5 py-1 text-2xs font-semibold bg-[#134F9F] text-white hover:bg-blue-700 rounded transition-colors cursor-pointer"
+                                  >
+                                    Registrar coleta física
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Sub-painel para registrar coleta física de participante */}
+                          {isRecordingThis && (
+                            <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-800 space-y-3 text-xs">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-blue-900 dark:text-blue-200">
+                                  Registrar Coleta de Assinatura de {p.name}
+                                </span>
                                 <button
                                   type="button"
-                                  onClick={() => onConfirmScience(alignment.id, p.id)}
-                                  className="px-2.5 py-1 text-2xs font-semibold bg-[#134F9F] text-white hover:bg-blue-700 rounded transition-colors cursor-pointer"
+                                  onClick={() => setRecordingParticipantId(null)}
+                                  className="text-slate-400 hover:text-slate-600 cursor-pointer"
                                 >
-                                  Assinar Ciência
+                                  <X className="w-4 h-4" />
                                 </button>
-                              )}
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-2xs">
+                                <div>
+                                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">Operador Responsável</label>
+                                  <input
+                                    type="text"
+                                    value={operatorInput}
+                                    onChange={(e) => setOperatorInput(e.target.value)}
+                                    className="w-full p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">Data / Hora da Coleta</label>
+                                  <input
+                                    type="text"
+                                    value={signatureDateInput}
+                                    onChange={(e) => setSignatureDateInput(e.target.value)}
+                                    className="w-full p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5 text-2xs">Observações do Registro (Folha / Livro)</label>
+                                <input
+                                  type="text"
+                                  value={evidenceNoteInput}
+                                  onChange={(e) => setEvidenceNoteInput(e.target.value)}
+                                  placeholder="Ex: Assinatura aposta na página 2 da via física anexa ao tomo 03/2026."
+                                  className="w-full p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-2xs"
+                                />
+                              </div>
+
+                              <div className="p-2 bg-white/70 dark:bg-slate-900/60 rounded border border-blue-200 dark:border-blue-900 text-3xs text-blue-800 dark:text-blue-300">
+                                ⚠️ <strong>Simulação de Registro Local:</strong> O registro confirma a aposição manual de assinatura na folha física. Aguardando conciliação com o backend FastAPI via Luna CLI.
+                              </div>
+
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setRecordingParticipantId(null)}
+                                  className="px-2.5 py-1 text-2xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 rounded cursor-pointer"
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (onCollectPhysicalSignature && docNumber) {
+                                      onCollectPhysicalSignature(docNumber, p.id, operatorInput, signatureDateInput, evidenceNoteInput);
+                                    } else if (onConfirmScience && alignment) {
+                                      onConfirmScience(alignment.id, p.id);
+                                    }
+                                    setRecordingParticipantId(null);
+                                  }}
+                                  className="px-3 py-1 text-2xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded cursor-pointer"
+                                >
+                                  Confirmar Coleta Manuscrita
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -669,10 +873,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm mb-1">
                 <Archive className="w-4 h-4 text-[#134F9F] dark:text-blue-400" />
-                Registro de Arquivamento Físico do Documento Assinado
+                Registro de Arquivamento Físico da Ata Assinada
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                Após coletar as assinaturas físicas em papel A4, registre a localização no livro de tomos e gaveta do arquivo DTI para fins de auditoria institucional.
+                Após coletar as assinaturas físicas em papel A4, registre a localização no livro de tomos e gaveta do arquivo DTI para fins de rastreabilidade institucional.
               </p>
 
               {archiveSuccess && (
@@ -711,12 +915,45 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                   />
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Operador Responsável pelo Arquivamento
+                    </label>
+                    <input
+                      type="text"
+                      value={operatorInput}
+                      onChange={(e) => setOperatorInput(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#134F9F]"
+                      placeholder="Ex: Henrique Vasconcelos"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Data da Guarda
+                    </label>
+                    <input
+                      type="text"
+                      value={archiveDateInput}
+                      onChange={(e) => setArchiveDateInput(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#134F9F]"
+                      placeholder="Ex: 06/11/2026"
+                    />
+                  </div>
+                </div>
+
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-2xs space-y-1">
                   <div className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
                     <Building2 className="w-3.5 h-3.5" />
-                    Guarda Documental Conforme Regulamento HEAL
+                    Procedimento Institucional DTI
                   </div>
-                  <p>Prazo mínimo de guarda em arquivo ativo: 5 anos. Sujeito à inspeção por auditorias de certificação hospitalar ONA / Qmentum.</p>
+                  <p>A via original com as assinaturas manuscritas a caneta deve ser anexada ao livro físico de alinhamentos operacionais da DTI. Registre os dados de localização para fins de consulta e auditoria interna.</p>
+                </div>
+
+                <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded text-3xs text-amber-800 dark:text-amber-300">
+                  ⚠️ <strong>Simulação de Registro:</strong> Os dados de arquivamento físico são mantidos em memória no AI Studio aguardando conciliação com o backend FastAPI via Luna CLI.
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">

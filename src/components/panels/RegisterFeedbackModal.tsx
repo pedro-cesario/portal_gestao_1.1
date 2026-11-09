@@ -21,72 +21,48 @@ interface RegisterFeedbackModalProps {
   onClose: () => void;
   onSaveFeedback: (feedback: ManagerialFeedback) => void;
   existingFeedbacks?: ManagerialFeedback[];
+  currentUser?: { name: string; role: string; id: string | number };
 }
 
 export const RegisterFeedbackModal: React.FC<RegisterFeedbackModalProps> = ({
   isOpen,
   onClose,
   onSaveFeedback,
-  existingFeedbacks = []
+  existingFeedbacks = [],
+  currentUser = { name: 'Henrique Vasconcelos', role: 'Gestor Operacional de TI', id: 1 }
 }) => {
   const [collaboratorId, setCollaboratorId] = useState<number>(101); // Mariana Costa default
-  const [periodEvaluated, setPeriodEvaluated] = useState('Novembro de 2026');
-  const [feedbackDate, setFeedbackDate] = useState('06/11/2026');
+  const [periodEvaluated, setPeriodEvaluated] = useState('');
+  const [feedbackDate, setFeedbackDate] = useState(() => new Date().toLocaleDateString('pt-BR'));
   const [feedbackType, setFeedbackType] = useState<ManagerialFeedback['feedbackType']>('PERIODICO_MENSAL');
   
   // Optional GLPI metrics toggle
   const [includeGlpiMetrics, setIncludeGlpiMetrics] = useState(true);
 
-  // Strengths
-  const [strengths, setStrengths] = useState<FeedbackStrength[]>([
-    {
-      id: 'str-new-1',
-      title: 'Alta resolutividade técnica e domínio de sistemas críticos',
-      description: 'Capacidade diferenciada de resolução rápida em chamados assistenciais críticos, com 98.3% de resolução sem reabertura.'
-    }
-  ]);
+  // Strengths start clean
+  const [strengths, setStrengths] = useState<FeedbackStrength[]>([]);
   const [newStrengthTitle, setNewStrengthTitle] = useState('');
   const [newStrengthDesc, setNewStrengthDesc] = useState('');
 
-  // Development points
-  const [devPoints, setDevPoints] = useState<FeedbackDevelopmentPoint[]>([
-    {
-      id: 'dp-new-1',
-      title: 'Apontamento tempestivo de follow-ups intermediários no GLPI',
-      description: 'Chamados em atendimento durante a tarde permanecem sem atualização de texto antes das 17h, gerando falsos indícios de estagnação no snapshot noturno das 04h.',
-      operationalImpact: 'Auditoria documental aponta risco de inconformidade por ausência de registro humano tempestivo.'
-    }
-  ]);
+  // Development points start clean
+  const [devPoints, setDevPoints] = useState<FeedbackDevelopmentPoint[]>([]);
   const [newDevTitle, setNewDevTitle] = useState('');
   const [newDevDesc, setNewDevDesc] = useState('');
   const [newDevImpact, setNewDevImpact] = useState('');
 
-  // Managerial criteria
-  const [collaboration, setCollaboration] = useState('Exemplar — Sempre solícita e cooperativa.');
-  const [communication, setCommunication] = useState('Muito boa — Clara nas interações assistenciais.');
-  const [organization, setOrganization] = useState('Adequada — Consolidar registros no GLPI antes das 17h.');
-  const [posture, setPosture] = useState('Exemplar — Ética e referência técnica positiva.');
-  const [autonomy, setAutonomy] = useState('Alta — Lidera resoluções complexas com maturidade.');
+  // Managerial criteria start clean
+  const [collaboration, setCollaboration] = useState('');
+  const [communication, setCommunication] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [posture, setPosture] = useState('');
+  const [autonomy, setAutonomy] = useState('');
 
-  // Development Goals
-  const [goals, setGoals] = useState<DevelopmentGoal[]>([
-    {
-      id: 'dg-new-1',
-      objective: 'Follow-ups tempestivos no GLPI até 17h00',
-      target: '100% dos chamados em andamento com registro humano antes das 17h',
-      practicalActions: ['Configurar alerta às 16h45', 'Atualizar notas no chamado'],
-      responsible: 'Mariana Costa',
-      startDate: '06/11/2026',
-      deadline: '06/12/2026',
-      successCriteria: 'Zero ocorrências de chamados > 24h sem apontamento humano.',
-      expectedEvidences: 'Relatório da auditoria noturna SNAPSHOT_04H sem apontamentos.',
-      status: 'EM_ANDAMENTO'
-    }
-  ]);
+  // Development Goals start clean
+  const [goals, setGoals] = useState<DevelopmentGoal[]>([]);
 
   const [newGoalObjective, setNewGoalObjective] = useState('');
   const [newGoalTarget, setNewGoalTarget] = useState('');
-  const [newGoalDeadline, setNewGoalDeadline] = useState('06/12/2026');
+  const [newGoalDeadline, setNewGoalDeadline] = useState('');
   const [newGoalEvidence, setNewGoalEvidence] = useState('');
 
   // Colaborador selecionado

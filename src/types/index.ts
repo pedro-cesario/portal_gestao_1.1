@@ -606,8 +606,57 @@ export type AlignmentCategory =
 
 export type AlignmentParticipantRole = 'CONDUTOR' | 'PARTICIPANTE' | 'RELATOR' | 'OUVINTE';
 export type AlignmentPresence = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO';
-export type AlignmentScienceStatus = 'PENDENTE_CIENCIA' | 'CIENTE' | 'SOLICITOU_CORRECAO';
-export type AlignmentSignatureStatus = 'PENDENTE' | 'ASSINADO_FISICO' | 'ASSINADO_DIGITAL';
+
+export type AlignmentScienceStatus = 
+  | 'PENDENTE'
+  | 'CIENCIA_ELETRONICA_CONFIRMADA'
+  | 'SOLICITOU_CORRECAO'
+  | 'NAO_COMPARECEU'
+  | 'PENDENTE_CIENCIA'
+  | 'CIENTE';
+
+export type AlignmentSignatureStatus = 
+  | 'PENDENTE'
+  | 'ASSINATURA_FISICA_PENDENTE'
+  | 'ASSINATURA_FISICA_COLETADA'
+  | 'RECUSOU_ASSINATURA'
+  | 'ASSINADO_FISICO'
+  | 'ASSINADO_DIGITAL';
+
+export type FormalDocumentStatus = 
+  | 'RASCUNHO'
+  | 'RASCUNHO_PREPARACAO'
+  | 'EM_REVISAO'
+  | 'APROVADO'
+  | 'PDF_EMITIDO'
+  | 'AGUARDANDO_ASSINATURAS'
+  | 'PARCIALMENTE_ASSINADO'
+  | 'ASSINATURAS_COLETADAS'
+  | 'ARQUIVADO'
+  | 'ARQUIVADO_FISICO'
+  | 'RETIFICADO'
+  | 'CANCELADO';
+
+export interface PhysicalSignatureRecord {
+  participantId: string | number;
+  participantName: string;
+  collectedBy: string; // Operador responsável
+  collectedAt: string; // Data e hora
+  evidenceNote?: string; // Observações / livro / comprovante
+  isSimulation: boolean; // Disclaimer explícito de simulação aguardando FastAPI
+}
+
+export interface PhysicalArchivingRecord {
+  isArchivedPhysical: boolean;
+  bookNumber?: string;
+  physicalLocation?: string;
+  registeredBy?: string;
+  archivedAt?: string;
+  scannedPdfUploaded?: boolean;
+  uploadedAt?: string;
+  notes?: string;
+  isSimulation?: boolean;
+}
 
 export interface AlignmentParticipant {
   id: string | number;
@@ -622,6 +671,7 @@ export interface AlignmentParticipant {
   scienceDate?: string;
   signatureStatus: AlignmentSignatureStatus;
   signatureDate?: string;
+  physicalSignatureRecord?: PhysicalSignatureRecord;
 }
 
 export interface AlignmentCommitment {
@@ -638,7 +688,7 @@ export interface AlignmentCommitment {
 
 export interface FormalAlignment {
   id: string;
-  alignmentNumber: string; // ex: 'ALN-2026-088'
+  alignmentNumber: string; // ex: 'ALN-2026-088' ou 'MINUTA-LOC-XXXX'
   dateTime: string; // ex: '06/11/2026 14:30'
   location: string;
   managerId: string | number;
@@ -658,19 +708,72 @@ export interface FormalAlignment {
   individualCommitments: { participantId: string | number; participantName: string; commitment: AlignmentCommitment }[];
   decisions: string[];
   nextReviewDate?: string;
-  status: 'RASCUNHO' | 'EM_REVISAO' | 'APROVADO' | 'ARQUIVADO';
+  status: FormalDocumentStatus;
   version: string;
   elaboratedBy: string;
   reviewedBy?: string;
   approvedAt?: string;
-  archivingInfo?: { 
-    isArchivedPhysical: boolean; 
-    bookNumber?: string; 
-    physicalLocation?: string; 
-    scannedPdfUploaded?: boolean; 
-    uploadedAt?: string;
-  };
+  managerSignatureStatus?: AlignmentSignatureStatus;
+  managerSignatureDate?: string;
+  archivingInfo?: PhysicalArchivingRecord;
   history: { timestamp: string; author: string; action: string; note?: string }[];
+}
+
+// ==========================================
+// PREPARAÇÃO NATURAL DE ALINHAMENTOS COM IA
+// ==========================================
+
+export type AlignmentTone = 
+  | 'EQUILIBRADO_PROFISSIONAL'
+  | 'ACOLHEDOR'
+  | 'DIRETO_ASSERTIVO'
+  | 'ORIENTADO_DESENVOLVIMENTO';
+
+export interface AlignmentAiPreparationInput {
+  participantIds: number[];
+  category: AlignmentCategory;
+  spontaneousStrengths: string;
+  spontaneousDevPoints: string;
+  spontaneousContext: string;
+  primaryObjective: string;
+  previousCommitmentsToRescue?: string;
+  includeGlpiMetrics?: boolean;
+  tone: AlignmentTone;
+}
+
+export interface ConversationScriptBlock {
+  stepNumber: number;
+  title: string;
+  guideline: string;
+  suggestedTalkingPoints: string[];
+  reflectiveQuestions?: string[];
+}
+
+export interface ProposedGoalDraft {
+  id: string;
+  objective: string;
+  target: string;
+  practicalActions: string[];
+  responsible: string;
+  deadline: string;
+  expectedEvidence: string;
+}
+
+export interface AlignmentAiPreparationResult {
+  tone: AlignmentTone;
+  toneLabel: string;
+  generatedAt: string;
+  conversationScript: ConversationScriptBlock[];
+  proposedGoals: ProposedGoalDraft[];
+  preliminaryDraft: {
+    subject: string;
+    objective: string;
+    context: string;
+    topicsDiscussed: string[];
+    observedFactsOrSituations: string;
+    transmittedOrientations: string;
+  };
+  isSimulation: boolean;
 }
 
 export interface FeedbackStrength {
