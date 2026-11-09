@@ -432,14 +432,15 @@ export const FeedbackAndAlignmentsDrawer: React.FC<FeedbackAndAlignmentsDrawerPr
                       <th className="p-3">Documento</th>
                       <th className="p-3">Participante / Colaborador</th>
                       <th className="p-3">Papel</th>
-                      <th className="p-3">Ciência</th>
-                      <th className="p-3">Assinatura</th>
+                      <th className="p-3">Ciência Formal</th>
+                      <th className="p-3">Assinatura Manuscrita A4</th>
                       <th className="p-3 text-right">Ação</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60 text-2xs">
                     {alignments.flatMap(a => 
                       a.participants.map(p => ({
+                        aln: a,
                         alnId: a.id,
                         docNumber: a.alignmentNumber,
                         subject: a.subject,
@@ -458,29 +459,47 @@ export const FeedbackAndAlignmentsDrawer: React.FC<FeedbackAndAlignmentsDrawerPr
                           {item.part.alignmentRole}
                         </td>
                         <td className="p-3">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded ${
+                              item.part.scienceStatus === 'CIENTE' || item.part.scienceStatus === 'CIENCIA_ELETRONICA_CONFIRMADA'
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                : item.part.scienceStatus === 'RECUSOU_CIENCIA'
+                                ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                                : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                            }`}>
+                              {item.part.scienceStatus === 'CIENTE' ? '✓ Ciente' : item.part.scienceStatus}
+                            </span>
+                            {item.part.scienceStatus !== 'CIENTE' && onConfirmParticipantScience && (
+                              <button
+                                type="button"
+                                onClick={() => onConfirmParticipantScience(item.alnId, item.part.id)}
+                                className="px-2 py-0.5 bg-blue-50 text-[#134F9F] hover:bg-blue-100 rounded text-3xs font-semibold cursor-pointer border border-blue-200"
+                                title="Registrar ciência do participante (não afeta assinatura física)"
+                              >
+                                Registrar Ciência
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3">
                           <span className={`inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded ${
-                            item.part.scienceStatus === 'CIENTE'
+                            item.part.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || item.part.signatureStatus === 'ASSINADO_FISICO'
                               ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                              : item.part.signatureStatus === 'RECUSOU_ASSINATURA'
+                              ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
                               : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
                           }`}>
-                            {item.part.scienceStatus}
+                            {item.part.signatureStatus === 'ASSINATURA_FISICA_COLETADA' ? '✓ Assinada em Folha' : item.part.signatureStatus}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-slate-600 dark:text-slate-300">
-                          {item.part.signatureStatus}
-                        </td>
                         <td className="p-3 text-right">
-                          {item.part.signatureStatus === 'PENDENTE' && onConfirmParticipantScience ? (
-                            <button
-                              type="button"
-                              onClick={() => onConfirmParticipantScience(item.alnId, item.part.id)}
-                              className="px-2 py-1 bg-[#134F9F] text-white hover:bg-blue-700 rounded text-2xs font-semibold cursor-pointer"
-                            >
-                              Coletar
-                            </button>
-                          ) : (
-                            <span className="text-emerald-600 font-semibold">Validado</span>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => onPreviewAlignment(item.aln)}
+                            className="px-2.5 py-1 text-2xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded cursor-pointer"
+                          >
+                            Abrir Documento
+                          </button>
                         </td>
                       </tr>
                     ))}

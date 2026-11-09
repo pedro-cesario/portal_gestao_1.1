@@ -77,11 +77,11 @@ interface DailyAndPanelsViewProps {
   onCollectPhysicalSignature?: (
     documentId: string, 
     participantId: string | number, 
-    operatorName: string, 
-    date: string, 
+    operatorName?: string, 
+    date?: string, 
     notes?: string
   ) => void;
-  onCollectManagerSignature?: (documentId: string, operatorName: string, date: string) => void;
+  onCollectManagerSignature?: (documentId: string, operatorName?: string, date?: string) => void;
   onArchivePhysical?: (
     documentId: string, 
     bookNumber: string, 

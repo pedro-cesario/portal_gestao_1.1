@@ -619,6 +619,7 @@ export type AlignmentScienceStatus =
   | 'SOLICITOU_CORRECAO'
   | 'NAO_COMPARECEU'
   | 'PENDENTE_CIENCIA'
+  | 'RECUSOU_CIENCIA'
   | 'CIENTE';
 
 export type AlignmentSignatureStatus = 
@@ -640,6 +641,7 @@ export type FormalDocumentStatus =
   | 'AGUARDANDO_ASSINATURAS'
   | 'PARCIALMENTE_ASSINADO'
   | 'ASSINATURAS_COLETADAS'
+  | 'COM_RECUSA_ASSINATURA'
   | 'ARQUIVADO'
   | 'ARQUIVADO_FISICO'
   | 'RETIFICADO'

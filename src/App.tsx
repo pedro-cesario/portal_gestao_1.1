@@ -42,6 +42,15 @@ import {
   DEFAULT_FEEDBACK_SETTINGS
 } from './data/mockData';
 import {
+  validateActionAuthentication,
+  confirmParticipantScience,
+  refuseParticipantScience,
+  collectParticipantPhysicalSignature,
+  refuseParticipantPhysicalSignature,
+  collectManagerPhysicalSignature,
+  archiveDocumentPhysical
+} from './utils/documentGovernance';
+import {
   DEFAULT_POP_SPEC,
   DEFAULT_CALCULATION_SETTINGS,
   DEFAULT_MENU_CONFIG
@@ -224,7 +233,7 @@ export default function App() {
     setAgreements(prev => prev.map(a => {
       if (a.agreementId === agreementId) {
         const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const authorName = currentUser?.name || 'Henrique Vasconcelos';
+        const authorName = currentUser?.name || 'Operador não identificado';
         return {
           ...a,
           status: newStatus,
@@ -259,7 +268,7 @@ export default function App() {
     actionNote?: string,
     validationFeedback?: string
   ) => {
-    const author = currentUser?.name || 'Henrique Vasconcelos';
+    const author = currentUser?.name || 'Operador não identificado';
     const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     setDevelopmentCommitments(prev => prev.map(c => {
@@ -306,7 +315,7 @@ export default function App() {
   };
 
   const handleAddEvolutionNote = (commitmentId: string, note: string) => {
-    const author = currentUser?.name || 'Henrique Vasconcelos';
+    const author = currentUser?.name || 'Operador não identificado';
     const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     setDevelopmentCommitments(prev => prev.map(c => {
@@ -398,97 +407,110 @@ export default function App() {
     setManagerialFeedbacks(prev => [newFeedback, ...prev]);
   };
 
-  const handleConfirmScience = (docId: string, participantId: string | number) => {
+  // Confirmar ciência formal: atualiza APENAS estado de ciência
+  const handleConfirmScience = (docId: string, participantId: string | number, notes?: string) => {
+    const authCheck = validateActionAuthentication(currentUser);
+    if (!authCheck.allowed) {
+      alert(authCheck.error || 'Ação bloqueada: Confirmação de ciência exige operador autenticado.');
+      return;
+    }
+    const operator = authCheck.operatorName!;
     const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    handleCollectPhysicalSignature(docId, participantId, currentUser?.name || 'Henrique Vasconcelos', nowTimestamp);
+
+    setFormalAlignments(prev => prev.map(a => {
+      if (a.id === docId || a.alignmentNumber === docId) {
+        return confirmParticipantScience(a, participantId, operator, nowTimestamp, notes);
+      }
+      return a;
+    }));
   };
 
+  // Registrar recusa de ciência
+  const handleRefuseScience = (docId: string, participantId: string | number, justification: string) => {
+    const authCheck = validateActionAuthentication(currentUser);
+    if (!authCheck.allowed) {
+      alert(authCheck.error || 'Ação bloqueada: Registro de recusa exige operador autenticado.');
+      return;
+    }
+    const operator = authCheck.operatorName!;
+    const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    setFormalAlignments(prev => prev.map(a => {
+      if (a.id === docId || a.alignmentNumber === docId) {
+        return refuseParticipantScience(a, participantId, operator, nowTimestamp, justification);
+      }
+      return a;
+    }));
+  };
+
+  // Registrar assinatura manuscrita: atualiza APENAS assinatura física e metadados
   const handleCollectPhysicalSignature = (
     docId: string, 
     participantId: string | number, 
-    operatorName: string, 
-    date: string, 
+    operatorName?: string, 
+    date?: string, 
     notes?: string
   ) => {
+    const authCheck = validateActionAuthentication(currentUser);
+    if (!authCheck.allowed) {
+      alert(authCheck.error || 'Ação bloqueada: Registro de assinatura física exige operador autenticado.');
+      return;
+    }
+    const operator = operatorName || authCheck.operatorName!;
+    const nowTimestamp = date || (new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+
     setFormalAlignments(prev => prev.map(a => {
       if (a.id === docId || a.alignmentNumber === docId) {
-        const updatedParticipants = a.participants.map(p => {
-          if (p.id === participantId) {
-            return {
-              ...p,
-              scienceStatus: 'CIENTE' as const,
-              scienceDate: date,
-              signatureStatus: 'ASSINATURA_FISICA_COLETADA' as const,
-              signatureDate: date,
-              physicalSignatureRecord: {
-                participantId: p.id,
-                participantName: p.name,
-                collectedBy: operatorName,
-                collectedAt: date,
-                evidenceNote: notes,
-                isSimulation: true
-              }
-            };
-          }
-          return p;
-        });
-
-        const allParticipantsSigned = updatedParticipants.every(
-          p => p.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || p.signatureStatus === 'ASSINADO_FISICO'
-        );
-        const managerSigned = a.managerSignatureStatus === 'ASSINATURA_FISICA_COLETADA' || a.managerSignatureStatus === 'ASSINADO_FISICO';
-
-        const newDocStatus = (allParticipantsSigned && managerSigned) 
-          ? 'ASSINATURAS_COLETADAS' 
-          : 'PARCIALMENTE_ASSINADO';
-
-        return {
-          ...a,
-          participants: updatedParticipants,
-          status: a.status === 'ARQUIVADO_FISICO' ? a.status : newDocStatus,
-          history: [
-            ...a.history,
-            {
-              timestamp: date,
-              author: operatorName,
-              action: `Assinatura física coletada para participante ${participantId}`,
-              note: notes
-            }
-          ]
-        };
+        return collectParticipantPhysicalSignature(a, participantId, operator, nowTimestamp, notes);
       }
       return a;
     }));
   };
 
-  const handleCollectManagerSignature = (docId: string, operatorName: string, date: string) => {
+  // Registrar recusa de assinatura física manuscrita
+  const handleRefusePhysicalSignature = (
+    docId: string,
+    participantId: string | number,
+    operatorName?: string,
+    date?: string,
+    justification?: string
+  ) => {
+    const authCheck = validateActionAuthentication(currentUser);
+    if (!authCheck.allowed) {
+      alert(authCheck.error || 'Ação bloqueada: Registro de recusa exige operador autenticado.');
+      return;
+    }
+    const operator = operatorName || authCheck.operatorName!;
+    const nowTimestamp = date || (new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+    const cleanJustification = justification || 'Recusa verbal do participante em apor firma manuscrita.';
+
     setFormalAlignments(prev => prev.map(a => {
       if (a.id === docId || a.alignmentNumber === docId) {
-        const allParticipantsSigned = a.participants.every(
-          p => p.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || p.signatureStatus === 'ASSINADO_FISICO'
-        );
-
-        const newDocStatus = allParticipantsSigned ? 'ASSINATURAS_COLETADAS' : 'PARCIALMENTE_ASSINADO';
-
-        return {
-          ...a,
-          managerSignatureStatus: 'ASSINATURA_FISICA_COLETADA',
-          managerSignatureDate: date,
-          status: a.status === 'ARQUIVADO_FISICO' ? a.status : newDocStatus,
-          history: [
-            ...a.history,
-            {
-              timestamp: date,
-              author: operatorName,
-              action: 'Assinatura física do gestor/condutor registrada'
-            }
-          ]
-        };
+        return refuseParticipantPhysicalSignature(a, participantId, operator, nowTimestamp, cleanJustification);
       }
       return a;
     }));
   };
 
+  // Registrar assinatura física do gestor/condutor
+  const handleCollectManagerSignature = (docId: string, operatorName?: string, date?: string) => {
+    const authCheck = validateActionAuthentication(currentUser);
+    if (!authCheck.allowed) {
+      alert(authCheck.error || 'Ação bloqueada: Registro de assinatura do gestor exige operador autenticado.');
+      return;
+    }
+    const operator = operatorName || authCheck.operatorName!;
+    const nowTimestamp = date || (new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+
+    setFormalAlignments(prev => prev.map(a => {
+      if (a.id === docId || a.alignmentNumber === docId) {
+        return collectManagerPhysicalSignature(a, operator, nowTimestamp);
+      }
+      return a;
+    }));
+  };
+
+  // Arquivamento físico institucional com livro e tomo
   const handleArchivePhysical = (
     docId: string, 
     bookNumber: string, 
@@ -496,32 +518,27 @@ export default function App() {
     operatorName?: string,
     archiveDate?: string
   ) => {
-    const nowTimestamp = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const operator = operatorName || currentUser?.name || 'Henrique Vasconcelos';
-    const dateUsed = archiveDate || nowTimestamp;
+    const authCheck = validateActionAuthentication(currentUser);
+    if (!authCheck.allowed) {
+      alert(authCheck.error || 'Ação bloqueada: Arquivamento físico exige operador autenticado.');
+      return;
+    }
+    const operator = operatorName || authCheck.operatorName!;
+    const nowTimestamp = archiveDate || (new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+
+    if (!bookNumber || !bookNumber.trim() || !physicalLocation || !physicalLocation.trim()) {
+      alert('Ação bloqueada: O arquivamento físico exige indicação formal de livro/tomo e localização física.');
+      return;
+    }
 
     setFormalAlignments(prev => prev.map(a => {
       if (a.id === docId || a.alignmentNumber === docId) {
-        return {
-          ...a,
-          status: 'ARQUIVADO_FISICO',
-          archivingInfo: {
-            isArchivedPhysical: true,
-            bookNumber,
-            physicalLocation,
-            registeredBy: operator,
-            archivedAt: dateUsed,
-            isSimulation: true
-          },
-          history: [
-            ...a.history,
-            {
-              timestamp: dateUsed,
-              author: operator,
-              action: `Arquivamento físico registrado no livro ${bookNumber} (${physicalLocation})`
-            }
-          ]
-        };
+        const result = archiveDocumentPhysical(a, bookNumber, physicalLocation, operator, nowTimestamp);
+        if (!result.success) {
+          alert(result.error || 'Falha no arquivamento.');
+          return a;
+        }
+        return result.alignment!;
       }
       return a;
     }));
@@ -533,8 +550,8 @@ export default function App() {
           status: 'ARQUIVADO',
           archivingInfo: {
             isArchivedPhysical: true,
-            bookNumber,
-            physicalLocation
+            bookNumber: bookNumber.trim(),
+            physicalLocation: physicalLocation.trim()
           }
         };
       }

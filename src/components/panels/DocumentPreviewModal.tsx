@@ -24,14 +24,22 @@ interface DocumentPreviewModalProps {
   alignment?: FormalAlignment | null;
   feedback?: ManagerialFeedback | null;
   onConfirmScience?: (documentId: string, participantId: string | number) => void;
+  onRefuseScience?: (documentId: string, participantId: string | number, justification: string) => void;
   onCollectPhysicalSignature?: (
     documentId: string, 
     participantId: string | number, 
-    operatorName: string, 
-    date: string, 
+    operatorName?: string, 
+    date?: string, 
     notes?: string
   ) => void;
-  onCollectManagerSignature?: (documentId: string, operatorName: string, date: string) => void;
+  onRefusePhysicalSignature?: (
+    documentId: string,
+    participantId: string | number,
+    operatorName?: string,
+    date?: string,
+    justification?: string
+  ) => void;
+  onCollectManagerSignature?: (documentId: string, operatorName?: string, date?: string) => void;
   onArchivePhysical?: (
     documentId: string, 
     bookNumber: string, 
@@ -39,7 +47,7 @@ interface DocumentPreviewModalProps {
     operatorName?: string,
     archiveDate?: string
   ) => void;
-  currentUser?: { name: string; role: string; id: string | number };
+  currentUser?: { name: string; role: string; id: string | number } | null;
 }
 
 export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
@@ -49,19 +57,21 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   alignment,
   feedback,
   onConfirmScience,
+  onRefuseScience,
   onCollectPhysicalSignature,
+  onRefusePhysicalSignature,
   onCollectManagerSignature,
   onArchivePhysical,
-  currentUser = { name: 'Henrique Vasconcelos', role: 'Gestor Operacional de TI', id: 1 }
+  currentUser
 }) => {
   const [activeTab, setActiveTab] = useState<'DOCUMENT' | 'ARCHIVING' | 'SIGNATURES'>('DOCUMENT');
   const [bookNumberInput, setBookNumberInput] = useState(
-    alignment?.archivingInfo?.bookNumber || feedback?.archivingInfo?.bookNumber || 'Livro de Registros DTI — Tomo 03/2026'
+    alignment?.archivingInfo?.bookNumber || feedback?.archivingInfo?.bookNumber || ''
   );
   const [locationInput, setLocationInput] = useState(
-    alignment?.archivingInfo?.physicalLocation || feedback?.archivingInfo?.physicalLocation || 'Arquivo Geral DTI / Pasta 14-C'
+    alignment?.archivingInfo?.physicalLocation || feedback?.archivingInfo?.physicalLocation || ''
   );
-  const [operatorInput, setOperatorInput] = useState(currentUser.name);
+  const [operatorInput, setOperatorInput] = useState(currentUser?.name || '');
   const [archiveDateInput, setArchiveDateInput] = useState(() => new Date().toLocaleDateString('pt-BR'));
   const [signatureDateInput, setSignatureDateInput] = useState(() => {
     const now = new Date();
@@ -740,14 +750,17 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                       </div>
                     )}
 
-                    {/* Participantes */}
+                    {/* Participantes com controles independentes de ciência e assinatura */}
                     {alignment.participants.map((p) => {
                       const isRecordingThis = recordingParticipantId === p.id;
                       const isSigned = p.signatureStatus === 'ASSINATURA_FISICA_COLETADA' || p.signatureStatus === 'ASSINADO_FISICO';
+                      const isRefusedSignature = p.signatureStatus === 'RECUSOU_ASSINATURA';
+                      const isCiente = p.scienceStatus === 'CIENTE' || p.scienceStatus === 'CIENCIA_ELETRONICA_CONFIRMADA';
+                      const isRefusedScience = p.scienceStatus === 'RECUSOU_CIENCIA';
 
                       return (
                         <div key={p.id} className="space-y-2">
-                          <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2">
+                          <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
                                 {p.name.substring(0, 2).toUpperCase()}
@@ -758,28 +771,89 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              {isSigned ? (
-                                <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                                  <Check className="w-3 h-3" /> Assinatura Física Coletada
-                                </span>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-2xs text-amber-600 dark:text-amber-400 font-semibold">
-                                    Assinatura pendente
+                            <div className="flex flex-wrap items-center gap-3">
+                              {/* Controle Exclusivo de Ciência */}
+                              <div className="flex items-center gap-1.5 border-r border-slate-200 dark:border-slate-700 pr-3">
+                                {isCiente ? (
+                                  <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                    <Check className="w-3 h-3" /> Ciente
                                   </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setRecordingParticipantId(p.id);
-                                      setRecordingManager(false);
-                                    }}
-                                    className="px-2.5 py-1 text-2xs font-semibold bg-[#134F9F] text-white hover:bg-blue-700 rounded transition-colors cursor-pointer"
-                                  >
-                                    Registrar coleta física
-                                  </button>
-                                </div>
-                              )}
+                                ) : isRefusedScience ? (
+                                  <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300">
+                                    Recusou Ciência
+                                  </span>
+                                ) : (
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      disabled={!currentUser}
+                                      onClick={() => {
+                                        if (onConfirmScience && alignment) {
+                                          onConfirmScience(alignment.id, p.id);
+                                        }
+                                      }}
+                                      className="px-2 py-1 text-2xs font-semibold bg-blue-50 text-[#134F9F] hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 rounded border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer disabled:opacity-50"
+                                      title="Registra a ciência do participante (sem alterar assinatura física)"
+                                    >
+                                      Confirmar Ciência
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={!currentUser}
+                                      onClick={() => {
+                                        const reason = prompt('Informe a justificativa da recusa de ciência:') || 'Recusa informada pelo colaborador';
+                                        if (onRefuseScience && alignment) {
+                                          onRefuseScience(alignment.id, p.id, reason);
+                                        }
+                                      }}
+                                      className="px-1.5 py-1 text-2xs font-semibold text-slate-500 hover:text-red-600 rounded cursor-pointer disabled:opacity-50"
+                                      title="Registrar recusa formal de ciência"
+                                    >
+                                      Recusar
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Controle Exclusivo de Assinatura Manuscrita Física */}
+                              <div>
+                                {isSigned ? (
+                                  <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                    <Check className="w-3 h-3" /> Assinatura Física Coletada
+                                  </span>
+                                ) : isRefusedSignature ? (
+                                  <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
+                                    Recusou Assinatura
+                                  </span>
+                                ) : (
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      disabled={!currentUser}
+                                      onClick={() => {
+                                        setRecordingParticipantId(p.id);
+                                        setRecordingManager(false);
+                                      }}
+                                      className="px-2.5 py-1 text-2xs font-semibold bg-[#134F9F] text-white hover:bg-blue-700 rounded transition-colors cursor-pointer disabled:opacity-50"
+                                    >
+                                      Coletar Assinatura Física
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={!currentUser}
+                                      onClick={() => {
+                                        const justification = prompt('Informe a justificativa da recusa de assinatura:') || 'Recusa verbal do participante em apor firma manuscrita';
+                                        if (onRefusePhysicalSignature && docNumber) {
+                                          onRefusePhysicalSignature(docNumber, p.id, operatorInput, signatureDateInput, justification);
+                                        }
+                                      }}
+                                      className="px-2 py-1 text-2xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded cursor-pointer disabled:opacity-50"
+                                    >
+                                      Recusa
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
 
@@ -788,7 +862,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                             <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-800 space-y-3 text-xs">
                               <div className="flex items-center justify-between">
                                 <span className="font-bold text-blue-900 dark:text-blue-200">
-                                  Registrar Coleta de Assinatura de {p.name}
+                                  Registrar Coleta de Assinatura Manuscrita de {p.name}
                                 </span>
                                 <button
                                   type="button"
@@ -806,6 +880,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                                     type="text"
                                     value={operatorInput}
                                     onChange={(e) => setOperatorInput(e.target.value)}
+                                    placeholder="Nome do operador autenticado"
+                                    required
                                     className="w-full p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                   />
                                 </div>
@@ -826,13 +902,13 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                                   type="text"
                                   value={evidenceNoteInput}
                                   onChange={(e) => setEvidenceNoteInput(e.target.value)}
-                                  placeholder="Ex: Assinatura aposta na página 2 da via física anexa ao tomo 03/2026."
+                                  placeholder="Ex: Assinatura manuscrita aposta na folha impressa A4."
                                   className="w-full p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-2xs"
                                 />
                               </div>
 
                               <div className="p-2 bg-white/70 dark:bg-slate-900/60 rounded border border-blue-200 dark:border-blue-900 text-3xs text-blue-800 dark:text-blue-300">
-                                ⚠️ <strong>Simulação de Registro Local:</strong> O registro confirma a aposição manual de assinatura na folha física. Aguardando conciliação com o backend FastAPI via Luna CLI.
+                                ⚠️ <strong>Registro Local Manuscrito:</strong> Confirma que a folha física foi assinada. Não altera ciência e não arquiva o documento.
                               </div>
 
                               <div className="flex justify-end gap-2">
@@ -848,14 +924,12 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                                   onClick={() => {
                                     if (onCollectPhysicalSignature && docNumber) {
                                       onCollectPhysicalSignature(docNumber, p.id, operatorInput, signatureDateInput, evidenceNoteInput);
-                                    } else if (onConfirmScience && alignment) {
-                                      onConfirmScience(alignment.id, p.id);
                                     }
                                     setRecordingParticipantId(null);
                                   }}
                                   className="px-3 py-1 text-2xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded cursor-pointer"
                                 >
-                                  Confirmar Coleta Manuscrita
+                                  Confirmar Assinatura Manuscrita
                                 </button>
                               </div>
                             </div>
@@ -926,7 +1000,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                       onChange={(e) => setOperatorInput(e.target.value)}
                       required
                       className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#134F9F]"
-                      placeholder="Ex: Henrique Vasconcelos"
+                      placeholder="Nome do operador autenticado"
                     />
                   </div>
                   <div>

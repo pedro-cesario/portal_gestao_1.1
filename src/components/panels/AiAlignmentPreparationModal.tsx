@@ -44,7 +44,7 @@ interface AiAlignmentPreparationModalProps {
   onClose: () => void;
   onSaveAlignment: (alignment: FormalAlignment) => void;
   onPreviewAlignment: (alignment: FormalAlignment) => void;
-  currentUser?: { name: string; role: string; id: string | number };
+  currentUser?: { name: string; role: string; id: string | number } | null;
 }
 
 export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalProps> = ({
@@ -52,7 +52,7 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
   onClose,
   onSaveAlignment,
   onPreviewAlignment,
-  currentUser = { name: 'Henrique Vasconcelos', role: 'Gestor Operacional de TI', id: 1 }
+  currentUser
 }) => {
   // Controle de etapas: 1 a 5
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -128,7 +128,7 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
         includeGlpiMetrics,
         tone: toneToUse
       },
-      currentUser.name
+      currentUser?.name || 'Operador não identificado'
     );
 
     setAiResult(result);
@@ -197,14 +197,18 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
 
     const documentStatus = isMeetingConductedConfirmed ? 'EM_REVISAO' : 'AGUARDANDO_REALIZACAO';
 
+    const managerName = currentUser?.name || 'Operador não identificado';
+    const managerId = currentUser?.id || 0;
+    const managerRole = currentUser?.role || 'Gestor Operacional de TI';
+
     const alignmentDoc: FormalAlignment = {
       id: `aln-ai-${Date.now()}`,
       alignmentNumber: draftNumber,
       dateTime: effectiveDateTime,
       location: 'Sala de Operações DTI / Presencial',
-      managerId: currentUser.id,
-      managerName: currentUser.name,
-      managerRole: currentUser.role,
+      managerId,
+      managerName,
+      managerRole,
       periodicity: 'ESPORADICO',
       scope,
       category,
@@ -223,19 +227,19 @@ export const AiAlignmentPreparationModal: React.FC<AiAlignmentPreparationModalPr
       nextReviewDate: 'Em 30 dias (Acompanhamento Periódico)',
       status: documentStatus,
       version: 'v1.0 (Minuta Formal)',
-      elaboratedBy: currentUser.name,
-      reviewedBy: currentUser.name,
+      elaboratedBy: managerName,
+      reviewedBy: managerName,
       managerSignatureStatus: 'ASSINATURA_FISICA_PENDENTE',
       archivingInfo: {
         isArchivedPhysical: false,
-        bookNumber: 'Livro de Plantão e Alinhamentos — Tomo 03/2026',
-        physicalLocation: 'Arquivo Ativo DTI / Armário 102',
+        bookNumber: undefined,
+        physicalLocation: undefined,
         isSimulation: true
       },
       history: [
         {
           timestamp: new Date().toLocaleDateString('pt-BR'),
-          author: currentUser.name,
+          author: managerName,
           action: isMeetingConductedConfirmed
             ? 'Minuta elaborada e reunião confirmada como realizada pelo gestor'
             : 'Preparação preliminar gerada pelo gestor (Reunião presencial pendente)'

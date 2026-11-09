@@ -23,19 +23,20 @@ import {
   AlignmentPresence 
 } from '../../types';
 import { MOCK_TECHNICIANS } from '../../data/mockData';
+import { resolveFinalDecisions } from '../../utils/documentGovernance';
 
 interface RegisterAlignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveAlignment: (alignment: FormalAlignment) => void;
-  currentUser?: { name: string; role: string; id: string | number };
+  currentUser?: { name: string; role: string; id: string | number } | null;
 }
 
 export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
   isOpen,
   onClose,
   onSaveAlignment,
-  currentUser = { name: 'Henrique Vasconcelos', role: 'Gestor Operacional de TI', id: 1 }
+  currentUser
 }) => {
   const [periodicity, setPeriodicity] = useState<'PERIODICO_MENSAL' | 'ESPORADICO'>('ESPORADICO');
   const [scope, setScope] = useState<'INDIVIDUAL' | 'COLETIVO'>('INDIVIDUAL');
@@ -85,7 +86,7 @@ export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
         role: tech.role,
         department: tech.groupName,
         alignmentRole: selectedRoleForNew,
-        presence: 'PRESENTE',
+        presence: 'PRESENCA_NAO_CONFIRMADA',
         individualStatement: '',
         scienceStatus: 'PENDENTE',
         signatureStatus: 'ASSINATURA_FISICA_PENDENTE'
@@ -124,6 +125,11 @@ export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!currentUser) {
+      alert('Ação bloqueada: A formalização de minutas requer operador autenticado no sistema.');
+      return;
+    }
+
     const alignmentNum = `MINUTA-LOC-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newAlignment: FormalAlignment = {
@@ -133,7 +139,7 @@ export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
       location,
       managerId: currentUser.id,
       managerName: currentUser.name,
-      managerRole: currentUser.role,
+      managerRole: currentUser.role || 'Gestor Operacional de TI',
       periodicity,
       scope,
       category,
@@ -141,19 +147,15 @@ export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
       objective,
       context,
       topicsDiscussed: [
-        'Apresentação de orientações e rotinas pactuadas',
-        'Alinhamento de prazos e responsabilidades operacionais',
-        'Pactuação de compromissos para assinatura física e arquivamento'
+        'Apresentação de orientações e rotinas da reunião',
+        'Alinhamento de responsabilidades operacionais'
       ],
       observedFactsOrSituations: observedFacts,
       transmittedOrientations,
       participants,
       generalCommitments,
       individualCommitments: [],
-      decisions: [
-        'Aprovadas as diretrizes operacionais pactuadas entre as partes.',
-        'Emissão de folha formal em A4 para coleta de assinaturas manuscritas e arquivamento no livro físico.'
-      ],
+      decisions: resolveFinalDecisions([]),
       nextReviewDate: 'Acompanhamento em 30 dias',
       status: 'RASCUNHO_PREPARACAO',
       version: 'v1.0 (Minuta Provisória)',
@@ -162,8 +164,8 @@ export const RegisterAlignmentModal: React.FC<RegisterAlignmentModalProps> = ({
       managerSignatureStatus: 'ASSINATURA_FISICA_PENDENTE',
       archivingInfo: {
         isArchivedPhysical: false,
-        bookNumber: 'Livro de Plantão e Alinhamentos — Tomo 03/2026',
-        physicalLocation: 'Arquivo Ativo DTI / Armário 102',
+        bookNumber: undefined,
+        physicalLocation: undefined,
         isSimulation: true
       },
       history: [

@@ -21,7 +21,7 @@ interface RegisterFeedbackModalProps {
   onClose: () => void;
   onSaveFeedback: (feedback: ManagerialFeedback) => void;
   existingFeedbacks?: ManagerialFeedback[];
-  currentUser?: { name: string; role: string; id: string | number };
+  currentUser?: { name: string; role: string; id: string | number } | null;
 }
 
 export const RegisterFeedbackModal: React.FC<RegisterFeedbackModalProps> = ({
@@ -29,7 +29,7 @@ export const RegisterFeedbackModal: React.FC<RegisterFeedbackModalProps> = ({
   onClose,
   onSaveFeedback,
   existingFeedbacks = [],
-  currentUser = { name: 'Henrique Vasconcelos', role: 'Gestor Operacional de TI', id: 1 }
+  currentUser
 }) => {
   const [collaboratorId, setCollaboratorId] = useState<number>(101); // Mariana Costa default
   const [periodEvaluated, setPeriodEvaluated] = useState('');
@@ -140,6 +140,11 @@ export const RegisterFeedbackModal: React.FC<RegisterFeedbackModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!currentUser) {
+      alert('Ação bloqueada: O registro de feedback gerencial requer operador autenticado no sistema.');
+      return;
+    }
+
     const newFeedback: ManagerialFeedback = {
       id: `fdb-2026-${Date.now().toString().slice(-4)}`,
       feedbackNumber: `FDB-2026-0${Math.floor(Math.random() * 50) + 50}`,
@@ -147,9 +152,9 @@ export const RegisterFeedbackModal: React.FC<RegisterFeedbackModalProps> = ({
       collaboratorName: selectedTech.name,
       collaboratorRole: selectedTech.role,
       collaboratorDepartment: selectedTech.groupName,
-      managerId: 1,
-      managerName: 'Henrique Vasconcelos',
-      managerRole: 'Gestor Operacional de TI',
+      managerId: currentUser.id,
+      managerName: currentUser.name,
+      managerRole: currentUser.role || 'Gestor Operacional de TI',
       feedbackDate,
       periodEvaluated,
       feedbackType,
@@ -176,13 +181,13 @@ export const RegisterFeedbackModal: React.FC<RegisterFeedbackModalProps> = ({
       version: 'v1.0 (Oficial)',
       archivingInfo: {
         isArchivedPhysical: false,
-        bookNumber: 'Livro de Feedbacks e Desempenho DTI — 2026',
-        physicalLocation: `Armário DTI / Pasta Funcional ${selectedTech.name.split(' ')[0]}`
+        bookNumber: undefined,
+        physicalLocation: undefined
       },
       history: [
         {
           timestamp: `${feedbackDate} 10:00`,
-          author: 'Henrique Vasconcelos',
+          author: currentUser.name,
           action: 'Novo feedback individual registrado no Portal'
         }
       ]
